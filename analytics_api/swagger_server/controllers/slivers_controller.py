@@ -1,10 +1,10 @@
-from analytics_api.swagger_server.models.components import Components  # noqa: E501
-from analytics_api.swagger_server.models.interfaces import Interfaces  # noqa: E501
 from analytics_api.swagger_server.models.slivers import Slivers  # noqa: E501
 from analytics_api.response_code import slivers_controller as rc
 
 
-def slivers_get(start_time=None, end_time=None, user_id=None, user_email=None, project_id=None, slice_id=None, sliver_id=None, sliver_type=None, sliver_state=None, component_type=None, component_model=None, bdf=None, vlan=None, ip_subnet=None, site=None, host=None, page=None, per_page=None):  # noqa: E501
+def slivers_get(start_time=None, end_time=None, user_id=None, user_email=None, project_id=None, slice_id=None,
+                sliver_id=None, sliver_type=None, sliver_state=None, component_type=None, component_model=None,
+                bdf=None, vlan=None, ip_subnet=None, site=None, host=None, page=None, per_page=None):  # noqa: E501
     """Get slivers
 
     Retrieve a list of slivers with optional filters. # noqa: E501
@@ -48,6 +48,8 @@ def slivers_get(start_time=None, end_time=None, user_id=None, user_email=None, p
 
     :rtype: Slivers
     """
-    start_time = util.deserialize_datetime(start_time)
-    end_time = util.deserialize_datetime(end_time)
-    return 'do some magic!'
+    return rc.slivers_get(start_time=start_time, end_time=end_time, user_email=user_email, user_id=user_id,
+                          slice_id=slice_id, sliver_id=sliver_id, sliver_type=sliver_type, sliver_state=sliver_state,
+                          project_id=project_id, component_type=component_type, component_model=component_model,
+                          bdf=bdf, vlan=vlan, ip_subnet=ip_subnet, page=page, per_page=per_page, site=site,
+                          host=host)

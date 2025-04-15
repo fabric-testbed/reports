@@ -2,7 +2,9 @@ from analytics_api.swagger_server.models.projects import Projects  # noqa: E501
 from analytics_api.response_code import projects_controller as rc
 
 
-def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, project_id=None, slice_id=None, sliver_id=None, sliver_type=None, sliver_state=None, component_type=None, component_model=None, bdf=None, vlan=None, ip_subnet=None, site=None, host=None, page=None, per_page=None):  # noqa: E501
+def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, project_id=None, slice_id=None,
+                 sliver_id=None, sliver_type=None, sliver_state=None, component_type=None, component_model=None,
+                 bdf=None, vlan=None, ip_subnet=None, site=None, host=None, page=None, per_page=None):  # noqa: E501
     """Retrieve a list of projects
 
     Returns a paginated list of projects with their UUIDs. # noqa: E501
@@ -46,6 +48,8 @@ def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, 
 
     :rtype: Projects
     """
-    start_time = util.deserialize_datetime(start_time)
-    end_time = util.deserialize_datetime(end_time)
-    return 'do some magic!'
+    return rc.projects_get(start_time=start_time, end_time=end_time, user_email=user_email, user_id=user_id,
+                           slice_id=slice_id, sliver_id=sliver_id, sliver_type=sliver_type, sliver_state=sliver_state,
+                           project_id=project_id, component_type=component_type, component_model=component_model,
+                           bdf=bdf, vlan=vlan, ip_subnet=ip_subnet, page=page, per_page=per_page, site=site,
+                           host=host)
