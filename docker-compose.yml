@@ -36,7 +36,9 @@ services:
     restart: always
 
   analytics-api:
-    build: ./analytics-api
+    build:
+      context: .
+      dockerfile: Dockerfle.analytics_api
     container_name: analytics-api
     restart: always
     depends_on:
