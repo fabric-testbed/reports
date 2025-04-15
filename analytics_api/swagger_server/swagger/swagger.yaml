@@ -1,0 +1,1632 @@
+openapi: 3.0.0
+info:
+  title: Analytics API with PostgreSQL
+  description: "API for managing users, projects, slices, slivers, and related entities."
+  version: 1.0.0
+servers:
+- url: http://localhost:5000
+tags:
+- name: users
+  description: Users in FABRIC
+- name: projects
+  description: Projects in FABRIC
+- name: slices
+  description: Slices in FABRIC
+- name: slivers
+  description: Slivers in FABRIC slices
+- name: sites
+  description: Sites in FABRIC
+- name: hosts
+  description: Hosts in FABRIC
+- name: default
+  description: Default information
+paths:
+  /version:
+    get:
+      tags:
+      - version
+      summary: Version
+      description: Version
+      operationId: version_get
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/version'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: analytics_api.swagger_server.controllers.version_controller
+  /users:
+    get:
+      tags:
+      - users
+      summary: Get users
+      description: Retrieve a list of users with optional filters.
+      operationId: users_get
+      parameters:
+      - name: start_time
+        in: query
+        description: Filter by start time (inclusive)
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+      - name: end_time
+        in: query
+        description: Filter by end time (inclusive)
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+      - name: user_id
+        in: query
+        description: Filter by user uuid
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: user_email
+        in: query
+        description: Filter by user email
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: project_id
+        in: query
+        description: Filter by project uuid
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: slice_id
+        in: query
+        description: Filter by slice uuid
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: sliver_id
+        in: query
+        description: Filter by sliver uuid
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: sliver_type
+        in: query
+        description: "Filter by sliver type; allowed values VM, Switch, Facility,\
+          \ L2STS, L2PTP, L2Bridge, FABNetv4, FABNetv6, PortMirror, L3VPN, FABNetv4Ext,\
+          \ FABNetv6Ext"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          enum:
+          - VM
+          - Switch
+          - Facility
+          - L2STS
+          - L2PTP
+          - L2Bridge
+          - FABNetv4
+          - FABNetv6
+          - PortMirror
+          - L3VPN
+          - FABNetv4Ext
+          - FABNetv6Ext
+      - name: sliver_state
+        in: query
+        description: "Filter by sliver state; allowed values ascent, Ticketed, Active,\
+          \ ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          enum:
+          - Nascent
+          - Ticketed
+          - Active
+          - ActiveTicketed
+          - Closed
+          - CloseWait
+          - Failed
+          - Unknown
+          - CloseFail
+      - name: component_type
+        in: query
+        description: "Filter by component type, allowed values GPU, SmartNIC, SharedNIC,\
+          \ FPGA, NVME, Storage"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          enum:
+          - GPU
+          - SmartNIC
+          - SharedNIC
+          - FPGA
+          - NVME
+          - Storage
+      - name: component_model
+        in: query
+        description: Filter by component model
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: bdf
+        in: query
+        description: Filter by specified BDF (Bus:Device.Function) of interfaces/components
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: vlan
+        in: query
+        description: Filter by VLAN associated with their sliver interfaces.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: ip_subnet
+        in: query
+        description: Filter by specified IP subnet
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: site
+        in: query
+        description: Filter by site
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: host
+        in: query
+        description: Filter by host
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        description: Page number for pagination. Default is 1.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 1
+      - name: per_page
+        in: query
+        description: Number of records per page. Default is 10.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 100
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/users'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      security:
+      - bearerAuth: []
+      x-openapi-router-controller: analytics_api.swagger_server.controllers.users_controller
+  /sites:
+    get:
+      tags:
+      - sites
+      summary: Get sites
+      description: Retrieve a list of sites.
+      operationId: sites_get
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/sites'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      security:
+      - bearerAuth: []
+      x-openapi-router-controller: analytics_api.swagger_server.controllers.sites_controller
+  /hosts:
+    get:
+      tags:
+      - hosts
+      summary: Get hosts
+      description: Retrieve a list of hosts.
+      operationId: hosts_get
+      parameters:
+      - name: site
+        in: query
+        description: Filter by site
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/sites'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      security:
+      - bearerAuth: []
+      x-openapi-router-controller: analytics_api.swagger_server.controllers.hosts_controller
+  /slivers:
+    get:
+      tags:
+      - slivers
+      summary: Get slivers
+      description: Retrieve a list of slivers with optional filters.
+      operationId: slivers_get
+      parameters:
+      - name: start_time
+        in: query
+        description: Filter by start time (inclusive)
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+      - name: end_time
+        in: query
+        description: Filter by end time (inclusive)
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+      - name: user_id
+        in: query
+        description: Filter by user uuid
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: user_email
+        in: query
+        description: Filter by user email
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: project_id
+        in: query
+        description: Filter by project uuid
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: slice_id
+        in: query
+        description: Filter by slice uuid
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: sliver_id
+        in: query
+        description: Filter by sliver uuid
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: sliver_type
+        in: query
+        description: "Filter by sliver type; allowed values VM, Switch, Facility,\
+          \ L2STS, L2PTP, L2Bridge, FABNetv4, FABNetv6, PortMirror, L3VPN, FABNetv4Ext,\
+          \ FABNetv6Ext"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          enum:
+          - VM
+          - Switch
+          - Facility
+          - L2STS
+          - L2PTP
+          - L2Bridge
+          - FABNetv4
+          - FABNetv6
+          - PortMirror
+          - L3VPN
+          - FABNetv4Ext
+          - FABNetv6Ext
+      - name: sliver_state
+        in: query
+        description: "Filter by sliver state; allowed values ascent, Ticketed, Active,\
+          \ ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          enum:
+          - Nascent
+          - Ticketed
+          - Active
+          - ActiveTicketed
+          - Closed
+          - CloseWait
+          - Failed
+          - Unknown
+          - CloseFail
+      - name: component_type
+        in: query
+        description: "Filter by component type, allowed values GPU, SmartNIC, SharedNIC,\
+          \ FPGA, NVME, Storage"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          enum:
+          - GPU
+          - SmartNIC
+          - SharedNIC
+          - FPGA
+          - NVME
+          - Storage
+      - name: component_model
+        in: query
+        description: Filter by component model
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: bdf
+        in: query
+        description: Filter by specified BDF (Bus:Device.Function) of interfaces/components
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: vlan
+        in: query
+        description: Filter by VLAN associated with their sliver interfaces.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: ip_subnet
+        in: query
+        description: Filter by specified IP subnet
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: site
+        in: query
+        description: Filter by site
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: host
+        in: query
+        description: Filter by host
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        description: Page number for pagination. Default is 1.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 1
+      - name: per_page
+        in: query
+        description: Number of records per page. Default is 10.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 100
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/slivers'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      security:
+      - bearerAuth: []
+      x-openapi-router-controller: analytics_api.swagger_server.controllers.slivers_controller
+  /projects:
+    get:
+      tags:
+      - projects
+      summary: Retrieve a list of projects
+      description: Returns a paginated list of projects with their UUIDs.
+      operationId: projects_get
+      parameters:
+      - name: start_time
+        in: query
+        description: Filter by start time (inclusive)
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+      - name: end_time
+        in: query
+        description: Filter by end time (inclusive)
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+      - name: user_id
+        in: query
+        description: Filter by user uuid
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: user_email
+        in: query
+        description: Filter by user email
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: project_id
+        in: query
+        description: Filter by project uuid
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: slice_id
+        in: query
+        description: Filter by slice uuid
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: sliver_id
+        in: query
+        description: Filter by sliver uuid
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: sliver_type
+        in: query
+        description: "Filter by sliver type; allowed values VM, Switch, Facility,\
+          \ L2STS, L2PTP, L2Bridge, FABNetv4, FABNetv6, PortMirror, L3VPN, FABNetv4Ext,\
+          \ FABNetv6Ext"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          enum:
+          - VM
+          - Switch
+          - Facility
+          - L2STS
+          - L2PTP
+          - L2Bridge
+          - FABNetv4
+          - FABNetv6
+          - PortMirror
+          - L3VPN
+          - FABNetv4Ext
+          - FABNetv6Ext
+      - name: sliver_state
+        in: query
+        description: "Filter by sliver state; allowed values ascent, Ticketed, Active,\
+          \ ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          enum:
+          - Nascent
+          - Ticketed
+          - Active
+          - ActiveTicketed
+          - Closed
+          - CloseWait
+          - Failed
+          - Unknown
+          - CloseFail
+      - name: component_type
+        in: query
+        description: "Filter by component type, allowed values GPU, SmartNIC, SharedNIC,\
+          \ FPGA, NVME, Storage"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          enum:
+          - GPU
+          - SmartNIC
+          - SharedNIC
+          - FPGA
+          - NVME
+          - Storage
+      - name: component_model
+        in: query
+        description: Filter by component model
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: bdf
+        in: query
+        description: Filter by specified BDF (Bus:Device.Function) of interfaces/components
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: vlan
+        in: query
+        description: Filter by VLAN associated with their sliver interfaces.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: ip_subnet
+        in: query
+        description: Filter by specified IP subnet
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: site
+        in: query
+        description: Filter by site
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: host
+        in: query
+        description: Filter by host
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        description: Page number for pagination. Default is 1.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 1
+      - name: per_page
+        in: query
+        description: Number of records per page. Default is 10.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 100
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/projects'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      security:
+      - bearerAuth: []
+      x-openapi-router-controller: analytics_api.swagger_server.controllers.projects_controller
+  /slices:
+    get:
+      tags:
+      - slices
+      summary: Get slices
+      description: Retrieve a list of slices with optional filters.
+      operationId: slices_get
+      parameters:
+      - name: start_time
+        in: query
+        description: Filter by start time (inclusive)
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+      - name: end_time
+        in: query
+        description: Filter by end time (inclusive)
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+      - name: user_id
+        in: query
+        description: Filter by user uuid
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: user_email
+        in: query
+        description: Filter by user email
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: project_id
+        in: query
+        description: Filter by project uuid
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: slice_id
+        in: query
+        description: Filter by slice uuid
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: sliver_id
+        in: query
+        description: Filter by sliver uuid
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: sliver_type
+        in: query
+        description: "Filter by sliver type; allowed values VM, Switch, Facility,\
+          \ L2STS, L2PTP, L2Bridge, FABNetv4, FABNetv6, PortMirror, L3VPN, FABNetv4Ext,\
+          \ FABNetv6Ext"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          enum:
+          - VM
+          - Switch
+          - Facility
+          - L2STS
+          - L2PTP
+          - L2Bridge
+          - FABNetv4
+          - FABNetv6
+          - PortMirror
+          - L3VPN
+          - FABNetv4Ext
+          - FABNetv6Ext
+      - name: sliver_state
+        in: query
+        description: "Filter by sliver state; allowed values ascent, Ticketed, Active,\
+          \ ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          enum:
+          - Nascent
+          - Ticketed
+          - Active
+          - ActiveTicketed
+          - Closed
+          - CloseWait
+          - Failed
+          - Unknown
+          - CloseFail
+      - name: component_type
+        in: query
+        description: "Filter by component type, allowed values GPU, SmartNIC, SharedNIC,\
+          \ FPGA, NVME, Storage"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          enum:
+          - GPU
+          - SmartNIC
+          - SharedNIC
+          - FPGA
+          - NVME
+          - Storage
+      - name: component_model
+        in: query
+        description: Filter by component model
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: bdf
+        in: query
+        description: Filter by specified BDF (Bus:Device.Function) of interfaces/components
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: vlan
+        in: query
+        description: Filter by VLAN associated with their sliver interfaces.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: ip_subnet
+        in: query
+        description: Filter by specified IP subnet
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: site
+        in: query
+        description: Filter by site
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: host
+        in: query
+        description: Filter by host
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        description: Page number for pagination. Default is 1.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 1
+      - name: per_page
+        in: query
+        description: Number of records per page. Default is 10.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 100
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/slices'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      security:
+      - bearerAuth: []
+      x-openapi-router-controller: analytics_api.swagger_server.controllers.slices_controller
+components:
+  schemas:
+    sites:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_paginated'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/site'
+    site:
+      type: object
+      properties:
+        name:
+          type: string
+        hosts:
+          type: array
+          items:
+            $ref: '#/components/schemas/host'
+    host:
+      type: object
+      properties:
+        name:
+          type: string
+    projects:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_paginated'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/project'
+    project:
+      type: object
+      properties:
+        project_id:
+          type: string
+        project_name:
+          type: string
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/user'
+    users:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_paginated'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/user'
+    user:
+      type: object
+      properties:
+        user_id:
+          type: string
+        user_email:
+          type: string
+        slices:
+          type: array
+          items:
+            $ref: '#/components/schemas/slice'
+    slices:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_paginated'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/slice'
+    slice:
+      type: object
+      properties:
+        project_id:
+          type: string
+        user_id:
+          type: string
+        slice_id:
+          type: string
+        slice_name:
+          type: string
+        state:
+          type: string
+        lease_start:
+          type: string
+          format: date-time
+        lease_end:
+          type: string
+          format: date-time
+        slivers:
+          type: array
+          items:
+            $ref: '#/components/schemas/sliver'
+    slivers:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_paginated'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/sliver'
+    sliver:
+      type: object
+      properties:
+        project_id:
+          type: string
+        slice_id:
+          type: string
+        user_id:
+          type: string
+        host:
+          type: string
+        site:
+          type: string
+        sliver_id:
+          type: string
+        node_id:
+          type: string
+        state:
+          type: string
+        sliver_type:
+          type: string
+        ip_subnet:
+          type: string
+        image:
+          type: string
+        core:
+          type: integer
+        ram:
+          type: integer
+        disk:
+          type: integer
+        bandwidth:
+          type: integer
+        lease_start:
+          type: string
+          format: date-time
+        lease_end:
+          type: string
+          format: date-time
+        components:
+          type: array
+          items:
+            $ref: '#/components/schemas/component'
+        interfaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/interface'
+    component:
+      type: object
+      properties:
+        component_id:
+          type: string
+        node_id:
+          type: string
+        component_node_id:
+          type: string
+        type:
+          type: string
+        model:
+          type: string
+        bdfs:
+          type: array
+          items:
+            type: string
+    interface:
+      type: object
+      properties:
+        interface_id:
+          type: string
+        port:
+          type: string
+        interface:
+          type: string
+        facility:
+          type: string
+        vlan:
+          type: string
+        bdf:
+          type: string
+    status_200_ok_paginated:
+      type: object
+      properties:
+        limit:
+          type: integer
+        offset:
+          type: integer
+        size:
+          type: integer
+        status:
+          type: integer
+          default: 200
+        total:
+          type: integer
+        type:
+          type: string
+    status_400_bad_request:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/status_400_bad_request_errors'
+    status_401_unauthorized:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/status_401_unauthorized_errors'
+        type:
+          type: string
+          default: error
+        size:
+          type: integer
+          default: 1
+        status:
+          type: integer
+          default: 401
+    status_403_forbidden:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/status_403_forbidden_errors'
+        type:
+          type: string
+          default: error
+        size:
+          type: integer
+          default: 1
+        status:
+          type: integer
+          default: 403
+    status_404_not_found:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/status_404_not_found_errors'
+        type:
+          type: string
+          default: error
+        size:
+          type: integer
+          default: 1
+        status:
+          type: integer
+          default: 404
+    status_500_internal_server_error:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/status_500_internal_server_error_errors'
+        type:
+          type: string
+          default: error
+        size:
+          type: integer
+          default: 1
+        status:
+          type: integer
+          default: 500
+    status_400_bad_request_errors:
+      type: object
+      properties:
+        message:
+          type: string
+          default: Bad Request
+        details:
+          type: string
+        type:
+          type: string
+          default: error
+        size:
+          type: integer
+          default: 1
+        status:
+          type: integer
+          default: 400
+    status_401_unauthorized_errors:
+      type: object
+      properties:
+        message:
+          type: string
+          default: Unauthorized
+        details:
+          type: string
+    status_403_forbidden_errors:
+      type: object
+      properties:
+        message:
+          type: string
+          default: Forbidden
+        details:
+          type: string
+    status_404_not_found_errors:
+      type: object
+      properties:
+        message:
+          type: string
+          default: Not Found
+        details:
+          type: string
+    status_500_internal_server_error_errors:
+      type: object
+      properties:
+        message:
+          type: string
+          default: Internal Server Error
+        details:
+          type: string
+    status_200_ok_single:
+      type: object
+      properties:
+        size:
+          type: integer
+          default: 1
+        status:
+          type: integer
+          default: 200
+        type:
+          type: string
+    version:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_single'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/version_data'
+    version_data:
+      required:
+      - reference
+      - version
+      properties:
+        reference:
+          type: string
+          example: https://github.com/fabric-testbed/sliver-analytics
+        version:
+          type: string
+          example: 1.0.0
+  parameters:
+    startTime:
+      name: start_time
+      in: query
+      description: Filter by start time (inclusive)
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: string
+        format: date-time
+    endTime:
+      name: end_time
+      in: query
+      description: Filter by end time (inclusive)
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: string
+        format: date-time
+    userId:
+      name: user_id
+      in: query
+      description: Filter by user uuid
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: string
+    userEmail:
+      name: user_email
+      in: query
+      description: Filter by user email
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: string
+    projectId:
+      name: project_id
+      in: query
+      description: Filter by project uuid
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: string
+    sliceId:
+      name: slice_id
+      in: query
+      description: Filter by slice uuid
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: string
+    sliverId:
+      name: sliver_id
+      in: query
+      description: Filter by sliver uuid
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: string
+    componentType:
+      name: component_type
+      in: query
+      description: "Filter by component type, allowed values GPU, SmartNIC, SharedNIC,\
+        \ FPGA, NVME, Storage"
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: string
+        enum:
+        - GPU
+        - SmartNIC
+        - SharedNIC
+        - FPGA
+        - NVME
+        - Storage
+    componentModel:
+      name: component_model
+      in: query
+      description: Filter by component model
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: string
+    sliverType:
+      name: sliver_type
+      in: query
+      description: "Filter by sliver type; allowed values VM, Switch, Facility, L2STS,\
+        \ L2PTP, L2Bridge, FABNetv4, FABNetv6, PortMirror, L3VPN, FABNetv4Ext, FABNetv6Ext"
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: string
+        enum:
+        - VM
+        - Switch
+        - Facility
+        - L2STS
+        - L2PTP
+        - L2Bridge
+        - FABNetv4
+        - FABNetv6
+        - PortMirror
+        - L3VPN
+        - FABNetv4Ext
+        - FABNetv6Ext
+    sliverState:
+      name: sliver_state
+      in: query
+      description: "Filter by sliver state; allowed values ascent, Ticketed, Active,\
+        \ ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail"
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: string
+        enum:
+        - Nascent
+        - Ticketed
+        - Active
+        - ActiveTicketed
+        - Closed
+        - CloseWait
+        - Failed
+        - Unknown
+        - CloseFail
+    site:
+      name: site
+      in: query
+      description: Filter by site
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: string
+    host:
+      name: host
+      in: query
+      description: Filter by host
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: string
+    ipSubnet:
+      name: ip_subnet
+      in: query
+      description: Filter by specified IP subnet
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: string
+    bdf:
+      name: bdf
+      in: query
+      description: Filter by specified BDF (Bus:Device.Function) of interfaces/components
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: string
+    vlan:
+      name: vlan
+      in: query
+      description: Filter by VLAN associated with their sliver interfaces.
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: string
+    page:
+      name: page
+      in: query
+      description: Page number for pagination. Default is 1.
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: integer
+        default: 1
+    perPage:
+      name: per_page
+      in: query
+      description: Number of records per page. Default is 10.
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: integer
+        default: 100
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      x-bearerInfoFunc: analytics_api.swagger_server.controllers.authorization_controller.check_bearerAuth
+
