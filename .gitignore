@@ -65,3 +65,4 @@ target/
 ../.DS_Store
 .DS_Store
 .idea
+analytics_api/python-flask-server-generated/
