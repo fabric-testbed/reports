@@ -39,7 +39,7 @@ logging.trace = lambda msg, *args, **kwargs: logging.log(logging.TRACE, msg, *ar
 
 
 class Globals:
-    config_file = "config.yml"
+    config_file = "/usr/src/app/config.yml"
     RPC_TIMEOUT = 0
 
     def __init__(self):

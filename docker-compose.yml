@@ -37,8 +37,8 @@ services:
 
   analytics-api:
     build:
-      context: .
-      dockerfile: Dockerfle.analytics_api
+      context: analytics_api/
+      dockerfile: Dockerfile
     container_name: analytics-api
     restart: always
     depends_on:
@@ -47,7 +47,8 @@ services:
       - backend   # Ensure the API is on the backend network
     environment:
       DATABASE_URL: "postgresql://fabric:fabric@analytics-db:5432/analytics"
-
+    volumes:
+      - ./config.yaml:/usr/src/app/config/config.yaml
   dash-app:
     build: ./dash-app
     container_name: dash-app

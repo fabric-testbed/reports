@@ -6,13 +6,13 @@ WORKDIR /usr/src/app
 VOLUME ["/usr/src/app"]
 
 COPY docker-entrypoint.sh /usr/src/app/
-COPY analytics_api /usr/src/app/analytics_api
+COPY . /usr/src/app/
 COPY README.md /usr/src/app/
 COPY LICENSE /usr/src/app/
 
-RUN pip3 install --no-cache-dir -r /usr/src/app/analytics_api/requirements.txt
+RUN pip3 install --no-cache-dir -r /usr/src/app/requirements.txt
 
 EXPOSE 8080
 
 ENTRYPOINT ["/usr/src/app/docker-entrypoint.sh"]
-CMD ["analytics_api"]
+CMD ["swagger_server"]
