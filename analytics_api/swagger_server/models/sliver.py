@@ -16,15 +16,21 @@ class Sliver(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, project_id: str=None, slice_id: str=None, user_id: str=None, host: str=None, site: str=None, sliver_id: str=None, node_id: str=None, state: str=None, sliver_type: str=None, ip_subnet: str=None, image: str=None, core: int=None, ram: int=None, disk: int=None, bandwidth: int=None, lease_start: datetime=None, lease_end: datetime=None, components: SliverComponents=None, interfaces: SliverInterfaces=None):  # noqa: E501
+    def __init__(self, project_id: str=None, project_name: str=None, slice_id: str=None, slice_name: str=None, user_id: str=None, user_email: str=None, host: str=None, site: str=None, sliver_id: str=None, node_id: str=None, state: str=None, sliver_type: str=None, ip_subnet: str=None, image: str=None, core: int=None, ram: int=None, disk: int=None, bandwidth: int=None, lease_start: datetime=None, lease_end: datetime=None, components: SliverComponents=None, interfaces: SliverInterfaces=None):  # noqa: E501
         """Sliver - a model defined in Swagger
 
         :param project_id: The project_id of this Sliver.  # noqa: E501
         :type project_id: str
+        :param project_name: The project_name of this Sliver.  # noqa: E501
+        :type project_name: str
         :param slice_id: The slice_id of this Sliver.  # noqa: E501
         :type slice_id: str
+        :param slice_name: The slice_name of this Sliver.  # noqa: E501
+        :type slice_name: str
         :param user_id: The user_id of this Sliver.  # noqa: E501
         :type user_id: str
+        :param user_email: The user_email of this Sliver.  # noqa: E501
+        :type user_email: str
         :param host: The host of this Sliver.  # noqa: E501
         :type host: str
         :param site: The site of this Sliver.  # noqa: E501
@@ -60,8 +66,11 @@ class Sliver(Model):
         """
         self.swagger_types = {
             'project_id': str,
+            'project_name': str,
             'slice_id': str,
+            'slice_name': str,
             'user_id': str,
+            'user_email': str,
             'host': str,
             'site': str,
             'sliver_id': str,
@@ -82,8 +91,11 @@ class Sliver(Model):
 
         self.attribute_map = {
             'project_id': 'project_id',
+            'project_name': 'project_name',
             'slice_id': 'slice_id',
+            'slice_name': 'slice_name',
             'user_id': 'user_id',
+            'user_email': 'user_email',
             'host': 'host',
             'site': 'site',
             'sliver_id': 'sliver_id',
@@ -102,8 +114,11 @@ class Sliver(Model):
             'interfaces': 'interfaces'
         }
         self._project_id = project_id
+        self._project_name = project_name
         self._slice_id = slice_id
+        self._slice_name = slice_name
         self._user_id = user_id
+        self._user_email = user_email
         self._host = host
         self._site = site
         self._sliver_id = sliver_id
@@ -154,6 +169,27 @@ class Sliver(Model):
         self._project_id = project_id
 
     @property
+    def project_name(self) -> str:
+        """Gets the project_name of this Sliver.
+
+
+        :return: The project_name of this Sliver.
+        :rtype: str
+        """
+        return self._project_name
+
+    @project_name.setter
+    def project_name(self, project_name: str):
+        """Sets the project_name of this Sliver.
+
+
+        :param project_name: The project_name of this Sliver.
+        :type project_name: str
+        """
+
+        self._project_name = project_name
+
+    @property
     def slice_id(self) -> str:
         """Gets the slice_id of this Sliver.
 
@@ -175,6 +211,27 @@ class Sliver(Model):
         self._slice_id = slice_id
 
     @property
+    def slice_name(self) -> str:
+        """Gets the slice_name of this Sliver.
+
+
+        :return: The slice_name of this Sliver.
+        :rtype: str
+        """
+        return self._slice_name
+
+    @slice_name.setter
+    def slice_name(self, slice_name: str):
+        """Sets the slice_name of this Sliver.
+
+
+        :param slice_name: The slice_name of this Sliver.
+        :type slice_name: str
+        """
+
+        self._slice_name = slice_name
+
+    @property
     def user_id(self) -> str:
         """Gets the user_id of this Sliver.
 
@@ -194,6 +251,27 @@ class Sliver(Model):
         """
 
         self._user_id = user_id
+
+    @property
+    def user_email(self) -> str:
+        """Gets the user_email of this Sliver.
+
+
+        :return: The user_email of this Sliver.
+        :rtype: str
+        """
+        return self._user_email
+
+    @user_email.setter
+    def user_email(self, user_email: str):
+        """Sets the user_email of this Sliver.
+
+
+        :param user_email: The user_email of this Sliver.
+        :type user_email: str
+        """
+
+        self._user_email = user_email
 
     @property
     def host(self) -> str:

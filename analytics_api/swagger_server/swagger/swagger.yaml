@@ -1263,9 +1263,15 @@ components:
       properties:
         project_id:
           type: string
+        project_name:
+          type: string
         slice_id:
           type: string
+        slice_name:
+          type: string
         user_id:
+          type: string
+        user_email:
           type: string
         host:
           type: string
