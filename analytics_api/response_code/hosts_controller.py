@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # MIT License
 #
-# Copyright (c) 2025 FABRIC Testbed
+# Copyright (component) 2025 FABRIC Testbed
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,8 @@ from analytics_api.common.globals import GlobalsSingleton
 from analytics_api.database.db_manager import DatabaseManager
 from analytics_api.response_code.cors_response import cors_500
 from analytics_api.response_code.utils import authorize, cors_success_response
-from analytics_api.swagger_server.models import Sites, Site
+from analytics_api.swagger_server.models.site import Site
+from analytics_api.swagger_server.models.sites import Sites
 
 
 def hosts_get(site: str):  # noqa: E501

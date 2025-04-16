@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # MIT License
 #
-# Copyright (c) 2025 FABRIC Testbed
+# Copyright (component) 2025 FABRIC Testbed
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -28,17 +28,17 @@ from datetime import datetime
 from analytics_api.common.globals import GlobalsSingleton
 from analytics_api.database.db_manager import DatabaseManager
 from analytics_api.response_code.cors_response import cors_500
-from analytics_api.response_code.sliver_states import SliverStates
+from analytics_api.response_code.slice_sliver_states import SliverStates
 from analytics_api.response_code.utils import authorize, cors_success_response
-from analytics_api.swagger_server.models import Project
+from analytics_api.swagger_server.models.project import Project
 from analytics_api.swagger_server.models.projects import Projects  # noqa: E501
 
 
-def projects_get(start_time: str = None, end_time: str = None, user_email: str = None, sliver_id: str = None,
-                 user_id: str = None, project_id: str = None, component_type: str = None, slice_id: str = None,
-                 component_model: str = None, sliver_type: str = None, sliver_state: str = None, site: str = None,
-                 ip_subnet: str = None, bdf: str = None, vlan: str = None, host: str = None, page: int = 0,
-                 per_page: int = 100):
+def projects_get(start_time: str = None, end_time: str = None, user_email: str = None,  user_id: str = None,
+                 project_id: str = None, component_type: str = None, slice_id: str = None, slice_state: str = None,
+                 component_model: str = None, sliver_type: str = None, sliver_id: str = None, sliver_state: str = None,
+                 site: str = None, ip_subnet: str = None, bdf: str = None, vlan: str = None, host: str = None,
+                 page: int = 0, per_page: int = 100):
     """
     Returns a paginated list of projects with their UUIDs. # noqa: E501
 
@@ -58,6 +58,8 @@ def projects_get(start_time: str = None, end_time: str = None, user_email: str =
     :type component_type: str, optional
     :param slice_id: Filter projects containing a specific slice.
     :type slice_id: str, optional
+    :param slice_state: Filter by slice state; allowed values Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK
+    :type slice_state: str
     :param component_model: Filter projects where slivers include components of this model.
     :type component_model: str, optional
     :param sliver_type: Filter projects by the type of slivers they include (e.g., VM, BareMetal).
@@ -98,12 +100,13 @@ def projects_get(start_time: str = None, end_time: str = None, user_email: str =
                                        sliver_id=sliver_id, sliver_type=sliver_type, slice_id=slice_id, bdf=bdf,
                                        sliver_state=SliverStates.translate(sliver_state),site=site, host=host,
                                        project_id=project_id, component_model=component_model,
+                                       slice_state=SliverStates.translate(slice_state),
                                        component_type=component_type, ip_subnet=ip_subnet, page=page, per_page=per_page)
-        print(projects)
-        for p in projects:
-            response.data.append(Project.from_dict(p))
+        for s in projects.get("projects"):
+            response.data.append(Project.from_dict(s))
         response.size = len(response.data)
         response.type = "projects"
+        response.total = projects.get("total")
         return cors_success_response(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with projects_get(): {0}'.format(exc)

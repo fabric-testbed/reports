@@ -1,10 +1,7 @@
-from analytics_api.swagger_server.models.slivers import Slivers  # noqa: E501
 from analytics_api.response_code import slivers_controller as rc
 
 
-def slivers_get(start_time=None, end_time=None, user_id=None, user_email=None, project_id=None, slice_id=None,
-                sliver_id=None, sliver_type=None, sliver_state=None, component_type=None, component_model=None,
-                bdf=None, vlan=None, ip_subnet=None, site=None, host=None, page=None, per_page=None):  # noqa: E501
+def slivers_get(start_time=None, end_time=None, user_id=None, user_email=None, project_id=None, slice_id=None, slice_state=None, sliver_id=None, sliver_type=None, sliver_state=None, component_type=None, component_model=None, bdf=None, vlan=None, ip_subnet=None, site=None, host=None, page=None, per_page=None):  # noqa: E501
     """Get slivers
 
     Retrieve a list of slivers with optional filters. # noqa: E501
@@ -21,11 +18,13 @@ def slivers_get(start_time=None, end_time=None, user_id=None, user_email=None, p
     :type project_id: str
     :param slice_id: Filter by slice uuid
     :type slice_id: str
+    :param slice_state: Filter by slice state; allowed values Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK
+    :type slice_state: str
     :param sliver_id: Filter by sliver uuid
     :type sliver_id: str
     :param sliver_type: Filter by sliver type; allowed values VM, Switch, Facility, L2STS, L2PTP, L2Bridge, FABNetv4, FABNetv6, PortMirror, L3VPN, FABNetv4Ext, FABNetv6Ext
     :type sliver_type: str
-    :param sliver_state: Filter by sliver state; allowed values ascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
+    :param sliver_state: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
     :type sliver_state: str
     :param component_type: Filter by component type, allowed values GPU, SmartNIC, SharedNIC, FPGA, NVME, Storage
     :type component_type: str
@@ -48,8 +47,9 @@ def slivers_get(start_time=None, end_time=None, user_id=None, user_email=None, p
 
     :rtype: Slivers
     """
-    return rc.slivers_get(start_time=start_time, end_time=end_time, user_email=user_email, user_id=user_id,
-                          slice_id=slice_id, sliver_id=sliver_id, sliver_type=sliver_type, sliver_state=sliver_state,
-                          project_id=project_id, component_type=component_type, component_model=component_model,
-                          bdf=bdf, vlan=vlan, ip_subnet=ip_subnet, page=page, per_page=per_page, site=site,
-                          host=host)
+    return rc.slivers_get(start_time=start_time, end_time=end_time, user_email=user_email, user_id=user_id, vlan=vlan,
+                          sliver_id=sliver_id, sliver_type=sliver_type, slice_id=slice_id, bdf=bdf,
+                          sliver_state=sliver_state,site=site, host=host, slice_state=slice_state,
+                          project_id=project_id, component_model=component_model,
+                          component_type=component_type, ip_subnet=ip_subnet, page=page, per_page=per_page)
+

@@ -6,8 +6,8 @@ from datetime import date, datetime  # noqa: F401
 from typing import List, Dict  # noqa: F401
 
 from analytics_api.swagger_server.models.base_model_ import Model
-from analytics_api.swagger_server.models.component import Component  # noqa: F401,E501
-from analytics_api.swagger_server.models.interface import Interface  # noqa: F401,E501
+from analytics_api.swagger_server.models.sliver_components import SliverComponents  # noqa: F401,E501
+from analytics_api.swagger_server.models.sliver_interfaces import SliverInterfaces  # noqa: F401,E501
 from analytics_api.swagger_server import util
 
 
@@ -16,7 +16,7 @@ class Sliver(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, project_id: str=None, slice_id: str=None, user_id: str=None, host: str=None, site: str=None, sliver_id: str=None, node_id: str=None, state: str=None, sliver_type: str=None, ip_subnet: str=None, image: str=None, core: int=None, ram: int=None, disk: int=None, bandwidth: int=None, lease_start: datetime=None, lease_end: datetime=None, components: List[Component]=None, interfaces: List[Interface]=None):  # noqa: E501
+    def __init__(self, project_id: str=None, slice_id: str=None, user_id: str=None, host: str=None, site: str=None, sliver_id: str=None, node_id: str=None, state: str=None, sliver_type: str=None, ip_subnet: str=None, image: str=None, core: int=None, ram: int=None, disk: int=None, bandwidth: int=None, lease_start: datetime=None, lease_end: datetime=None, components: SliverComponents=None, interfaces: SliverInterfaces=None):  # noqa: E501
         """Sliver - a model defined in Swagger
 
         :param project_id: The project_id of this Sliver.  # noqa: E501
@@ -54,9 +54,9 @@ class Sliver(Model):
         :param lease_end: The lease_end of this Sliver.  # noqa: E501
         :type lease_end: datetime
         :param components: The components of this Sliver.  # noqa: E501
-        :type components: List[Component]
+        :type components: SliverComponents
         :param interfaces: The interfaces of this Sliver.  # noqa: E501
-        :type interfaces: List[Interface]
+        :type interfaces: SliverInterfaces
         """
         self.swagger_types = {
             'project_id': str,
@@ -76,8 +76,8 @@ class Sliver(Model):
             'bandwidth': int,
             'lease_start': datetime,
             'lease_end': datetime,
-            'components': List[Component],
-            'interfaces': List[Interface]
+            'components': SliverComponents,
+            'interfaces': SliverInterfaces
         }
 
         self.attribute_map = {
@@ -490,43 +490,43 @@ class Sliver(Model):
         self._lease_end = lease_end
 
     @property
-    def components(self) -> List[Component]:
+    def components(self) -> SliverComponents:
         """Gets the components of this Sliver.
 
 
         :return: The components of this Sliver.
-        :rtype: List[Component]
+        :rtype: SliverComponents
         """
         return self._components
 
     @components.setter
-    def components(self, components: List[Component]):
+    def components(self, components: SliverComponents):
         """Sets the components of this Sliver.
 
 
         :param components: The components of this Sliver.
-        :type components: List[Component]
+        :type components: SliverComponents
         """
 
         self._components = components
 
     @property
-    def interfaces(self) -> List[Interface]:
+    def interfaces(self) -> SliverInterfaces:
         """Gets the interfaces of this Sliver.
 
 
         :return: The interfaces of this Sliver.
-        :rtype: List[Interface]
+        :rtype: SliverInterfaces
         """
         return self._interfaces
 
     @interfaces.setter
-    def interfaces(self, interfaces: List[Interface]):
+    def interfaces(self, interfaces: SliverInterfaces):
         """Sets the interfaces of this Sliver.
 
 
         :param interfaces: The interfaces of this Sliver.
-        :type interfaces: List[Interface]
+        :type interfaces: SliverInterfaces
         """
 
         self._interfaces = interfaces

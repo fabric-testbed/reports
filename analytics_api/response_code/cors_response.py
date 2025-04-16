@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # MIT License
 #
-# Copyright (c) 2025 FABRIC Testbed
+# Copyright (component) 2025 FABRIC Testbed
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,7 @@
 #
 #
 # Author: Komal Thareja (kthare10@renci.org)
+import datetime
 import json
 import os
 from typing import Union
@@ -76,12 +77,26 @@ def cors_response(req: request, status_code: int = 200, body: object = None, x_e
     return response
 
 
+def sanitize_for_json(obj):
+    if isinstance(obj, dict):
+        return {k: sanitize_for_json(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [sanitize_for_json(i) for i in obj]
+    elif isinstance(obj, datetime.datetime):
+        return obj.isoformat()
+    elif isinstance(obj, datetime.date):
+        return obj.isoformat()
+    else:
+        return obj
+
+
 def cors_200(response_body: Union[Slices, Slivers, Version, Hosts, Users] = None) -> cors_response:
     """
     Return 200 - OK
     """
-    body = json.dumps(delete_none(response_body.to_dict()), indent=_INDENT, sort_keys=True) \
-        if _INDENT != 0 else json.dumps(delete_none(response_body.to_dict()), sort_keys=True)
+    sanitized_response_body = sanitize_for_json(response_body.to_dict())
+    body = json.dumps(delete_none(sanitized_response_body), indent=_INDENT, sort_keys=True) \
+        if _INDENT != 0 else json.dumps(delete_none(sanitized_response_body), sort_keys=True)
     return cors_response(
         req=request,
         status_code=200,

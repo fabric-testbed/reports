@@ -100,6 +100,28 @@ paths:
         explode: true
         schema:
           type: string
+      - name: slice_state
+        in: query
+        description: "Filter by slice state; allowed values Nascent, Configuring,\
+          \ StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError,\
+          \ AllocatedError, AllocatedOK"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          enum:
+          - Nascent
+          - Configuring
+          - StableError
+          - StableOK
+          - Closing
+          - Dead
+          - Modifying
+          - ModifyOK
+          - ModifyError
+          - AllocatedError
+          - AllocatedOK
       - name: sliver_id
         in: query
         description: Filter by sliver uuid
@@ -133,7 +155,7 @@ paths:
           - FABNetv6Ext
       - name: sliver_state
         in: query
-        description: "Filter by sliver state; allowed values ascent, Ticketed, Active,\
+        description: "Filter by sliver state; allowed values Nascent, Ticketed, Active,\
           \ ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail"
         required: false
         style: form
@@ -433,6 +455,28 @@ paths:
         explode: true
         schema:
           type: string
+      - name: slice_state
+        in: query
+        description: "Filter by slice state; allowed values Nascent, Configuring,\
+          \ StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError,\
+          \ AllocatedError, AllocatedOK"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          enum:
+          - Nascent
+          - Configuring
+          - StableError
+          - StableOK
+          - Closing
+          - Dead
+          - Modifying
+          - ModifyOK
+          - ModifyError
+          - AllocatedError
+          - AllocatedOK
       - name: sliver_id
         in: query
         description: Filter by sliver uuid
@@ -466,7 +510,7 @@ paths:
           - FABNetv6Ext
       - name: sliver_state
         in: query
-        description: "Filter by sliver state; allowed values ascent, Ticketed, Active,\
+        description: "Filter by sliver state; allowed values Nascent, Ticketed, Active,\
           \ ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail"
         required: false
         style: form
@@ -663,6 +707,28 @@ paths:
         explode: true
         schema:
           type: string
+      - name: slice_state
+        in: query
+        description: "Filter by slice state; allowed values Nascent, Configuring,\
+          \ StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError,\
+          \ AllocatedError, AllocatedOK"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          enum:
+          - Nascent
+          - Configuring
+          - StableError
+          - StableOK
+          - Closing
+          - Dead
+          - Modifying
+          - ModifyOK
+          - ModifyError
+          - AllocatedError
+          - AllocatedOK
       - name: sliver_id
         in: query
         description: Filter by sliver uuid
@@ -696,7 +762,7 @@ paths:
           - FABNetv6Ext
       - name: sliver_state
         in: query
-        description: "Filter by sliver state; allowed values ascent, Ticketed, Active,\
+        description: "Filter by sliver state; allowed values Nascent, Ticketed, Active,\
           \ ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail"
         required: false
         style: form
@@ -893,6 +959,28 @@ paths:
         explode: true
         schema:
           type: string
+      - name: slice_state
+        in: query
+        description: "Filter by slice state; allowed values Nascent, Configuring,\
+          \ StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError,\
+          \ AllocatedError, AllocatedOK"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          enum:
+          - Nascent
+          - Configuring
+          - StableError
+          - StableOK
+          - Closing
+          - Dead
+          - Modifying
+          - ModifyOK
+          - ModifyError
+          - AllocatedError
+          - AllocatedOK
       - name: sliver_id
         in: query
         description: Filter by sliver uuid
@@ -926,7 +1014,7 @@ paths:
           - FABNetv6Ext
       - name: sliver_state
         in: query
-        description: "Filter by sliver state; allowed values ascent, Ticketed, Active,\
+        description: "Filter by sliver state; allowed values Nascent, Ticketed, Active,\
           \ ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail"
         required: false
         style: form
@@ -1109,9 +1197,7 @@ components:
         project_name:
           type: string
         users:
-          type: array
-          items:
-            $ref: '#/components/schemas/user'
+          $ref: '#/components/schemas/project_users'
     users:
       type: object
       allOf:
@@ -1130,9 +1216,7 @@ components:
         user_email:
           type: string
         slices:
-          type: array
-          items:
-            $ref: '#/components/schemas/slice'
+          $ref: '#/components/schemas/user_slices'
     slices:
       type: object
       allOf:
@@ -1163,9 +1247,7 @@ components:
           type: string
           format: date-time
         slivers:
-          type: array
-          items:
-            $ref: '#/components/schemas/sliver'
+          $ref: '#/components/schemas/slice_slivers'
     slivers:
       type: object
       allOf:
@@ -1216,13 +1298,9 @@ components:
           type: string
           format: date-time
         components:
-          type: array
-          items:
-            $ref: '#/components/schemas/component'
+          $ref: '#/components/schemas/sliver_components'
         interfaces:
-          type: array
-          items:
-            $ref: '#/components/schemas/interface'
+          $ref: '#/components/schemas/sliver_interfaces'
     component:
       type: object
       properties:
@@ -1423,6 +1501,51 @@ components:
         version:
           type: string
           example: 1.0.0
+    project_users:
+      type: object
+      properties:
+        total:
+          type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/user'
+    user_slices:
+      type: object
+      properties:
+        total:
+          type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/slice'
+    slice_slivers:
+      type: object
+      properties:
+        total:
+          type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/sliver'
+    sliver_components:
+      type: object
+      properties:
+        total:
+          type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/component'
+    sliver_interfaces:
+      type: object
+      properties:
+        total:
+          type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/interface'
   parameters:
     startTime:
       name: start_time
@@ -1541,7 +1664,7 @@ components:
     sliverState:
       name: sliver_state
       in: query
-      description: "Filter by sliver state; allowed values ascent, Ticketed, Active,\
+      description: "Filter by sliver state; allowed values Nascent, Ticketed, Active,\
         \ ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail"
       required: false
       style: form
@@ -1558,6 +1681,29 @@ components:
         - Failed
         - Unknown
         - CloseFail
+    sliceState:
+      name: slice_state
+      in: query
+      description: "Filter by slice state; allowed values Nascent, Configuring, StableError,\
+        \ StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError,\
+        \ AllocatedOK"
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: string
+        enum:
+        - Nascent
+        - Configuring
+        - StableError
+        - StableOK
+        - Closing
+        - Dead
+        - Modifying
+        - ModifyOK
+        - ModifyError
+        - AllocatedError
+        - AllocatedOK
     site:
       name: site
       in: query

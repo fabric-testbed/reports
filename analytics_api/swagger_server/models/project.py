@@ -6,7 +6,7 @@ from datetime import date, datetime  # noqa: F401
 from typing import List, Dict  # noqa: F401
 
 from analytics_api.swagger_server.models.base_model_ import Model
-from analytics_api.swagger_server.models.user import User  # noqa: F401,E501
+from analytics_api.swagger_server.models.project_users import ProjectUsers  # noqa: F401,E501
 from analytics_api.swagger_server import util
 
 
@@ -15,7 +15,7 @@ class Project(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, project_id: str=None, project_name: str=None, users: List[User]=None):  # noqa: E501
+    def __init__(self, project_id: str=None, project_name: str=None, users: ProjectUsers=None):  # noqa: E501
         """Project - a model defined in Swagger
 
         :param project_id: The project_id of this Project.  # noqa: E501
@@ -23,12 +23,12 @@ class Project(Model):
         :param project_name: The project_name of this Project.  # noqa: E501
         :type project_name: str
         :param users: The users of this Project.  # noqa: E501
-        :type users: List[User]
+        :type users: ProjectUsers
         """
         self.swagger_types = {
             'project_id': str,
             'project_name': str,
-            'users': List[User]
+            'users': ProjectUsers
         }
 
         self.attribute_map = {
@@ -94,22 +94,22 @@ class Project(Model):
         self._project_name = project_name
 
     @property
-    def users(self) -> List[User]:
+    def users(self) -> ProjectUsers:
         """Gets the users of this Project.
 
 
         :return: The users of this Project.
-        :rtype: List[User]
+        :rtype: ProjectUsers
         """
         return self._users
 
     @users.setter
-    def users(self, users: List[User]):
+    def users(self, users: ProjectUsers):
         """Sets the users of this Project.
 
 
         :param users: The users of this Project.
-        :type users: List[User]
+        :type users: ProjectUsers
         """
 
         self._users = users

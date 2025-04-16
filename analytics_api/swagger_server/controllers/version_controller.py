@@ -1,4 +1,3 @@
-from analytics_api.swagger_server.models.version import Version  # noqa: E501
 from analytics_api.response_code import version_controller as rc
 
 

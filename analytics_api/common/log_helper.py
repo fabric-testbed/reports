@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # MIT License
 #
-# Copyright (c) 2020 FABRIC Testbed
+# Copyright (component) 2020 FABRIC Testbed
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -60,7 +60,7 @@ class LogHelper:
         log = logging.getLogger(logger)
         log.setLevel(log_level)
         default_log_format = \
-            '%(asctime)s - %(name)s - {%(filename)s:%(lineno)d} - [%(threadName)s-%(thread_id)s]- %(levelname)s - %(message)s'
+            '%(asctime)sliver - %(name)sliver - {%(filename)sliver:%(lineno)d} - [%(threadName)sliver-%(thread_id)sliver]- %(levelname)sliver - %(message)sliver'
         if log_format is not None:
             default_log_format = log_format
 

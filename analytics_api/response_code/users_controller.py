@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # MIT License
 #
-# Copyright (c) 2025 FABRIC Testbed
+# Copyright (component) 2025 FABRIC Testbed
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -28,17 +28,17 @@ from datetime import datetime
 from analytics_api.common.globals import GlobalsSingleton
 from analytics_api.database.db_manager import DatabaseManager
 from analytics_api.response_code.cors_response import cors_500
-from analytics_api.response_code.sliver_states import SliverStates
+from analytics_api.response_code.slice_sliver_states import SliverStates, SliceState
 from analytics_api.response_code.utils import authorize, cors_success_response
-from analytics_api.swagger_server.models import User
+from analytics_api.swagger_server.models.user import User
 from analytics_api.swagger_server.models.users import Users  # noqa: E501
 
 
-def users_get(start_time: str = None, end_time: str = None, user_email: str = None, sliver_id: str = None,
-              user_id: str = None, project_id: str = None, component_type: str = None, slice_id: str = None,
-              component_model: str = None, sliver_type: str = None, sliver_state: str = None, site: str = None,
-              ip_subnet: str = None, bdf: str = None, vlan: str = None, host: str = None, page: int = 0,
-              per_page: int = 100):
+def users_get(start_time: str = None, end_time: str = None, user_email: str = None,  user_id: str = None,
+              project_id: str = None, component_type: str = None, slice_id: str = None, slice_state: str = None,
+              component_model: str = None, sliver_type: str = None, sliver_id: str = None, sliver_state: str = None,
+              site: str = None, ip_subnet: str = None, bdf: str = None, vlan: str = None, host: str = None,
+              page: int = 0, per_page: int = 100):
     """
     Retrieve a list of slivers filtered by time range, user, project, slice, component, and network-related fields.
 
@@ -58,6 +58,8 @@ def users_get(start_time: str = None, end_time: str = None, user_email: str = No
     :type component_type: str, optional
     :param slice_id: Filter by slice ID containing the sliver.
     :type slice_id: str, optional
+    :param slice_state: Filter by slice state; allowed values Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK
+    :type slice_state: str
     :param component_model: Filter by model of the attached component (e.g., Tesla T4, ConnectX-5).
     :type component_model: str, optional
     :param sliver_type: Filter by type of sliver (e.g., VM, BareMetal).
@@ -70,7 +72,7 @@ def users_get(start_time: str = None, end_time: str = None, user_email: str = No
     :type ip_subnet: str, optional
     :param bdf: Filter by PCI BDF (Bus:Device.Function) of a device/interface.
     :type bdf: str, optional
-    :param vlan: Filter by VLAN associated with the sliver's interface.
+    :param vlan: Filter by VLAN associated with the sliver'sliver interface.
     :type vlan: str, optional
     :param host: Filter by hostname where the sliver is instantiated.
     :type host: str, optional
@@ -99,12 +101,13 @@ def users_get(start_time: str = None, end_time: str = None, user_email: str = No
         users = db_mgr.get_users(start_time=start, end_time=end, user_email=user_email, user_id=user_id, vlan=vlan,
                                  sliver_id=sliver_id, sliver_type=sliver_type, slice_id=slice_id, bdf=bdf,
                                  sliver_state=SliverStates.translate(sliver_state), site=site, host=host,
-                                 project_id=project_id, component_model=component_model,
+                                 project_id=project_id, component_model=component_model, slice_state=SliceState.translate(slice_state),
                                  component_type=component_type, ip_subnet=ip_subnet, page=page, per_page=per_page)
-        for u in users:
+        for u in users.get("users"):
             response.data.append(User.from_dict(u))
         response.size = len(response.data)
         response.type = "users"
+        response.total =users.get("total")
         return cors_success_response(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with users_get(): {0}'.format(exc)

@@ -28,6 +28,7 @@ class TestSliversController(BaseTestCase):
                         ('user_email', 'user_email_example'),
                         ('project_id', 'project_id_example'),
                         ('slice_id', 'slice_id_example'),
+                        ('slice_state', 'slice_state_example'),
                         ('sliver_id', 'sliver_id_example'),
                         ('sliver_type', 'sliver_type_example'),
                         ('sliver_state', 'sliver_state_example'),

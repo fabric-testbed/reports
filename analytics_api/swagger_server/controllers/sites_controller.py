@@ -1,4 +1,3 @@
-from analytics_api.swagger_server.models.sites import Sites  # noqa: E501
 from analytics_api.response_code import sites_controller as rc
 
 

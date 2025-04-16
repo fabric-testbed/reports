@@ -22,7 +22,7 @@ DIRS_TO_COPY=(
 )
 
 swagger-codegen generate -i openapi.json -l python-flask -o ${STUB_DIR}
-find ${STUB_DIR}/swagger_server \( -type d -name .git -prune \) -o -type f -print0 | xargs -0 sed -i '' 's/swagger_server/analytics_api.swagger_server/g'
+find ${STUB_DIR}/swagger_server \( -type d -name .git -prune \) -o -type f -print0 | xargs -0 sed -i '' 'sliver/swagger_server/analytics_api.swagger_server/g'
 
 
 # check for STUB_DIR directory
@@ -62,9 +62,9 @@ echo "[INFO] update controllers to include response import"
 while read f; do
     echo "---------------------------------------------------"
     echo "[INFO] updating file: ${f}"
-    sed -i '' "/from swagger_server import util/a from swagger_server.response_code import ${f%???} as rc" \
+    sed -i '' "/from swagger_server import util/a from response_code import ${f%???} as rc" \
         $WORKING_DIR/controllers/${f}
-    sed -i '' "s/from analytics_api.swagger_server import util/from analytics_api.swagger_server import util\\"$'\n'\\"from analytics_api.swagger_server.response import ${f%???} as rc/g" \
+    sed -i '' "s/from analytics_api.swagger_server import util/from analytics_api.swagger_server import util\\"$'\n'\\"from analytics_api.response_code import ${f%???} as rc/g" \
     $WORKING_DIR/controllers/${f}
     while read line; do
         if [[ $line == def* ]]; then

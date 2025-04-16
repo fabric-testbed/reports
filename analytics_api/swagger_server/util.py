@@ -85,8 +85,9 @@ def deserialize_datetime(string):
     :rtype: datetime
     """
     try:
-        from dateutil.parser import parse
-        return parse(string)
+        return datetime.datetime.fromisoformat(string)
+        #from dateutil.parser import parse
+        #return parse(string)
     except ImportError:
         return string
 

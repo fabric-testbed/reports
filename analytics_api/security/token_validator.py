@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # MIT License
 #
-# Copyright (c) 2020 FABRIC Testbed
+# Copyright (component) 2020 FABRIC Testbed
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -48,7 +48,7 @@ class TokenValidator:
                  jwt_validator: JWTValidator):
         """ Initialize a validator with an endpoint URL presenting Token revoke list,
         a refresh period for keys expressed as datetime.timedelta and
-        audience (i.e. CI Logon client id cilogon:/client_id/1234567890).
+        audience (interface.e. CI Logon client id cilogon:/client_id/1234567890).
         :param credmgr_host:
         :param refresh_period:
         """

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # MIT License
 #
-# Copyright (c) 2025 FABRIC Testbed
+# Copyright (component) 2025 FABRIC Testbed
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -30,14 +30,8 @@ from analytics_api.common.globals import GlobalsSingleton
 from analytics_api.database.db_manager import DatabaseManager
 from analytics_api.response_code.cors_response import cors_500
 from analytics_api.response_code.utils import authorize, cors_success_response
-from analytics_api.swagger_server.models import Site
+from analytics_api.swagger_server.models.site import Site
 from analytics_api.swagger_server.models.sites import Sites  # noqa: E501
-from analytics_api.swagger_server.models.status400_bad_request import Status400BadRequest  # noqa: E501
-from analytics_api.swagger_server.models.status401_unauthorized import Status401Unauthorized  # noqa: E501
-from analytics_api.swagger_server.models.status403_forbidden import Status403Forbidden  # noqa: E501
-from analytics_api.swagger_server.models.status404_not_found import Status404NotFound  # noqa: E501
-from analytics_api.swagger_server.models.status500_internal_server_error import Status500InternalServerError  # noqa: E501
-from analytics_api.swagger_server import util
 
 
 def sites_get():  # noqa: E501

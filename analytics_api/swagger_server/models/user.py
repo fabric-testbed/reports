@@ -6,7 +6,7 @@ from datetime import date, datetime  # noqa: F401
 from typing import List, Dict  # noqa: F401
 
 from analytics_api.swagger_server.models.base_model_ import Model
-from analytics_api.swagger_server.models.slice import Slice  # noqa: F401,E501
+from analytics_api.swagger_server.models.user_slices import UserSlices  # noqa: F401,E501
 from analytics_api.swagger_server import util
 
 
@@ -15,7 +15,7 @@ class User(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, user_id: str=None, user_email: str=None, slices: List[Slice]=None):  # noqa: E501
+    def __init__(self, user_id: str=None, user_email: str=None, slices: UserSlices=None):  # noqa: E501
         """User - a model defined in Swagger
 
         :param user_id: The user_id of this User.  # noqa: E501
@@ -23,12 +23,12 @@ class User(Model):
         :param user_email: The user_email of this User.  # noqa: E501
         :type user_email: str
         :param slices: The slices of this User.  # noqa: E501
-        :type slices: List[Slice]
+        :type slices: UserSlices
         """
         self.swagger_types = {
             'user_id': str,
             'user_email': str,
-            'slices': List[Slice]
+            'slices': UserSlices
         }
 
         self.attribute_map = {
@@ -94,22 +94,22 @@ class User(Model):
         self._user_email = user_email
 
     @property
-    def slices(self) -> List[Slice]:
+    def slices(self) -> UserSlices:
         """Gets the slices of this User.
 
 
         :return: The slices of this User.
-        :rtype: List[Slice]
+        :rtype: UserSlices
         """
         return self._slices
 
     @slices.setter
-    def slices(self, slices: List[Slice]):
+    def slices(self, slices: UserSlices):
         """Sets the slices of this User.
 
 
         :param slices: The slices of this User.
-        :type slices: List[Slice]
+        :type slices: UserSlices
         """
 
         self._slices = slices

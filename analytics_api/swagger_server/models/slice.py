@@ -6,7 +6,7 @@ from datetime import date, datetime  # noqa: F401
 from typing import List, Dict  # noqa: F401
 
 from analytics_api.swagger_server.models.base_model_ import Model
-from analytics_api.swagger_server.models.sliver import Sliver  # noqa: F401,E501
+from analytics_api.swagger_server.models.slice_slivers import SliceSlivers  # noqa: F401,E501
 from analytics_api.swagger_server import util
 
 
@@ -15,7 +15,7 @@ class Slice(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, project_id: str=None, user_id: str=None, slice_id: str=None, slice_name: str=None, state: str=None, lease_start: datetime=None, lease_end: datetime=None, slivers: List[Sliver]=None):  # noqa: E501
+    def __init__(self, project_id: str=None, user_id: str=None, slice_id: str=None, slice_name: str=None, state: str=None, lease_start: datetime=None, lease_end: datetime=None, slivers: SliceSlivers=None):  # noqa: E501
         """Slice - a model defined in Swagger
 
         :param project_id: The project_id of this Slice.  # noqa: E501
@@ -33,7 +33,7 @@ class Slice(Model):
         :param lease_end: The lease_end of this Slice.  # noqa: E501
         :type lease_end: datetime
         :param slivers: The slivers of this Slice.  # noqa: E501
-        :type slivers: List[Sliver]
+        :type slivers: SliceSlivers
         """
         self.swagger_types = {
             'project_id': str,
@@ -43,7 +43,7 @@ class Slice(Model):
             'state': str,
             'lease_start': datetime,
             'lease_end': datetime,
-            'slivers': List[Sliver]
+            'slivers': SliceSlivers
         }
 
         self.attribute_map = {
@@ -224,22 +224,22 @@ class Slice(Model):
         self._lease_end = lease_end
 
     @property
-    def slivers(self) -> List[Sliver]:
+    def slivers(self) -> SliceSlivers:
         """Gets the slivers of this Slice.
 
 
         :return: The slivers of this Slice.
-        :rtype: List[Sliver]
+        :rtype: SliceSlivers
         """
         return self._slivers
 
     @slivers.setter
-    def slivers(self, slivers: List[Sliver]):
+    def slivers(self, slivers: SliceSlivers):
         """Sets the slivers of this Slice.
 
 
         :param slivers: The slivers of this Slice.
-        :type slivers: List[Sliver]
+        :type slivers: SliceSlivers
         """
 
         self._slivers = slivers
