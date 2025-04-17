@@ -123,7 +123,7 @@ app.layout = html.Div([
             html.Label("Select Component Type:"),
             dcc.Dropdown(
                 id="resource-dropdown",
-                options=[{"label": c, "value": c} for c in ["SharedNIC", "SmartNIC", "FPGA", "GPU", "NVME", "Storage"]],
+                options=[{"label": component, "value": component} for component in ["SharedNIC", "SmartNIC", "FPGA", "GPU", "NVME", "Storage"]],
                 placeholder="Select a component"
             ),
             html.Label("Select User:"),

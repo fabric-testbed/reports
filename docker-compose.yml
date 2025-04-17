@@ -1,7 +1,7 @@
 services:
   database:
     image: fabrictestbed/postgres:12.3
-    container_name: analytics-db
+    container_name: reports-db
     ports:
       - 5432:5432
     networks:
@@ -21,7 +21,7 @@ services:
 
   nginx:
     image: library/nginx:1
-    container_name: analytics-nginx
+    container_name: reports-nginx
     networks:
       - frontend
       - backend
@@ -35,29 +35,33 @@ services:
       - ./nginx-logs:/var/log/nginx
     restart: always
 
-  analytics-api:
-    build: ./analytics-api
-    container_name: analytics-api
+  reports-api:
+    build:
+      context: reports_api/
+      dockerfile: Dockerfile
+    container_name: reports-api
+    image: reports-api:latest
     restart: always
-    depends_on:
-      - database
+    #depends_on:
+    #  - database
     networks:
       - backend   # Ensure the API is on the backend network
     environment:
-      DATABASE_URL: "postgresql://fabric:fabric@analytics-db:5432/analytics"
-
+      DATABASE_URL: "postgresql://fabric:fabric@reports-db:5432/analytics"
+    volumes:
+      - ./reports_api/config.yml:/usr/src/app/config.yml
   dash-app:
     build: ./dash-app
     container_name: dash-app
     depends_on:
-      - analytics-api
+      - reports-api
     networks:
       - backend   # Ensure the API is on the backend network
     environment:
-      - API_URL=http://analytics-api:5000
+      - API_URL=http://reports-api:5000
 
   vouch-proxy:
-    container_name: analytics-vouch-proxy
+    container_name: reports-vouch-proxy
     networks:
       - frontend
       - backend
