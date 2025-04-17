@@ -58,7 +58,7 @@ services:
     networks:
       - backend   # Ensure the API is on the backend network
     environment:
-      - API_URL=http://reports-api:5000
+      - API_URL=http://reports-api:8080
 
   vouch-proxy:
     container_name: reports-vouch-proxy

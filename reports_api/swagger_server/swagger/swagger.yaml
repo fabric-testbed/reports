@@ -4,7 +4,7 @@ info:
   description: "API for managing users, projects, slices, slivers, and related entities."
   version: 1.0.0
 servers:
-- url: http://localhost:5000
+- url: http://localhost:8080/reports/
 tags:
 - name: users
   description: Users in FABRIC
