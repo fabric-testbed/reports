@@ -1,4 +1,4 @@
-# sliver-analytics
+# reports
 ## Overview
 The Sliver Analytics Dashboard is a web-based tool for tracking and analyzing sliver allocations across projects and users. It provides insights into resource usage with time-based, user-based, and project-based filtering.
 
