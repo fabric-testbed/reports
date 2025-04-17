@@ -10,7 +10,7 @@ COPY . /usr/src/app/reports_api
 COPY README.md /usr/src/app/
 COPY LICENSE /usr/src/app/
 
-RUN pip3 install --no-cache-dir -r /usr/src/app/requirements.txt
+RUN pip3 install --no-cache-dir -r /usr/src/app/reports_api/requirements.txt
 
 EXPOSE 8080
 

@@ -41,7 +41,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/status_500_internal_server_error'
-      x-openapi-router-controller: analytics_api.swagger_server.controllers.version_controller
+      x-openapi-router-controller: reports_api.swagger_server.controllers.version_controller
   /users:
     get:
       tags:
@@ -293,7 +293,7 @@ paths:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       security:
       - bearerAuth: []
-      x-openapi-router-controller: analytics_api.swagger_server.controllers.users_controller
+      x-openapi-router-controller: reports_api.swagger_server.controllers.users_controller
   /sites:
     get:
       tags:
@@ -340,7 +340,7 @@ paths:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       security:
       - bearerAuth: []
-      x-openapi-router-controller: analytics_api.swagger_server.controllers.sites_controller
+      x-openapi-router-controller: reports_api.swagger_server.controllers.sites_controller
   /hosts:
     get:
       tags:
@@ -396,7 +396,7 @@ paths:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       security:
       - bearerAuth: []
-      x-openapi-router-controller: analytics_api.swagger_server.controllers.hosts_controller
+      x-openapi-router-controller: reports_api.swagger_server.controllers.hosts_controller
   /slivers:
     get:
       tags:
@@ -648,7 +648,7 @@ paths:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       security:
       - bearerAuth: []
-      x-openapi-router-controller: analytics_api.swagger_server.controllers.slivers_controller
+      x-openapi-router-controller: reports_api.swagger_server.controllers.slivers_controller
   /projects:
     get:
       tags:
@@ -900,7 +900,7 @@ paths:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       security:
       - bearerAuth: []
-      x-openapi-router-controller: analytics_api.swagger_server.controllers.projects_controller
+      x-openapi-router-controller: reports_api.swagger_server.controllers.projects_controller
   /slices:
     get:
       tags:
@@ -1152,7 +1152,7 @@ paths:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       security:
       - bearerAuth: []
-      x-openapi-router-controller: analytics_api.swagger_server.controllers.slices_controller
+      x-openapi-router-controller: reports_api.swagger_server.controllers.slices_controller
 components:
   schemas:
     sites:
