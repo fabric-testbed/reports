@@ -75,7 +75,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: user_email
         in: query
         description: Filter by user email
@@ -83,7 +85,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: project_id
         in: query
         description: Filter by project uuid
@@ -91,7 +95,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: slice_id
         in: query
         description: Filter by slice uuid
@@ -99,7 +105,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: slice_state
         in: query
         description: "Filter by slice state; allowed values Nascent, Configuring,\
@@ -109,19 +117,21 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
-          enum:
-          - Nascent
-          - Configuring
-          - StableError
-          - StableOK
-          - Closing
-          - Dead
-          - Modifying
-          - ModifyOK
-          - ModifyError
-          - AllocatedError
-          - AllocatedOK
+          type: array
+          items:
+            type: string
+            enum:
+            - Nascent
+            - Configuring
+            - StableError
+            - StableOK
+            - Closing
+            - Dead
+            - Modifying
+            - ModifyOK
+            - ModifyError
+            - AllocatedError
+            - AllocatedOK
       - name: sliver_id
         in: query
         description: Filter by sliver uuid
@@ -129,7 +139,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: sliver_type
         in: query
         description: "Filter by sliver type; allowed values VM, Switch, Facility,\
@@ -139,20 +151,22 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
-          enum:
-          - VM
-          - Switch
-          - Facility
-          - L2STS
-          - L2PTP
-          - L2Bridge
-          - FABNetv4
-          - FABNetv6
-          - PortMirror
-          - L3VPN
-          - FABNetv4Ext
-          - FABNetv6Ext
+          type: array
+          items:
+            type: string
+            enum:
+            - VM
+            - Switch
+            - Facility
+            - L2STS
+            - L2PTP
+            - L2Bridge
+            - FABNetv4
+            - FABNetv6
+            - PortMirror
+            - L3VPN
+            - FABNetv4Ext
+            - FABNetv6Ext
       - name: sliver_state
         in: query
         description: "Filter by sliver state; allowed values Nascent, Ticketed, Active,\
@@ -161,17 +175,19 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
-          enum:
-          - Nascent
-          - Ticketed
-          - Active
-          - ActiveTicketed
-          - Closed
-          - CloseWait
-          - Failed
-          - Unknown
-          - CloseFail
+          type: array
+          items:
+            type: string
+            enum:
+            - Nascent
+            - Ticketed
+            - Active
+            - ActiveTicketed
+            - Closed
+            - CloseWait
+            - Failed
+            - Unknown
+            - CloseFail
       - name: component_type
         in: query
         description: "Filter by component type, allowed values GPU, SmartNIC, SharedNIC,\
@@ -180,14 +196,16 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
-          enum:
-          - GPU
-          - SmartNIC
-          - SharedNIC
-          - FPGA
-          - NVME
-          - Storage
+          type: array
+          items:
+            type: string
+            enum:
+            - GPU
+            - SmartNIC
+            - SharedNIC
+            - FPGA
+            - NVME
+            - Storage
       - name: component_model
         in: query
         description: Filter by component model
@@ -195,7 +213,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: bdf
         in: query
         description: Filter by specified BDF (Bus:Device.Function) of interfaces/components
@@ -203,7 +223,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: vlan
         in: query
         description: Filter by VLAN associated with their sliver interfaces.
@@ -211,7 +233,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: ip_subnet
         in: query
         description: Filter by specified IP subnet
@@ -219,7 +243,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: site
         in: query
         description: Filter by site
@@ -227,7 +253,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: host
         in: query
         description: Filter by host
@@ -235,7 +263,59 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
+      - name: exclude_user_id
+        in: query
+        description: Exclude Users by IDs
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: exclude_user_email
+        in: query
+        description: Exclude Users by emails
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: exclude_project_id
+        in: query
+        description: Exclude projects
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: exclude_site
+        in: query
+        description: Exclude sites
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: exclude_host
+        in: query
+        description: Exclude hosts
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
       - name: page
         in: query
         description: Page number for pagination. Default is 1.
@@ -356,7 +436,19 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
+      - name: exclude_site
+        in: query
+        description: Exclude sites
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
       responses:
         "200":
           description: OK
@@ -430,7 +522,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: user_email
         in: query
         description: Filter by user email
@@ -438,7 +532,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: project_id
         in: query
         description: Filter by project uuid
@@ -446,7 +542,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: slice_id
         in: query
         description: Filter by slice uuid
@@ -454,7 +552,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: slice_state
         in: query
         description: "Filter by slice state; allowed values Nascent, Configuring,\
@@ -464,19 +564,21 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
-          enum:
-          - Nascent
-          - Configuring
-          - StableError
-          - StableOK
-          - Closing
-          - Dead
-          - Modifying
-          - ModifyOK
-          - ModifyError
-          - AllocatedError
-          - AllocatedOK
+          type: array
+          items:
+            type: string
+            enum:
+            - Nascent
+            - Configuring
+            - StableError
+            - StableOK
+            - Closing
+            - Dead
+            - Modifying
+            - ModifyOK
+            - ModifyError
+            - AllocatedError
+            - AllocatedOK
       - name: sliver_id
         in: query
         description: Filter by sliver uuid
@@ -484,7 +586,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: sliver_type
         in: query
         description: "Filter by sliver type; allowed values VM, Switch, Facility,\
@@ -494,20 +598,22 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
-          enum:
-          - VM
-          - Switch
-          - Facility
-          - L2STS
-          - L2PTP
-          - L2Bridge
-          - FABNetv4
-          - FABNetv6
-          - PortMirror
-          - L3VPN
-          - FABNetv4Ext
-          - FABNetv6Ext
+          type: array
+          items:
+            type: string
+            enum:
+            - VM
+            - Switch
+            - Facility
+            - L2STS
+            - L2PTP
+            - L2Bridge
+            - FABNetv4
+            - FABNetv6
+            - PortMirror
+            - L3VPN
+            - FABNetv4Ext
+            - FABNetv6Ext
       - name: sliver_state
         in: query
         description: "Filter by sliver state; allowed values Nascent, Ticketed, Active,\
@@ -516,17 +622,19 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
-          enum:
-          - Nascent
-          - Ticketed
-          - Active
-          - ActiveTicketed
-          - Closed
-          - CloseWait
-          - Failed
-          - Unknown
-          - CloseFail
+          type: array
+          items:
+            type: string
+            enum:
+            - Nascent
+            - Ticketed
+            - Active
+            - ActiveTicketed
+            - Closed
+            - CloseWait
+            - Failed
+            - Unknown
+            - CloseFail
       - name: component_type
         in: query
         description: "Filter by component type, allowed values GPU, SmartNIC, SharedNIC,\
@@ -535,14 +643,16 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
-          enum:
-          - GPU
-          - SmartNIC
-          - SharedNIC
-          - FPGA
-          - NVME
-          - Storage
+          type: array
+          items:
+            type: string
+            enum:
+            - GPU
+            - SmartNIC
+            - SharedNIC
+            - FPGA
+            - NVME
+            - Storage
       - name: component_model
         in: query
         description: Filter by component model
@@ -550,7 +660,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: bdf
         in: query
         description: Filter by specified BDF (Bus:Device.Function) of interfaces/components
@@ -558,7 +670,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: vlan
         in: query
         description: Filter by VLAN associated with their sliver interfaces.
@@ -566,7 +680,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: ip_subnet
         in: query
         description: Filter by specified IP subnet
@@ -574,7 +690,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: site
         in: query
         description: Filter by site
@@ -582,7 +700,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: host
         in: query
         description: Filter by host
@@ -590,7 +710,59 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
+      - name: exclude_user_id
+        in: query
+        description: Exclude Users by IDs
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: exclude_user_email
+        in: query
+        description: Exclude Users by emails
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: exclude_project_id
+        in: query
+        description: Exclude projects
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: exclude_site
+        in: query
+        description: Exclude sites
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: exclude_host
+        in: query
+        description: Exclude hosts
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
       - name: page
         in: query
         description: Page number for pagination. Default is 1.
@@ -682,7 +854,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: user_email
         in: query
         description: Filter by user email
@@ -690,7 +864,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: project_id
         in: query
         description: Filter by project uuid
@@ -698,7 +874,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: slice_id
         in: query
         description: Filter by slice uuid
@@ -706,7 +884,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: slice_state
         in: query
         description: "Filter by slice state; allowed values Nascent, Configuring,\
@@ -716,19 +896,21 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
-          enum:
-          - Nascent
-          - Configuring
-          - StableError
-          - StableOK
-          - Closing
-          - Dead
-          - Modifying
-          - ModifyOK
-          - ModifyError
-          - AllocatedError
-          - AllocatedOK
+          type: array
+          items:
+            type: string
+            enum:
+            - Nascent
+            - Configuring
+            - StableError
+            - StableOK
+            - Closing
+            - Dead
+            - Modifying
+            - ModifyOK
+            - ModifyError
+            - AllocatedError
+            - AllocatedOK
       - name: sliver_id
         in: query
         description: Filter by sliver uuid
@@ -736,7 +918,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: sliver_type
         in: query
         description: "Filter by sliver type; allowed values VM, Switch, Facility,\
@@ -746,20 +930,22 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
-          enum:
-          - VM
-          - Switch
-          - Facility
-          - L2STS
-          - L2PTP
-          - L2Bridge
-          - FABNetv4
-          - FABNetv6
-          - PortMirror
-          - L3VPN
-          - FABNetv4Ext
-          - FABNetv6Ext
+          type: array
+          items:
+            type: string
+            enum:
+            - VM
+            - Switch
+            - Facility
+            - L2STS
+            - L2PTP
+            - L2Bridge
+            - FABNetv4
+            - FABNetv6
+            - PortMirror
+            - L3VPN
+            - FABNetv4Ext
+            - FABNetv6Ext
       - name: sliver_state
         in: query
         description: "Filter by sliver state; allowed values Nascent, Ticketed, Active,\
@@ -768,17 +954,19 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
-          enum:
-          - Nascent
-          - Ticketed
-          - Active
-          - ActiveTicketed
-          - Closed
-          - CloseWait
-          - Failed
-          - Unknown
-          - CloseFail
+          type: array
+          items:
+            type: string
+            enum:
+            - Nascent
+            - Ticketed
+            - Active
+            - ActiveTicketed
+            - Closed
+            - CloseWait
+            - Failed
+            - Unknown
+            - CloseFail
       - name: component_type
         in: query
         description: "Filter by component type, allowed values GPU, SmartNIC, SharedNIC,\
@@ -787,14 +975,16 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
-          enum:
-          - GPU
-          - SmartNIC
-          - SharedNIC
-          - FPGA
-          - NVME
-          - Storage
+          type: array
+          items:
+            type: string
+            enum:
+            - GPU
+            - SmartNIC
+            - SharedNIC
+            - FPGA
+            - NVME
+            - Storage
       - name: component_model
         in: query
         description: Filter by component model
@@ -802,7 +992,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: bdf
         in: query
         description: Filter by specified BDF (Bus:Device.Function) of interfaces/components
@@ -810,7 +1002,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: vlan
         in: query
         description: Filter by VLAN associated with their sliver interfaces.
@@ -818,7 +1012,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: ip_subnet
         in: query
         description: Filter by specified IP subnet
@@ -826,7 +1022,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: site
         in: query
         description: Filter by site
@@ -834,7 +1032,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: host
         in: query
         description: Filter by host
@@ -842,7 +1042,59 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
+      - name: exclude_user_id
+        in: query
+        description: Exclude Users by IDs
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: exclude_user_email
+        in: query
+        description: Exclude Users by emails
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: exclude_project_id
+        in: query
+        description: Exclude projects
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: exclude_site
+        in: query
+        description: Exclude sites
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: exclude_host
+        in: query
+        description: Exclude hosts
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
       - name: page
         in: query
         description: Page number for pagination. Default is 1.
@@ -934,7 +1186,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: user_email
         in: query
         description: Filter by user email
@@ -942,7 +1196,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: project_id
         in: query
         description: Filter by project uuid
@@ -950,7 +1206,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: slice_id
         in: query
         description: Filter by slice uuid
@@ -958,7 +1216,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: slice_state
         in: query
         description: "Filter by slice state; allowed values Nascent, Configuring,\
@@ -968,19 +1228,21 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
-          enum:
-          - Nascent
-          - Configuring
-          - StableError
-          - StableOK
-          - Closing
-          - Dead
-          - Modifying
-          - ModifyOK
-          - ModifyError
-          - AllocatedError
-          - AllocatedOK
+          type: array
+          items:
+            type: string
+            enum:
+            - Nascent
+            - Configuring
+            - StableError
+            - StableOK
+            - Closing
+            - Dead
+            - Modifying
+            - ModifyOK
+            - ModifyError
+            - AllocatedError
+            - AllocatedOK
       - name: sliver_id
         in: query
         description: Filter by sliver uuid
@@ -988,7 +1250,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: sliver_type
         in: query
         description: "Filter by sliver type; allowed values VM, Switch, Facility,\
@@ -998,20 +1262,22 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
-          enum:
-          - VM
-          - Switch
-          - Facility
-          - L2STS
-          - L2PTP
-          - L2Bridge
-          - FABNetv4
-          - FABNetv6
-          - PortMirror
-          - L3VPN
-          - FABNetv4Ext
-          - FABNetv6Ext
+          type: array
+          items:
+            type: string
+            enum:
+            - VM
+            - Switch
+            - Facility
+            - L2STS
+            - L2PTP
+            - L2Bridge
+            - FABNetv4
+            - FABNetv6
+            - PortMirror
+            - L3VPN
+            - FABNetv4Ext
+            - FABNetv6Ext
       - name: sliver_state
         in: query
         description: "Filter by sliver state; allowed values Nascent, Ticketed, Active,\
@@ -1020,17 +1286,19 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
-          enum:
-          - Nascent
-          - Ticketed
-          - Active
-          - ActiveTicketed
-          - Closed
-          - CloseWait
-          - Failed
-          - Unknown
-          - CloseFail
+          type: array
+          items:
+            type: string
+            enum:
+            - Nascent
+            - Ticketed
+            - Active
+            - ActiveTicketed
+            - Closed
+            - CloseWait
+            - Failed
+            - Unknown
+            - CloseFail
       - name: component_type
         in: query
         description: "Filter by component type, allowed values GPU, SmartNIC, SharedNIC,\
@@ -1039,14 +1307,16 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
-          enum:
-          - GPU
-          - SmartNIC
-          - SharedNIC
-          - FPGA
-          - NVME
-          - Storage
+          type: array
+          items:
+            type: string
+            enum:
+            - GPU
+            - SmartNIC
+            - SharedNIC
+            - FPGA
+            - NVME
+            - Storage
       - name: component_model
         in: query
         description: Filter by component model
@@ -1054,7 +1324,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: bdf
         in: query
         description: Filter by specified BDF (Bus:Device.Function) of interfaces/components
@@ -1062,7 +1334,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: vlan
         in: query
         description: Filter by VLAN associated with their sliver interfaces.
@@ -1070,7 +1344,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: ip_subnet
         in: query
         description: Filter by specified IP subnet
@@ -1078,7 +1354,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: site
         in: query
         description: Filter by site
@@ -1086,7 +1364,9 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
       - name: host
         in: query
         description: Filter by host
@@ -1094,7 +1374,59 @@ paths:
         style: form
         explode: true
         schema:
-          type: string
+          type: array
+          items:
+            type: string
+      - name: exclude_user_id
+        in: query
+        description: Exclude Users by IDs
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: exclude_user_email
+        in: query
+        description: Exclude Users by emails
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: exclude_project_id
+        in: query
+        description: Exclude projects
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: exclude_site
+        in: query
+        description: Exclude sites
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: exclude_host
+        in: query
+        description: Exclude hosts
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
       - name: page
         in: query
         description: Page number for pagination. Default is 1.
@@ -1503,7 +1835,7 @@ components:
       properties:
         reference:
           type: string
-          example: https://github.com/fabric-testbed/sliver-reports
+          example: https://github.com/fabric-testbed/reports
         version:
           type: string
           example: 1.0.0
@@ -1581,7 +1913,9 @@ components:
       style: form
       explode: true
       schema:
-        type: string
+        type: array
+        items:
+          type: string
     userEmail:
       name: user_email
       in: query
@@ -1590,7 +1924,31 @@ components:
       style: form
       explode: true
       schema:
-        type: string
+        type: array
+        items:
+          type: string
+    excludeUserId:
+      name: exclude_user_id
+      in: query
+      description: Exclude Users by IDs
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: array
+        items:
+          type: string
+    excludeUserEmail:
+      name: exclude_user_email
+      in: query
+      description: Exclude Users by emails
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: array
+        items:
+          type: string
     projectId:
       name: project_id
       in: query
@@ -1599,7 +1957,20 @@ components:
       style: form
       explode: true
       schema:
-        type: string
+        type: array
+        items:
+          type: string
+    excludeProjectId:
+      name: exclude_project_id
+      in: query
+      description: Exclude projects
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: array
+        items:
+          type: string
     sliceId:
       name: slice_id
       in: query
@@ -1608,7 +1979,9 @@ components:
       style: form
       explode: true
       schema:
-        type: string
+        type: array
+        items:
+          type: string
     sliverId:
       name: sliver_id
       in: query
@@ -1617,7 +1990,9 @@ components:
       style: form
       explode: true
       schema:
-        type: string
+        type: array
+        items:
+          type: string
     componentType:
       name: component_type
       in: query
@@ -1627,14 +2002,16 @@ components:
       style: form
       explode: true
       schema:
-        type: string
-        enum:
-        - GPU
-        - SmartNIC
-        - SharedNIC
-        - FPGA
-        - NVME
-        - Storage
+        type: array
+        items:
+          type: string
+          enum:
+          - GPU
+          - SmartNIC
+          - SharedNIC
+          - FPGA
+          - NVME
+          - Storage
     componentModel:
       name: component_model
       in: query
@@ -1643,7 +2020,9 @@ components:
       style: form
       explode: true
       schema:
-        type: string
+        type: array
+        items:
+          type: string
     sliverType:
       name: sliver_type
       in: query
@@ -1653,20 +2032,22 @@ components:
       style: form
       explode: true
       schema:
-        type: string
-        enum:
-        - VM
-        - Switch
-        - Facility
-        - L2STS
-        - L2PTP
-        - L2Bridge
-        - FABNetv4
-        - FABNetv6
-        - PortMirror
-        - L3VPN
-        - FABNetv4Ext
-        - FABNetv6Ext
+        type: array
+        items:
+          type: string
+          enum:
+          - VM
+          - Switch
+          - Facility
+          - L2STS
+          - L2PTP
+          - L2Bridge
+          - FABNetv4
+          - FABNetv6
+          - PortMirror
+          - L3VPN
+          - FABNetv4Ext
+          - FABNetv6Ext
     sliverState:
       name: sliver_state
       in: query
@@ -1676,17 +2057,19 @@ components:
       style: form
       explode: true
       schema:
-        type: string
-        enum:
-        - Nascent
-        - Ticketed
-        - Active
-        - ActiveTicketed
-        - Closed
-        - CloseWait
-        - Failed
-        - Unknown
-        - CloseFail
+        type: array
+        items:
+          type: string
+          enum:
+          - Nascent
+          - Ticketed
+          - Active
+          - ActiveTicketed
+          - Closed
+          - CloseWait
+          - Failed
+          - Unknown
+          - CloseFail
     sliceState:
       name: slice_state
       in: query
@@ -1697,19 +2080,21 @@ components:
       style: form
       explode: true
       schema:
-        type: string
-        enum:
-        - Nascent
-        - Configuring
-        - StableError
-        - StableOK
-        - Closing
-        - Dead
-        - Modifying
-        - ModifyOK
-        - ModifyError
-        - AllocatedError
-        - AllocatedOK
+        type: array
+        items:
+          type: string
+          enum:
+          - Nascent
+          - Configuring
+          - StableError
+          - StableOK
+          - Closing
+          - Dead
+          - Modifying
+          - ModifyOK
+          - ModifyError
+          - AllocatedError
+          - AllocatedOK
     site:
       name: site
       in: query
@@ -1718,7 +2103,20 @@ components:
       style: form
       explode: true
       schema:
-        type: string
+        type: array
+        items:
+          type: string
+    excludeSite:
+      name: exclude_site
+      in: query
+      description: Exclude sites
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: array
+        items:
+          type: string
     host:
       name: host
       in: query
@@ -1727,7 +2125,20 @@ components:
       style: form
       explode: true
       schema:
-        type: string
+        type: array
+        items:
+          type: string
+    excludeHost:
+      name: exclude_host
+      in: query
+      description: Exclude hosts
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: array
+        items:
+          type: string
     ipSubnet:
       name: ip_subnet
       in: query
@@ -1736,7 +2147,9 @@ components:
       style: form
       explode: true
       schema:
-        type: string
+        type: array
+        items:
+          type: string
     bdf:
       name: bdf
       in: query
@@ -1745,7 +2158,9 @@ components:
       style: form
       explode: true
       schema:
-        type: string
+        type: array
+        items:
+          type: string
     vlan:
       name: vlan
       in: query
@@ -1754,7 +2169,9 @@ components:
       style: form
       explode: true
       schema:
-        type: string
+        type: array
+        items:
+          type: string
     page:
       name: page
       in: query

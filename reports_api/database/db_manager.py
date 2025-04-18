@@ -410,12 +410,14 @@ class DatabaseManager:
         finally:
             session.rollback()
 
-    def get_hosts(self, site: str = None):
+    def get_hosts(self, site: list[str] = None, exclude_site: list[str] = None):
         session = self.get_session()
         try:
             rows = session.query(Hosts.name, Sites.name.label('site_name')).join(Sites, Hosts.site_id == Sites.id)
             if site:
-                rows = rows.filter(Sites.name == site)
+                rows = rows.filter(Sites.name.in_(site))
+            if exclude_site:
+                rows = rows.filter(Sites.name.notin_(exclude_site))
             results = rows.all()
 
             site_map = defaultdict(list)
@@ -429,55 +431,71 @@ class DatabaseManager:
         finally:
             session.rollback()
 
-    def get_projects(self, start_time: str = None, end_time: str = None, user_email: str = None,  user_id: str = None,
-                     project_id: str = None, component_type: str = None, slice_id: str = None, slice_state: str = None,
-                     component_model: str = None, sliver_type: str = None, sliver_id: str = None, sliver_state: str = None,
-                     site: str = None, ip_subnet: str = None, bdf: str = None, vlan: str = None, host: str = None,
+    def get_projects(self, start_time: datetime = None, end_time: datetime = None, user_email: list[str] = None,
+                     user_id: list[str] = None, project_id: list[str] = None, component_type: list[str] = None,
+                     slice_id: list[str] = None, slice_state: list[int] = None, component_model: list[str] = None,
+                     sliver_type: list[str] = None, sliver_id: list[str] = None, sliver_state: list[int] = None,
+                     site: list[str] = None, ip_subnet: list[str] = None, bdf: list[str] = None,
+                     vlan: list[str] = None, host: list[str] = None, exclude_user_id: list[str] = None,
+                     exclude_user_email: list[str] = None, exclude_project_id: list[str] = None,
+                     exclude_site: list[str] = None, exclude_host: list[str] = None,
                      page: int = 0, per_page: int = 100) -> dict:
         """
         Retrieve a list of projects filtered by related slices, slivers, users, components, interface attributes, and time range.
 
-        :param start_time: Filter projects with slivers that start on or after this time.
+        :param start_time: start time filter (inclusive).
         :type start_time: datetime, optional
-        :param end_time: Filter projects with slivers that end on or before this time.
+        :param end_time: end time filter (inclusive).
         :type end_time: datetime, optional
-        :param user_email: Filter projects by email of the user associated with related slices or slivers.
-        :type user_email: str, optional
-        :param sliver_id: Filter by specific sliver ID associated with the project.
-        :type sliver_id: str, optional
-        :param user_id: Filter projects associated with a given user ID.
-        :type user_id: str, optional
-        :param project_id: Filter by project ID.
-        :type project_id: str, optional
-        :param component_type: Filter projects where slivers include components of this type.
-        :type component_type: str, optional
-        :param slice_id: Filter projects containing a specific slice.
-        :type slice_id: str, optional
-        :param slice_state: Filter projects by slice state.
-        :type slice_state: str, optional
-        :param component_model: Filter projects where slivers include components of this model.
-        :type component_model: str, optional
-        :param sliver_type: Filter projects by the type of slivers they include (e.g., VM, BareMetal).
-        :type sliver_type: str, optional
-        :param sliver_state: Filter projects by the state of their associated slivers (integer status code).
-        :type sliver_state: str, optional
-        :param site: Filter projects by site name where their slivers are deployed.
-        :type site: str, optional
-        :param ip_subnet: Filter projects with slivers using the specified IP subnet.
-        :type ip_subnet: str, optional
-        :param bdf: Filter projects by PCI BDF (Bus:Device.Function) of associated interfaces or components.
-        :type bdf: str, optional
-        :param vlan: Filter projects by VLAN associated with sliver interfaces.
-        :type vlan: str, optional
-        :param host: Filter projects by the host name where slivers are running.
-        :type host: str, optional
+        :param user_email: Filter projects by one or more user emails associated with related slices or slivers.
+        :type user_email: list[str], optional
+        :param user_id: Filter projects by one or more user IDs.
+        :type user_id: list[str], optional
+        :param project_id: Filter by one or more project IDs.
+        :type project_id: list[str], optional
+        :param component_type: Filter projects where slivers include components of any of these types.
+        :type component_type: list[str], optional
+        :param slice_id: Filter projects containing one or more specific slices.
+        :type slice_id: list[str], optional
+        :param slice_state: Filter projects by one or more slice states.
+        :type slice_state: list[int], optional
+        :param component_model: Filter projects where slivers include components of any of these models.
+        :type component_model: list[str], optional
+        :param sliver_type: Filter projects by the types of slivers they include (e.g., VM, Switch).
+        :type sliver_type: list[str], optional
+        :param sliver_id: Filter by one or more sliver IDs associated with the project.
+        :type sliver_id: list[str], optional
+        :param sliver_state: Filter projects by the states of their associated slivers.
+        :type sliver_state: list[int], optional
+        :param site: Filter projects by one or more site names where slivers are deployed.
+        :type site: list[str], optional
+        :param ip_subnet: Filter projects with slivers using any of the specified IP subnets.
+        :type ip_subnet: list[str], optional
+        :param bdf: Filter projects by one or more PCI BDFs (Bus:Device.Function) of interfaces or components.
+        :type bdf: list[str], optional
+        :param vlan: Filter projects by one or more VLANs associated with sliver interfaces.
+        :type vlan: list[str], optional
+        :param host: Filter projects by one or more hostnames where slivers are running.
+        :type host: list[str], optional
+
+        :param exclude_user_id: Exclude projects associated with these user IDs.
+        :type exclude_user_id: list[str], optional
+        :param exclude_user_email: Exclude projects associated with these user emails.
+        :type exclude_user_email: list[str], optional
+        :param exclude_project_id: Exclude these project IDs.
+        :type exclude_project_id: list[str], optional
+        :param exclude_site: Exclude projects deployed at these site names.
+        :type exclude_site: list[str], optional
+        :param exclude_host: Exclude projects running on these hostnames.
+        :type exclude_host: list[str], optional
+
         :param page: Page number for paginated results (0-based index).
         :type page: int, optional
         :param per_page: Number of projects to return per page.
         :type per_page: int, optional
 
-        :return: A list of projects matching the given filters.
-        :rtype: List[Project]
+        :return: A dictionary containing the list of projects and associated metadata.
+        :rtype: dict
         """
         session = self.get_session()
         try:
@@ -500,47 +518,58 @@ class DatabaseManager:
 
             # Project ID
             if project_id:
-                filters.append(Projects.project_uuid == project_id)
+                filters.append(Projects.project_uuid.in_(project_id))
 
             # Slice ID
             if slice_id:
-                filters.append(Slices.slice_guid == slice_id)
+                filters.append(Slices.slice_guid.in_(slice_id))
             if slice_state:
-                filters.append(Slices.state == slice_state)
+                filters.append(Slices.state.in_(slice_state))
 
             # User
             if user_id:
-                filters.append(Users.user_uuid == user_id)
+                filters.append(Users.user_uuid.in_(user_id))
             if user_email:
-                filters.append(Users.user_email == user_email)
+                filters.append(Users.user_email.in_(user_email))
 
             # Sliver attributes
             if sliver_id:
-                filters.append(Slivers.sliver_guid == sliver_id)
+                filters.append(Slivers.sliver_guid.in_(sliver_id))
             if sliver_type:
-                filters.append(Slivers.sliver_type == sliver_type)
+                filters.append(Slivers.sliver_type.in_([t.lower() for t in sliver_type]))
             if sliver_state:
-                filters.append(Slivers.state == int(sliver_state))
+                filters.append(Slivers.state.in_(sliver_state))
             if ip_subnet:
-                filters.append(Slivers.ip_subnet == ip_subnet)
+                filters.append(Slivers.ip_subnet.in_(ip_subnet))
 
             # Component filters
             if component_type:
-                filters.append(Components.type == component_type.lower())
+                filters.append(Components.type.in_([t.lower() for t in component_type]))
             if component_model:
-                filters.append(Components.model == component_model.lower())
+                filters.append(Components.model.in_([t.lower() for t in component_model]))
 
             # Interface filters
             if bdf:
                 filters.append(Interfaces.bdf == bdf)
             if vlan:
-                filters.append(Interfaces.vlan == vlan)
+                filters.append(Interfaces.vlan.in_(vlan))
 
             # Host and Site
             if host:
-                filters.append(Hosts.name == host)
+                filters.append(Hosts.name.in_(host))
             if site:
-                filters.append(Sites.name == site)
+                filters.append(Sites.name.in_(site))
+
+            if exclude_project_id:
+                filters.append(Projects.project_uuid.notin_(exclude_project_id))
+            if exclude_user_id:
+                filters.append(Users.user_uuid.notin_(exclude_user_id))
+            if exclude_user_email:
+                filters.append(Users.user_uuid.notin_(exclude_user_email))
+            if exclude_site:
+                filters.append(Sites.name.notin_(exclude_site))
+            if exclude_host:
+                filters.append(Hosts.name.notin_(exclude_host))
 
             # Apply filters
             if filters:
@@ -580,10 +609,14 @@ class DatabaseManager:
         finally:
             session.rollback()
 
-    def get_users(self, start_time: str = None, end_time: str = None, user_email: str = None,  user_id: str = None,
-                  project_id: str = None, component_type: str = None, slice_id: str = None, slice_state: str = None,
-                  component_model: str = None, sliver_type: str = None, sliver_id: str = None, sliver_state: str = None,
-                  site: str = None, ip_subnet: str = None, bdf: str = None, vlan: str = None, host: str = None,
+    def get_users(self, start_time: datetime = None, end_time: datetime = None, user_email: list[str] = None,
+                  user_id: list[str] = None, project_id: list[str] = None, component_type: list[str] = None,
+                  slice_id: list[str] = None, slice_state: list[int] = None, component_model: list[str] = None,
+                  sliver_type: list[str] = None, sliver_id: list[str] = None, sliver_state: list[int] = None,
+                  site: list[str] = None, ip_subnet: list[str] = None, bdf: list[str] = None,
+                  vlan: list[str] = None, host: list[str] = None, exclude_user_id: list[str] = None,
+                  exclude_user_email: list[str] = None, exclude_project_id: list[str] = None,
+                  exclude_site: list[str] = None, exclude_host: list[str] = None,
                   page: int = 0, per_page: int = 100) -> dict:
         """
         Retrieve a list of users filtered by associated slices, slivers, components, network interfaces, and time range.
@@ -592,43 +625,56 @@ class DatabaseManager:
         :type start_time: datetime, optional
         :param end_time: Filter users with slivers that end on or before this time.
         :type end_time: datetime, optional
-        :param user_email: Filter by user email address.
-        :type user_email: str, optional
-        :param sliver_id: Filter by specific sliver ID associated with the user.
-        :type sliver_id: str, optional
-        :param user_id: Filter by user ID.
-        :type user_id: str, optional
-        :param project_id: Filter users associated with a given project ID.
-        :type project_id: str, optional
-        :param component_type: Filter users whose slivers include components of this type.
-        :type component_type: str, optional
-        :param slice_id: Filter users who own a specific slice.
-        :type slice_id: str, optional
-        :param slice_state: Filter projects by slice state.
-        :type slice_state: str, optional
-        :param component_model: Filter users whose slivers include components of this model.
-        :type component_model: str, optional
-        :param sliver_type: Filter users by the type of their associated slivers (e.g., VM, BareMetal).
-        :type sliver_type: str, optional
-        :param sliver_state: Filter users by the state of their associated slivers (integer code).
-        :type sliver_state: str, optional
-        :param site: Filter users based on the site name where their slivers are deployed.
-        :type site: str, optional
-        :param ip_subnet: Filter users whose slivers use the specified IP subnet.
-        :type ip_subnet: str, optional
-        :param bdf: Filter users based on the BDF (Bus:Device.Function) of interfaces/components.
-        :type bdf: str, optional
-        :param vlan: Filter users by VLAN associated with their sliver interfaces.
-        :type vlan: str, optional
-        :param host: Filter users by host name where their slivers are running.
-        :type host: str, optional
+
+        :param user_email: Filter by one or more user email addresses.
+        :type user_email: list[str], optional
+        :param user_id: Filter by one or more user IDs.
+        :type user_id: list[str], optional
+        :param project_id: Filter users associated with one or more project IDs.
+        :type project_id: list[str], optional
+        :param component_type: Filter users whose slivers include components of any of these types.
+        :type component_type: list[str], optional
+        :param slice_id: Filter users who own one or more specific slices.
+        :type slice_id: list[str], optional
+        :param slice_state: Filter users by the state of their associated slices.
+        :type slice_state: list[int], optional
+        :param component_model: Filter users whose slivers include components of any of these models.
+        :type component_model: list[str], optional
+        :param sliver_type: Filter users by the types of their associated slivers (e.g., VM, Switch).
+        :type sliver_type: list[str], optional
+        :param sliver_id: Filter users associated with one or more specific sliver IDs.
+        :type sliver_id: list[str], optional
+        :param sliver_state: Filter users by the state of their associated slivers.
+        :type sliver_state: list[int], optional
+        :param site: Filter users based on the site names where their slivers are deployed.
+        :type site: list[str], optional
+        :param ip_subnet: Filter users whose slivers use any of the specified IP subnets.
+        :type ip_subnet: list[str], optional
+        :param bdf: Filter users based on PCI BDF (Bus:Device.Function) values of interfaces/components.
+        :type bdf: list[str], optional
+        :param vlan: Filter users by one or more VLANs associated with their sliver interfaces.
+        :type vlan: list[str], optional
+        :param host: Filter users by hostnames where their slivers are running.
+        :type host: list[str], optional
+
+        :param exclude_user_id: Exclude users with these user IDs.
+        :type exclude_user_id: list[str], optional
+        :param exclude_user_email: Exclude users with these email addresses.
+        :type exclude_user_email: list[str], optional
+        :param exclude_project_id: Exclude users associated with these project IDs.
+        :type exclude_project_id: list[str], optional
+        :param exclude_site: Exclude users whose slivers are deployed at these sites.
+        :type exclude_site: list[str], optional
+        :param exclude_host: Exclude users whose slivers are hosted on these hosts.
+        :type exclude_host: list[str], optional
+
         :param page: Page number for paginated results (0-based index).
         :type page: int, optional
         :param per_page: Number of users to return per page.
         :type per_page: int, optional
 
-        :return: A list of users matching the given filters.
-        :rtype: List[User]
+        :return: A dictionary containing the list of users and pagination metadata.
+        :rtype: dict
         """
 
         session = self.get_session()
@@ -652,47 +698,58 @@ class DatabaseManager:
 
             # User filters
             if user_email:
-                filters.append(Users.user_email == user_email)
+                filters.append(Users.user_email.in_(user_email))
             if user_id:
-                filters.append(Users.user_uuid == user_id)
+                filters.append(Users.user_uuid.in_(user_id))
 
             # Project filter
             if project_id:
-                filters.append(Projects.project_uuid == project_id)
+                filters.append(Projects.project_uuid.in_(project_id))
 
             # Slice filter
             if slice_id:
-                filters.append(Slices.slice_guid == slice_id)
+                filters.append(Slices.slice_guid.in_(slice_id))
             if slice_state:
-                filters.append(Slices.state == slice_state)
+                filters.append(Slices.state.in_(slice_state))
 
             # Sliver attributes
             if sliver_id:
-                filters.append(Slivers.sliver_guid == sliver_id)
+                filters.append(Slivers.sliver_guid.in_(sliver_id))
             if sliver_type:
-                filters.append(Slivers.sliver_type == sliver_type)
+                filters.append(Slivers.sliver_type.in_([t.lower() for t in sliver_type]))
             if sliver_state:
-                filters.append(Slivers.state == int(sliver_state))
+                filters.append(Slivers.state.in_(sliver_state))
             if ip_subnet:
-                filters.append(Slivers.ip_subnet == ip_subnet)
+                filters.append(Slivers.ip_subnet.in_(ip_subnet))
 
             # Component filters
             if component_type:
-                filters.append(Components.type == component_type.lower())
+                filters.append(Components.type.in_([t.lower() for t in component_type]))
             if component_model:
-                filters.append(Components.model == component_model.lower())
+                filters.append(Components.model.in_([t.lower() for t in component_model]))
 
             # Interface filters
             if bdf:
-                filters.append(Interfaces.bdf == bdf)
+                filters.append(Interfaces.bdf.in_(bdf))
             if vlan:
-                filters.append(Interfaces.vlan == vlan)
+                filters.append(Interfaces.vlan.in_(vlan))
 
             # Site and host filters
             if site:
-                filters.append(Sites.name == site)
+                filters.append(Sites.name.in_(site))
             if host:
-                filters.append(Hosts.name == host)
+                filters.append(Hosts.name.in_(host))
+
+            if exclude_project_id:
+                filters.append(Projects.project_uuid.notin_(exclude_project_id))
+            if exclude_user_id:
+                filters.append(Users.user_uuid.notin_(exclude_user_id))
+            if exclude_user_email:
+                filters.append(Users.user_uuid.notin_(exclude_user_email))
+            if exclude_site:
+                filters.append(Sites.name.notin_(exclude_site))
+            if exclude_host:
+                filters.append(Hosts.name.notin_(exclude_host))
 
             # Apply filters
             if filters:
@@ -733,10 +790,14 @@ class DatabaseManager:
         finally:
             session.rollback()
 
-    def get_slivers(self, start_time: str = None, end_time: str = None, user_email: str = None,  user_id: str = None,
-                    project_id: str = None, component_type: str = None, slice_id: str = None, slice_state: str = None,
-                    component_model: str = None, sliver_type: str = None, sliver_id: str = None, sliver_state: str = None,
-                    site: str = None, ip_subnet: str = None, bdf: str = None, vlan: str = None, host: str = None,
+    def get_slivers(self, start_time: datetime = None, end_time: datetime = None, user_email: list[str] = None,
+                    user_id: list[str] = None, project_id: list[str] = None, component_type: list[str] = None,
+                    slice_id: list[str] = None, slice_state: list[int] = None, component_model: list[str] = None,
+                    sliver_type: list[str] = None, sliver_id: list[str] = None, sliver_state: list[int] = None,
+                    site: list[str] = None, ip_subnet: list[str] = None, bdf: list[str] = None,
+                    vlan: list[str] = None, host: list[str] = None, exclude_user_id: list[str] = None,
+                    exclude_user_email: list[str] = None, exclude_project_id: list[str] = None,
+                    exclude_site: list[str] = None, exclude_host: list[str] = None,
                     page: int = 0, per_page: int = 100) -> dict:
         """
         Retrieve a list of slivers filtered by time range, user, project, slice, component, and network-related fields.
@@ -745,43 +806,55 @@ class DatabaseManager:
         :type start_time: datetime, optional
         :param end_time: Filter slivers that end on or before this time.
         :type end_time: datetime, optional
-        :param user_email: Filter by user email address.
-        :type user_email: str, optional
-        :param sliver_id: Filter by a specific sliver ID.
-        :type sliver_id: str, optional
-        :param user_id: Filter by user ID.
-        :type user_id: str, optional
-        :param project_id: Filter by project ID associated with the sliver.
-        :type project_id: str, optional
-        :param component_type: Filter by component type (e.g., FPGA, GPU, NIC).
-        :type component_type: str, optional
-        :param slice_id: Filter by slice ID containing the sliver.
-        :type slice_id: str, optional
-        :param slice_state: Filter projects by slice state.
-        :type slice_state: str, optional
-        :param component_model: Filter by model of the attached component (e.g., Tesla T4, ConnectX-5).
-        :type component_model: str, optional
-        :param sliver_type: Filter by type of sliver (e.g., VM, BareMetal).
-        :type sliver_type: str, optional
-        :param sliver_state: Filter by sliver state (status code, usually integer).
-        :type sliver_state: str, optional
-        :param site: Filter by site name hosting the sliver.
-        :type site: str, optional
-        :param ip_subnet: Filter by IP subnet assigned to the sliver.
-        :type ip_subnet: str, optional
-        :param bdf: Filter by PCI BDF (Bus:Device.Function) of a device/interface.
-        :type bdf: str, optional
-        :param vlan: Filter by VLAN associated with the sliver'sliver interface.
-        :type vlan: str, optional
-        :param host: Filter by hostname where the sliver is instantiated.
-        :type host: str, optional
+        :param user_email: Filter by one or more user email addresses.
+        :type user_email: list[str], optional
+        :param user_id: Filter by one or more user IDs.
+        :type user_id: list[str], optional
+        :param project_id: Filter by one or more project IDs associated with the sliver.
+        :type project_id: list[str], optional
+        :param component_type: Filter by one or more component types (e.g., FPGA, GPU, SmartNIC).
+        :type component_type: list[str], optional
+        :param slice_id: Filter by one or more slice IDs containing the sliver.
+        :type slice_id: list[str], optional
+        :param slice_state: Filter slivers by the state of their parent slices.
+        :type slice_state: list[int], optional
+        :param component_model: Filter by one or more component models (e.g., Tesla T4, ConnectX-5).
+        :type component_model: list[str], optional
+        :param sliver_type: Filter by one or more types of slivers (e.g., VM, Switch).
+        :type sliver_type: list[str], optional
+        :param sliver_id: Filter by one or more specific sliver IDs.
+        :type sliver_id: list[str], optional
+        :param sliver_state: Filter by one or more sliver states (integer-based status code).
+        :type sliver_state: list[int], optional
+        :param site: Filter by one or more site names hosting the slivers.
+        :type site: list[str], optional
+        :param ip_subnet: Filter by one or more IP subnets assigned to slivers.
+        :type ip_subnet: list[str], optional
+        :param bdf: Filter by one or more PCI BDF (Bus:Device.Function) values.
+        :type bdf: list[str], optional
+        :param vlan: Filter by one or more VLANs associated with the sliver interfaces.
+        :type vlan: list[str], optional
+        :param host: Filter by one or more hostnames where slivers are instantiated.
+        :type host: list[str], optional
+
+        :param exclude_user_id: Exclude slivers associated with these user IDs.
+        :type exclude_user_id: list[str], optional
+        :param exclude_user_email: Exclude slivers associated with these user email addresses.
+        :type exclude_user_email: list[str], optional
+        :param exclude_project_id: Exclude slivers belonging to these project IDs.
+        :type exclude_project_id: list[str], optional
+        :param exclude_site: Exclude slivers hosted at these site names.
+        :type exclude_site: list[str], optional
+        :param exclude_host: Exclude slivers hosted on these hostnames.
+        :type exclude_host: list[str], optional
+
         :param page: Page number for paginated results (0-based index).
         :type page: int, optional
-        :param per_page: Number of results per page.
+        :param per_page: Number of slivers to return per page.
         :type per_page: int, optional
 
-        :return: A list of slivers matching the given filters.
-        :rtype: List[Sliver]
+        :return: A dictionary containing the list of slivers and pagination metadata.
+        :rtype: dict
         """
 
         session = self.get_session()
@@ -805,47 +878,58 @@ class DatabaseManager:
 
             # User filters
             if user_email:
-                filters.append(Users.user_email == user_email)
+                filters.append(Users.user_email.in_(user_email))
             if user_id:
-                filters.append(Users.user_uuid == user_id)
+                filters.append(Users.user_uuid.in_(user_id))
 
             # Project filter
             if project_id:
-                filters.append(Projects.project_uuid == project_id)
+                filters.append(Projects.project_uuid.in_(project_id))
 
             # Slice filter
             if slice_id:
-                filters.append(Slices.slice_guid == slice_id)
+                filters.append(Slices.slice_guid.in_(slice_id))
             if slice_state:
-                filters.append(Slices.state == slice_state)
+                filters.append(Slices.state.in_(slice_state))
 
             # Sliver attributes
             if sliver_id:
-                filters.append(Slivers.sliver_guid == sliver_id)
+                filters.append(Slivers.sliver_guid.in_(sliver_id))
             if sliver_type:
-                filters.append(Slivers.sliver_type == sliver_type)
+                filters.append(Slivers.sliver_type.in_([t.lower() for t in sliver_type]))
             if sliver_state:
-                filters.append(Slivers.state == int(sliver_state))  # assuming state is stored as int
+                filters.append(Slivers.state.in_(sliver_state))  # assuming state is stored as int
             if ip_subnet:
-                filters.append(Slivers.ip_subnet == ip_subnet)
+                filters.append(Slivers.ip_subnet.in_(ip_subnet))
 
             # Component filters
             if component_type:
-                filters.append(Components.type == component_type.lower())
+                filters.append(Components.type.in_([t.lower() for t in component_type]))
             if component_model:
-                filters.append(Components.model == component_model.lower())
+                filters.append(Components.model.in_([t.lower() for t in component_model]))
 
             # Interface filters
             if bdf:
-                filters.append(Interfaces.bdf == bdf)
+                filters.append(Interfaces.bdf.in_(bdf))
             if vlan:
-                filters.append(Interfaces.vlan == vlan)
+                filters.append(Interfaces.vlan.in_(vlan))
 
             # Host/Site filters
             if site:
-                filters.append(Sites.name == site)
+                filters.append(Sites.name.in_(site))
             if host:
-                filters.append(Hosts.name == host)
+                filters.append(Hosts.name.in_(host))
+
+            if exclude_project_id:
+                filters.append(Projects.project_uuid.notin_(exclude_project_id))
+            if exclude_user_id:
+                filters.append(Users.user_uuid.notin_(exclude_user_id))
+            if exclude_user_email:
+                filters.append(Users.user_uuid.notin_(exclude_user_email))
+            if exclude_site:
+                filters.append(Sites.name.notin_(exclude_site))
+            if exclude_host:
+                filters.append(Hosts.name.notin_(exclude_host))
 
             # Apply filters
             if filters:
@@ -900,12 +984,15 @@ class DatabaseManager:
         finally:
             session.rollback()
 
-    def get_slices(self, start_time: str = None, end_time: str = None, user_email: str = None,  user_id: str = None,
-                   project_id: str = None, component_type: str = None, slice_id: str = None, slice_state: str = None,
-                   component_model: str = None, sliver_type: str = None, sliver_id: str = None, sliver_state: str = None,
-                   site: str = None, ip_subnet: str = None, bdf: str = None, vlan: str = None, host: str = None,
+    def get_slices(self, start_time: datetime = None, end_time: datetime = None, user_email: list[str] = None,
+                   user_id: list[str] = None, project_id: list[str] = None, component_type: list[str] = None,
+                   slice_id: list[str] = None, slice_state: list[int] = None, component_model: list[str] = None,
+                   sliver_type: list[str] = None, sliver_id: list[str] = None, sliver_state: list[int] = None,
+                   site: list[str] = None, ip_subnet: list[str] = None, bdf: list[str] = None,
+                   vlan: list[str] = None, host: list[str] = None, exclude_user_id: list[str] = None,
+                   exclude_user_email: list[str] = None, exclude_project_id: list[str] = None,
+                   exclude_site: list[str] = None, exclude_host: list[str] = None,
                    page: int = 0, per_page: int = 100) -> dict:
-
         """
         Retrieve a list of slices filtered by time, user, project, sliver, component, and network attributes.
 
@@ -913,43 +1000,55 @@ class DatabaseManager:
         :type start_time: datetime, optional
         :param end_time: Filter slices with slivers ending before this time.
         :type end_time: datetime, optional
-        :param user_email: Filter by user'sliver email address.
-        :type user_email: str, optional
-        :param slice_id: Filter by specific slice ID.
-        :type slice_id: str, optional
-        :param slice_state: Filter projects by slice state.
-        :type slice_state: str, optional
-        :param user_id: Filter by user ID.
-        :type user_id: str, optional
-        :param project_id: Filter by project ID.
-        :type project_id: str, optional
-        :param component_type: Filter by component type (e.g., GPU, SmartNIC).
-        :type component_type: str, optional
-        :param component_model: Filter by component model (e.g., ConnectX-6, A30).
-        :type component_model: str, optional
-        :param sliver_type: Filter by sliver type (e.g., VM, BareMetal).
-        :type sliver_type: str, optional
-        :param sliver_state: Filter by sliver state (integer-based status code).
-        :type sliver_state: str, optional
-        :param site: Filter by site name where the sliver is located.
-        :type site: str, optional
-        :param ip_subnet: Filter slivers by their IP subnet.
-        :type ip_subnet: str, optional
-        :param sliver_id: Filter by specific sliver ID.
-        :type sliver_id: str, optional
-        :param bdf: Filter by PCI BDF (Bus:Device.Function) value.
-        :type bdf: str, optional
-        :param vlan: Filter by VLAN ID associated with an interface.
-        :type vlan: str, optional
-        :param host: Filter by host name where the sliver is running.
-        :type host: str, optional
+        :param user_email: Filter by one or more user email addresses.
+        :type user_email: list[str], optional
+        :param user_id: Filter by one or more user IDs.
+        :type user_id: list[str], optional
+        :param project_id: Filter by one or more project IDs.
+        :type project_id: list[str], optional
+        :param component_type: Filter slices that include components of any of these types (e.g., GPU, SmartNIC).
+        :type component_type: list[str], optional
+        :param slice_id: Filter by one or more specific slice IDs.
+        :type slice_id: list[str], optional
+        :param slice_state: Filter by one or more slice states.
+        :type slice_state: list[int], optional
+        :param component_model: Filter by one or more component models (e.g., ConnectX-6, A30).
+        :type component_model: list[str], optional
+        :param sliver_type: Filter by one or more sliver types (e.g., VM, Switch, Facility).
+        :type sliver_type: list[str], optional
+        :param sliver_id: Filter by one or more sliver IDs.
+        :type sliver_id: list[str], optional
+        :param sliver_state: Filter by one or more sliver states (integer-based status code).
+        :type sliver_state: list[int], optional
+        :param site: Filter by one or more site names where the slivers are located.
+        :type site: list[str], optional
+        :param ip_subnet: Filter slivers by one or more IP subnets.
+        :type ip_subnet: list[str], optional
+        :param bdf: Filter by one or more PCI BDF (Bus:Device.Function) values.
+        :type bdf: list[str], optional
+        :param vlan: Filter by one or more VLAN IDs associated with interfaces.
+        :type vlan: list[str], optional
+        :param host: Filter by one or more hostnames where slivers are running.
+        :type host: list[str], optional
+
+        :param exclude_user_id: Exclude slices associated with these user IDs.
+        :type exclude_user_id: list[str], optional
+        :param exclude_user_email: Exclude slices associated with these user email addresses.
+        :type exclude_user_email: list[str], optional
+        :param exclude_project_id: Exclude slices belonging to these project IDs.
+        :type exclude_project_id: list[str], optional
+        :param exclude_site: Exclude slices deployed at these site names.
+        :type exclude_site: list[str], optional
+        :param exclude_host: Exclude slices running on these hostnames.
+        :type exclude_host: list[str], optional
+
         :param page: Page number for paginated results (0-based index).
         :type page: int, optional
-        :param per_page: Number of results per page.
+        :param per_page: Number of slices to return per page.
         :type per_page: int, optional
 
-        :return: A list of slices matching the given filters.
-        :rtype: List[Slice]
+        :return: A dictionary containing the list of slices and metadata like pagination.
+        :rtype: dict
         """
 
         session = self.get_session()
@@ -973,47 +1072,58 @@ class DatabaseManager:
 
             # User filter
             if user_email:
-                filters.append(Users.user_email == user_email)
+                filters.append(Users.user_email.in_(user_email))
             if user_id:
-                filters.append(Users.user_uuid == user_id)
+                filters.append(Users.user_uuid.in_(user_id))
 
             # Project filter
             if project_id:
-                filters.append(Projects.project_uuid == project_id)
+                filters.append(Projects.project_uuid.in_(project_id))
 
             # Slice filter
             if slice_id:
-                filters.append(Slices.slice_guid == slice_id)
+                filters.append(Slices.slice_guid.in_(slice_id))
             if slice_state:
-                filters.append(Slices.state == slice_state)
+                filters.append(Slices.state.in_(slice_state))
 
             # Sliver attributes
             if sliver_id:
-                filters.append(Slivers.sliver_guid == sliver_id)
+                filters.append(Slivers.sliver_guid.in_(sliver_id))
             if sliver_type:
-                filters.append(Slivers.sliver_type == sliver_type)
+                filters.append(Slivers.sliver_type.in_([t.lower() for t in sliver_type]))
             if sliver_state:
-                filters.append(Slivers.state == int(sliver_state))  # assuming state is stored as int
+                filters.append(Slivers.state.in_(sliver_state))  # assuming state is stored as int
             if ip_subnet:
-                filters.append(Slivers.ip_subnet == ip_subnet)
+                filters.append(Slivers.ip_subnet.in_(ip_subnet))
 
             # Component filters
             if component_type:
-                filters.append(Components.type == component_type.lower())
+                filters.append(Components.type.in_([t.lower() for t in component_type]))
             if component_model:
-                filters.append(Components.model == component_model.lower())
+                filters.append(Components.model.in_([t.lower() for t in component_model]))
 
             # Interface filters
             if bdf:
-                filters.append(Interfaces.bdf == bdf)
+                filters.append(Interfaces.bdf.in_(bdf))
             if vlan:
-                filters.append(Interfaces.vlan == vlan)
+                filters.append(Interfaces.vlan.in_(vlan))
 
             # Host/Site filters
             if site:
-                filters.append(Sites.name == site)
+                filters.append(Sites.name.in_(site))
             if host:
-                filters.append(Hosts.name == host)
+                filters.append(Hosts.name.in_(host))
+
+            if exclude_project_id:
+                filters.append(Projects.project_uuid.notin_(exclude_project_id))
+            if exclude_user_id:
+                filters.append(Users.user_uuid.notin_(exclude_user_id))
+            if exclude_user_email:
+                filters.append(Users.user_uuid.notin_(exclude_user_email))
+            if exclude_site:
+                filters.append(Sites.name.notin_(exclude_site))
+            if exclude_host:
+                filters.append(Hosts.name.notin_(exclude_host))
 
             # Apply all filters
             if filters:

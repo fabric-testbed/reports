@@ -23,63 +23,75 @@
 #
 #
 # Author: Komal Thareja (kthare10@renci.org)
+import traceback
 from datetime import datetime
 
 from reports_api.common.globals import GlobalsSingleton
 from reports_api.database.db_manager import DatabaseManager
 from reports_api.response_code.cors_response import cors_500
-from reports_api.response_code.slice_sliver_states import SliverStates
+from reports_api.response_code.slice_sliver_states import SliverStates, SliceState
 from reports_api.response_code.utils import authorize, cors_success_response
 from reports_api.swagger_server.models.project import Project
 from reports_api.swagger_server.models.projects import Projects  # noqa: E501
 
 
-def projects_get(start_time: str = None, end_time: str = None, user_email: str = None,  user_id: str = None,
-                 project_id: str = None, component_type: str = None, slice_id: str = None, slice_state: str = None,
-                 component_model: str = None, sliver_type: str = None, sliver_id: str = None, sliver_state: str = None,
-                 site: str = None, ip_subnet: str = None, bdf: str = None, vlan: str = None, host: str = None,
-                 page: int = 0, per_page: int = 100):
-    """
+def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, project_id=None, slice_id=None,
+                 slice_state=None, sliver_id=None, sliver_type=None, sliver_state=None, component_type=None,
+                 component_model=None, bdf=None, vlan=None, ip_subnet=None, site=None, host=None,
+                 exclude_user_id=None, exclude_user_email=None, exclude_project_id=None, exclude_site=None,
+                 exclude_host=None, page=0, per_page=100):  # noqa: E501
+    """Retrieve a list of projects
+
     Returns a paginated list of projects with their UUIDs. # noqa: E501
 
-    :param start_time: Filter projects with slivers that start on or after this time.
-    :type start_time: datetime, optional
-    :param end_time: Filter projects with slivers that end on or before this time.
-    :type end_time: datetime, optional
-    :param user_email: Filter projects by email of the user associated with related slices or slivers.
-    :type user_email: str, optional
-    :param sliver_id: Filter by specific sliver ID associated with the project.
-    :type sliver_id: str, optional
-    :param user_id: Filter projects associated with a given user ID.
-    :type user_id: str, optional
-    :param project_id: Filter by project ID.
-    :type project_id: str, optional
-    :param component_type: Filter projects where slivers include components of this type.
-    :type component_type: str, optional
-    :param slice_id: Filter projects containing a specific slice.
-    :type slice_id: str, optional
+    :param start_time: Filter by start time (inclusive)
+    :type start_time: str
+    :param end_time: Filter by end time (inclusive)
+    :type end_time: str
+    :param user_id: Filter by user uuid
+    :type user_id: List[str]
+    :param user_email: Filter by user email
+    :type user_email: List[str]
+    :param project_id: Filter by project uuid
+    :type project_id: List[str]
+    :param slice_id: Filter by slice uuid
+    :type slice_id: List[str]
     :param slice_state: Filter by slice state; allowed values Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK
-    :type slice_state: str
-    :param component_model: Filter projects where slivers include components of this model.
-    :type component_model: str, optional
-    :param sliver_type: Filter projects by the type of slivers they include (e.g., VM, BareMetal).
-    :type sliver_type: str, optional
-    :param sliver_state: Filter projects by the state of their associated slivers (integer status code).
-    :type sliver_state: str, optional
-    :param site: Filter projects by site name where their slivers are deployed.
-    :type site: str, optional
-    :param ip_subnet: Filter projects with slivers using the specified IP subnet.
-    :type ip_subnet: str, optional
-    :param bdf: Filter projects by PCI BDF (Bus:Device.Function) of associated interfaces or components.
-    :type bdf: str, optional
-    :param vlan: Filter projects by VLAN associated with sliver interfaces.
-    :type vlan: str, optional
-    :param host: Filter projects by the host name where slivers are running.
-    :type host: str, optional
-    :param page: Page number for paginated results (0-based index).
-    :type page: int, optional
-    :param per_page: Number of projects to return per page.
-    :type per_page: int, optional
+    :type slice_state: List[str]
+    :param sliver_id: Filter by sliver uuid
+    :type sliver_id: List[str]
+    :param sliver_type: Filter by sliver type; allowed values VM, Switch, Facility, L2STS, L2PTP, L2Bridge, FABNetv4, FABNetv6, PortMirror, L3VPN, FABNetv4Ext, FABNetv6Ext
+    :type sliver_type: List[str]
+    :param sliver_state: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
+    :type sliver_state: List[str]
+    :param component_type: Filter by component type, allowed values GPU, SmartNIC, SharedNIC, FPGA, NVME, Storage
+    :type component_type: List[str]
+    :param component_model: Filter by component model
+    :type component_model: List[str]
+    :param bdf: Filter by specified BDF (Bus:Device.Function) of interfaces/components
+    :type bdf: List[str]
+    :param vlan: Filter by VLAN associated with their sliver interfaces.
+    :type vlan: List[str]
+    :param ip_subnet: Filter by specified IP subnet
+    :type ip_subnet: List[str]
+    :param site: Filter by site
+    :type site: List[str]
+    :param host: Filter by host
+    :type host: List[str]
+    :param exclude_user_id: Exclude Users by IDs
+    :type exclude_user_id: List[str]
+    :param exclude_user_email: Exclude Users by emails
+    :type exclude_user_email: List[str]
+    :param exclude_project_id: Exclude projects
+    :type exclude_project_id: List[str]
+    :param exclude_site: Exclude sites
+    :type exclude_site: List[str]
+    :param exclude_host: Exclude hosts
+    :type exclude_host: List[str]
+    :param page: Page number for pagination. Default is 1.
+    :type page: int
+    :param per_page: Number of records per page. Default is 10.
+    :type per_page: int
 
     :rtype: Projects
     """
@@ -96,12 +108,17 @@ def projects_get(start_time: str = None, end_time: str = None, user_email: str =
         response.data = []
         start = datetime.fromisoformat(start_time) if start_time else None
         end = datetime.fromisoformat(end_time) if end_time else None
+        sliver_states = [SliverStates.translate(s) for s in sliver_state] if sliver_state else None
+        slice_states = [SliceState.translate(s) for s in slice_state] if slice_state else None
         projects = db_mgr.get_projects(start_time=start, end_time=end, user_email=user_email, user_id=user_id, vlan=vlan,
                                        sliver_id=sliver_id, sliver_type=sliver_type, slice_id=slice_id, bdf=bdf,
-                                       sliver_state=SliverStates.translate(sliver_state),site=site, host=host,
-                                       project_id=project_id, component_model=component_model,
-                                       slice_state=SliverStates.translate(slice_state),
-                                       component_type=component_type, ip_subnet=ip_subnet, page=page, per_page=per_page)
+                                       sliver_state=sliver_states, site=site,
+                                       host=host, project_id=project_id, component_model=component_model,
+                                       slice_state=slice_states,
+                                       component_type=component_type, ip_subnet=ip_subnet, page=page, per_page=per_page,
+                                       exclude_user_id=exclude_user_id, exclude_user_email=exclude_user_email,
+                                       exclude_project_id=exclude_project_id, exclude_site=exclude_site,
+                                       exclude_host=exclude_host)
         for s in projects.get("projects"):
             response.data.append(Project.from_dict(s))
         response.size = len(response.data)
@@ -111,4 +128,5 @@ def projects_get(start_time: str = None, end_time: str = None, user_email: str =
     except Exception as exc:
         details = 'Oops! something went wrong with projects_get(): {0}'.format(exc)
         logger.error(details)
+        logger.error(traceback.format_exc())
         return cors_500(details=details)

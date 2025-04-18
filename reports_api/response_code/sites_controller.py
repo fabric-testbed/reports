@@ -23,6 +23,8 @@
 #
 #
 # Author: Komal Thareja (kthare10@renci.org)
+import traceback
+
 import connexion
 import six
 
@@ -61,4 +63,5 @@ def sites_get():  # noqa: E501
     except Exception as exc:
         details = 'Oops! something went wrong with sites_get(): {0}'.format(exc)
         logger.error(details)
+        logger.error(traceback.format_exc())
         return cors_500(details=details)

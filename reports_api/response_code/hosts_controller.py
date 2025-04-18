@@ -23,6 +23,8 @@
 #
 #
 # Author: Komal Thareja (kthare10@renci.org)
+import traceback
+
 from reports_api.common.globals import GlobalsSingleton
 from reports_api.database.db_manager import DatabaseManager
 from reports_api.response_code.cors_response import cors_500
@@ -31,13 +33,16 @@ from reports_api.swagger_server.models.site import Site
 from reports_api.swagger_server.models.sites import Sites
 
 
-def hosts_get(site: str):  # noqa: E501
+def hosts_get(site=None, exclude_site=None):  # noqa: E501
     """Get hosts
 
     Retrieve a list of hosts. # noqa: E501
 
     :param site: Filter by site
-    :type site: str
+    :type site: List[str]
+
+    :param exclude_site: Exclude sites
+    :type exclude_site: List[str]
 
     :rtype: Sites
     """
@@ -52,7 +57,7 @@ def hosts_get(site: str):  # noqa: E501
 
         response = Sites()
         response.data = []
-        for h in db_mgr.get_hosts(site=site):
+        for h in db_mgr.get_hosts(site=site, exclude_site=exclude_site):
             response.data.append(Site.from_dict(h))
         response.size = len(response.data)
         response.type = "hosts"
@@ -60,4 +65,5 @@ def hosts_get(site: str):  # noqa: E501
     except Exception as exc:
         details = 'Oops! something went wrong with hosts_get(): {0}'.format(exc)
         logger.error(details)
+        logger.error(traceback.format_exc())
         return cors_500(details=details)
