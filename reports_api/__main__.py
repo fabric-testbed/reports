@@ -7,7 +7,7 @@ from reports_api.common.globals import Globals, GlobalsSingleton
 from reports_api.swagger_server import encoder
 rest_port_str = 8080
 
-#Globals.config_file = "config.yml"
+Globals.config_file = "test_config.yml"
 
 
 def main():

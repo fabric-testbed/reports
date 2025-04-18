@@ -11,7 +11,7 @@
       "description": "SwaggerHub API Auto Mocking"
     },
     {
-      "url": "http://localhost:5000"
+      "url": "http://localhost:8080/reports"
     }
   ],
   "tags": [
@@ -111,7 +111,10 @@
             "description": "Filter by user uuid",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -120,7 +123,10 @@
             "description": "Filter by user email",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -129,7 +135,10 @@
             "description": "Filter by project uuid",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -138,7 +147,10 @@
             "description": "Filter by slice uuid",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -147,20 +159,23 @@
             "description": "Filter by slice state; allowed values Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "Nascent",
-                "Configuring",
-                "StableError",
-                "StableOK",
-                "Closing",
-                "Dead",
-                "Modifying",
-                "ModifyOK",
-                "ModifyError",
-                "AllocatedError",
-                "AllocatedOK"
-              ]
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "Nascent",
+                  "Configuring",
+                  "StableError",
+                  "StableOK",
+                  "Closing",
+                  "Dead",
+                  "Modifying",
+                  "ModifyOK",
+                  "ModifyError",
+                  "AllocatedError",
+                  "AllocatedOK"
+                ]
+              }
             }
           },
           {
@@ -169,7 +184,10 @@
             "description": "Filter by sliver uuid",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -178,21 +196,24 @@
             "description": "Filter by sliver type; allowed values VM, Switch, Facility, L2STS, L2PTP, L2Bridge, FABNetv4, FABNetv6, PortMirror, L3VPN, FABNetv4Ext, FABNetv6Ext",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "VM",
-                "Switch",
-                "Facility",
-                "L2STS",
-                "L2PTP",
-                "L2Bridge",
-                "FABNetv4",
-                "FABNetv6",
-                "PortMirror",
-                "L3VPN",
-                "FABNetv4Ext",
-                "FABNetv6Ext"
-              ]
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "VM",
+                  "Switch",
+                  "Facility",
+                  "L2STS",
+                  "L2PTP",
+                  "L2Bridge",
+                  "FABNetv4",
+                  "FABNetv6",
+                  "PortMirror",
+                  "L3VPN",
+                  "FABNetv4Ext",
+                  "FABNetv6Ext"
+                ]
+              }
             }
           },
           {
@@ -201,18 +222,21 @@
             "description": "Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "Nascent",
-                "Ticketed",
-                "Active",
-                "ActiveTicketed",
-                "Closed",
-                "CloseWait",
-                "Failed",
-                "Unknown",
-                "CloseFail"
-              ]
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "Nascent",
+                  "Ticketed",
+                  "Active",
+                  "ActiveTicketed",
+                  "Closed",
+                  "CloseWait",
+                  "Failed",
+                  "Unknown",
+                  "CloseFail"
+                ]
+              }
             }
           },
           {
@@ -221,15 +245,18 @@
             "description": "Filter by component type, allowed values GPU, SmartNIC, SharedNIC, FPGA, NVME, Storage",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "GPU",
-                "SmartNIC",
-                "SharedNIC",
-                "FPGA",
-                "NVME",
-                "Storage"
-              ]
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "GPU",
+                  "SmartNIC",
+                  "SharedNIC",
+                  "FPGA",
+                  "NVME",
+                  "Storage"
+                ]
+              }
             }
           },
           {
@@ -238,7 +265,10 @@
             "description": "Filter by component model",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -247,7 +277,10 @@
             "description": "Filter by specified BDF (Bus:Device.Function) of interfaces/components",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -256,7 +289,10 @@
             "description": "Filter by VLAN associated with their sliver interfaces.",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -265,7 +301,10 @@
             "description": "Filter by specified IP subnet",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -274,7 +313,10 @@
             "description": "Filter by site",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -283,7 +325,70 @@
             "description": "Filter by host",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "exclude_user_id",
+            "in": "query",
+            "description": "Exclude Users by IDs",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "exclude_user_email",
+            "in": "query",
+            "description": "Exclude Users by emails",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "exclude_project_id",
+            "in": "query",
+            "description": "Exclude projects",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "exclude_site",
+            "in": "query",
+            "description": "Exclude sites",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "exclude_host",
+            "in": "query",
+            "description": "Exclude hosts",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -466,7 +571,22 @@
             "description": "Filter by site",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "exclude_site",
+            "in": "query",
+            "description": "Exclude sites",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         ],
@@ -573,7 +693,10 @@
             "description": "Filter by user uuid",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -582,7 +705,10 @@
             "description": "Filter by user email",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -591,7 +717,10 @@
             "description": "Filter by project uuid",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -600,7 +729,10 @@
             "description": "Filter by slice uuid",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -609,20 +741,23 @@
             "description": "Filter by slice state; allowed values Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "Nascent",
-                "Configuring",
-                "StableError",
-                "StableOK",
-                "Closing",
-                "Dead",
-                "Modifying",
-                "ModifyOK",
-                "ModifyError",
-                "AllocatedError",
-                "AllocatedOK"
-              ]
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "Nascent",
+                  "Configuring",
+                  "StableError",
+                  "StableOK",
+                  "Closing",
+                  "Dead",
+                  "Modifying",
+                  "ModifyOK",
+                  "ModifyError",
+                  "AllocatedError",
+                  "AllocatedOK"
+                ]
+              }
             }
           },
           {
@@ -631,7 +766,10 @@
             "description": "Filter by sliver uuid",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -640,21 +778,24 @@
             "description": "Filter by sliver type; allowed values VM, Switch, Facility, L2STS, L2PTP, L2Bridge, FABNetv4, FABNetv6, PortMirror, L3VPN, FABNetv4Ext, FABNetv6Ext",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "VM",
-                "Switch",
-                "Facility",
-                "L2STS",
-                "L2PTP",
-                "L2Bridge",
-                "FABNetv4",
-                "FABNetv6",
-                "PortMirror",
-                "L3VPN",
-                "FABNetv4Ext",
-                "FABNetv6Ext"
-              ]
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "VM",
+                  "Switch",
+                  "Facility",
+                  "L2STS",
+                  "L2PTP",
+                  "L2Bridge",
+                  "FABNetv4",
+                  "FABNetv6",
+                  "PortMirror",
+                  "L3VPN",
+                  "FABNetv4Ext",
+                  "FABNetv6Ext"
+                ]
+              }
             }
           },
           {
@@ -663,18 +804,21 @@
             "description": "Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "Nascent",
-                "Ticketed",
-                "Active",
-                "ActiveTicketed",
-                "Closed",
-                "CloseWait",
-                "Failed",
-                "Unknown",
-                "CloseFail"
-              ]
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "Nascent",
+                  "Ticketed",
+                  "Active",
+                  "ActiveTicketed",
+                  "Closed",
+                  "CloseWait",
+                  "Failed",
+                  "Unknown",
+                  "CloseFail"
+                ]
+              }
             }
           },
           {
@@ -683,15 +827,18 @@
             "description": "Filter by component type, allowed values GPU, SmartNIC, SharedNIC, FPGA, NVME, Storage",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "GPU",
-                "SmartNIC",
-                "SharedNIC",
-                "FPGA",
-                "NVME",
-                "Storage"
-              ]
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "GPU",
+                  "SmartNIC",
+                  "SharedNIC",
+                  "FPGA",
+                  "NVME",
+                  "Storage"
+                ]
+              }
             }
           },
           {
@@ -700,7 +847,10 @@
             "description": "Filter by component model",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -709,7 +859,10 @@
             "description": "Filter by specified BDF (Bus:Device.Function) of interfaces/components",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -718,7 +871,10 @@
             "description": "Filter by VLAN associated with their sliver interfaces.",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -727,7 +883,10 @@
             "description": "Filter by specified IP subnet",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -736,7 +895,10 @@
             "description": "Filter by site",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -745,7 +907,70 @@
             "description": "Filter by host",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "exclude_user_id",
+            "in": "query",
+            "description": "Exclude Users by IDs",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "exclude_user_email",
+            "in": "query",
+            "description": "Exclude Users by emails",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "exclude_project_id",
+            "in": "query",
+            "description": "Exclude projects",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "exclude_site",
+            "in": "query",
+            "description": "Exclude sites",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "exclude_host",
+            "in": "query",
+            "description": "Exclude hosts",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -872,7 +1097,10 @@
             "description": "Filter by user uuid",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -881,7 +1109,10 @@
             "description": "Filter by user email",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -890,7 +1121,10 @@
             "description": "Filter by project uuid",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -899,7 +1133,10 @@
             "description": "Filter by slice uuid",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -908,20 +1145,23 @@
             "description": "Filter by slice state; allowed values Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "Nascent",
-                "Configuring",
-                "StableError",
-                "StableOK",
-                "Closing",
-                "Dead",
-                "Modifying",
-                "ModifyOK",
-                "ModifyError",
-                "AllocatedError",
-                "AllocatedOK"
-              ]
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "Nascent",
+                  "Configuring",
+                  "StableError",
+                  "StableOK",
+                  "Closing",
+                  "Dead",
+                  "Modifying",
+                  "ModifyOK",
+                  "ModifyError",
+                  "AllocatedError",
+                  "AllocatedOK"
+                ]
+              }
             }
           },
           {
@@ -930,7 +1170,10 @@
             "description": "Filter by sliver uuid",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -939,21 +1182,24 @@
             "description": "Filter by sliver type; allowed values VM, Switch, Facility, L2STS, L2PTP, L2Bridge, FABNetv4, FABNetv6, PortMirror, L3VPN, FABNetv4Ext, FABNetv6Ext",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "VM",
-                "Switch",
-                "Facility",
-                "L2STS",
-                "L2PTP",
-                "L2Bridge",
-                "FABNetv4",
-                "FABNetv6",
-                "PortMirror",
-                "L3VPN",
-                "FABNetv4Ext",
-                "FABNetv6Ext"
-              ]
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "VM",
+                  "Switch",
+                  "Facility",
+                  "L2STS",
+                  "L2PTP",
+                  "L2Bridge",
+                  "FABNetv4",
+                  "FABNetv6",
+                  "PortMirror",
+                  "L3VPN",
+                  "FABNetv4Ext",
+                  "FABNetv6Ext"
+                ]
+              }
             }
           },
           {
@@ -962,18 +1208,21 @@
             "description": "Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "Nascent",
-                "Ticketed",
-                "Active",
-                "ActiveTicketed",
-                "Closed",
-                "CloseWait",
-                "Failed",
-                "Unknown",
-                "CloseFail"
-              ]
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "Nascent",
+                  "Ticketed",
+                  "Active",
+                  "ActiveTicketed",
+                  "Closed",
+                  "CloseWait",
+                  "Failed",
+                  "Unknown",
+                  "CloseFail"
+                ]
+              }
             }
           },
           {
@@ -982,15 +1231,18 @@
             "description": "Filter by component type, allowed values GPU, SmartNIC, SharedNIC, FPGA, NVME, Storage",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "GPU",
-                "SmartNIC",
-                "SharedNIC",
-                "FPGA",
-                "NVME",
-                "Storage"
-              ]
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "GPU",
+                  "SmartNIC",
+                  "SharedNIC",
+                  "FPGA",
+                  "NVME",
+                  "Storage"
+                ]
+              }
             }
           },
           {
@@ -999,7 +1251,10 @@
             "description": "Filter by component model",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -1008,7 +1263,10 @@
             "description": "Filter by specified BDF (Bus:Device.Function) of interfaces/components",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -1017,7 +1275,10 @@
             "description": "Filter by VLAN associated with their sliver interfaces.",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -1026,7 +1287,10 @@
             "description": "Filter by specified IP subnet",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -1035,7 +1299,10 @@
             "description": "Filter by site",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -1044,7 +1311,70 @@
             "description": "Filter by host",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "exclude_user_id",
+            "in": "query",
+            "description": "Exclude Users by IDs",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "exclude_user_email",
+            "in": "query",
+            "description": "Exclude Users by emails",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "exclude_project_id",
+            "in": "query",
+            "description": "Exclude projects",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "exclude_site",
+            "in": "query",
+            "description": "Exclude sites",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "exclude_host",
+            "in": "query",
+            "description": "Exclude hosts",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -1171,7 +1501,10 @@
             "description": "Filter by user uuid",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -1180,7 +1513,10 @@
             "description": "Filter by user email",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -1189,7 +1525,10 @@
             "description": "Filter by project uuid",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -1198,7 +1537,10 @@
             "description": "Filter by slice uuid",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -1207,20 +1549,23 @@
             "description": "Filter by slice state; allowed values Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "Nascent",
-                "Configuring",
-                "StableError",
-                "StableOK",
-                "Closing",
-                "Dead",
-                "Modifying",
-                "ModifyOK",
-                "ModifyError",
-                "AllocatedError",
-                "AllocatedOK"
-              ]
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "Nascent",
+                  "Configuring",
+                  "StableError",
+                  "StableOK",
+                  "Closing",
+                  "Dead",
+                  "Modifying",
+                  "ModifyOK",
+                  "ModifyError",
+                  "AllocatedError",
+                  "AllocatedOK"
+                ]
+              }
             }
           },
           {
@@ -1229,7 +1574,10 @@
             "description": "Filter by sliver uuid",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -1238,21 +1586,24 @@
             "description": "Filter by sliver type; allowed values VM, Switch, Facility, L2STS, L2PTP, L2Bridge, FABNetv4, FABNetv6, PortMirror, L3VPN, FABNetv4Ext, FABNetv6Ext",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "VM",
-                "Switch",
-                "Facility",
-                "L2STS",
-                "L2PTP",
-                "L2Bridge",
-                "FABNetv4",
-                "FABNetv6",
-                "PortMirror",
-                "L3VPN",
-                "FABNetv4Ext",
-                "FABNetv6Ext"
-              ]
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "VM",
+                  "Switch",
+                  "Facility",
+                  "L2STS",
+                  "L2PTP",
+                  "L2Bridge",
+                  "FABNetv4",
+                  "FABNetv6",
+                  "PortMirror",
+                  "L3VPN",
+                  "FABNetv4Ext",
+                  "FABNetv6Ext"
+                ]
+              }
             }
           },
           {
@@ -1261,18 +1612,21 @@
             "description": "Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "Nascent",
-                "Ticketed",
-                "Active",
-                "ActiveTicketed",
-                "Closed",
-                "CloseWait",
-                "Failed",
-                "Unknown",
-                "CloseFail"
-              ]
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "Nascent",
+                  "Ticketed",
+                  "Active",
+                  "ActiveTicketed",
+                  "Closed",
+                  "CloseWait",
+                  "Failed",
+                  "Unknown",
+                  "CloseFail"
+                ]
+              }
             }
           },
           {
@@ -1281,15 +1635,18 @@
             "description": "Filter by component type, allowed values GPU, SmartNIC, SharedNIC, FPGA, NVME, Storage",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "GPU",
-                "SmartNIC",
-                "SharedNIC",
-                "FPGA",
-                "NVME",
-                "Storage"
-              ]
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "GPU",
+                  "SmartNIC",
+                  "SharedNIC",
+                  "FPGA",
+                  "NVME",
+                  "Storage"
+                ]
+              }
             }
           },
           {
@@ -1298,7 +1655,10 @@
             "description": "Filter by component model",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -1307,7 +1667,10 @@
             "description": "Filter by specified BDF (Bus:Device.Function) of interfaces/components",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -1316,7 +1679,10 @@
             "description": "Filter by VLAN associated with their sliver interfaces.",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -1325,7 +1691,10 @@
             "description": "Filter by specified IP subnet",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -1334,7 +1703,10 @@
             "description": "Filter by site",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -1343,7 +1715,70 @@
             "description": "Filter by host",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "exclude_user_id",
+            "in": "query",
+            "description": "Exclude Users by IDs",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "exclude_user_email",
+            "in": "query",
+            "description": "Exclude Users by emails",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "exclude_project_id",
+            "in": "query",
+            "description": "Exclude projects",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "exclude_site",
+            "in": "query",
+            "description": "Exclude sites",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "exclude_host",
+            "in": "query",
+            "description": "Exclude hosts",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -2085,7 +2520,10 @@
         "description": "Filter by user uuid",
         "required": false,
         "schema": {
-          "type": "string"
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "userEmail": {
@@ -2094,7 +2532,34 @@
         "description": "Filter by user email",
         "required": false,
         "schema": {
-          "type": "string"
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "excludeUserId": {
+        "name": "exclude_user_id",
+        "in": "query",
+        "description": "Exclude Users by IDs",
+        "required": false,
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "excludeUserEmail": {
+        "name": "exclude_user_email",
+        "in": "query",
+        "description": "Exclude Users by emails",
+        "required": false,
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "projectId": {
@@ -2103,7 +2568,22 @@
         "description": "Filter by project uuid",
         "required": false,
         "schema": {
-          "type": "string"
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "excludeProjectId": {
+        "name": "exclude_project_id",
+        "in": "query",
+        "description": "Exclude projects",
+        "required": false,
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "sliceId": {
@@ -2112,7 +2592,10 @@
         "description": "Filter by slice uuid",
         "required": false,
         "schema": {
-          "type": "string"
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "sliverId": {
@@ -2121,7 +2604,10 @@
         "description": "Filter by sliver uuid",
         "required": false,
         "schema": {
-          "type": "string"
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "componentType": {
@@ -2130,15 +2616,18 @@
         "description": "Filter by component type, allowed values GPU, SmartNIC, SharedNIC, FPGA, NVME, Storage",
         "required": false,
         "schema": {
-          "type": "string",
-          "enum": [
-            "GPU",
-            "SmartNIC",
-            "SharedNIC",
-            "FPGA",
-            "NVME",
-            "Storage"
-          ]
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "GPU",
+              "SmartNIC",
+              "SharedNIC",
+              "FPGA",
+              "NVME",
+              "Storage"
+            ]
+          }
         }
       },
       "componentModel": {
@@ -2147,7 +2636,10 @@
         "description": "Filter by component model",
         "required": false,
         "schema": {
-          "type": "string"
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "sliverType": {
@@ -2156,21 +2648,24 @@
         "description": "Filter by sliver type; allowed values VM, Switch, Facility, L2STS, L2PTP, L2Bridge, FABNetv4, FABNetv6, PortMirror, L3VPN, FABNetv4Ext, FABNetv6Ext",
         "required": false,
         "schema": {
-          "type": "string",
-          "enum": [
-            "VM",
-            "Switch",
-            "Facility",
-            "L2STS",
-            "L2PTP",
-            "L2Bridge",
-            "FABNetv4",
-            "FABNetv6",
-            "PortMirror",
-            "L3VPN",
-            "FABNetv4Ext",
-            "FABNetv6Ext"
-          ]
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "VM",
+              "Switch",
+              "Facility",
+              "L2STS",
+              "L2PTP",
+              "L2Bridge",
+              "FABNetv4",
+              "FABNetv6",
+              "PortMirror",
+              "L3VPN",
+              "FABNetv4Ext",
+              "FABNetv6Ext"
+            ]
+          }
         }
       },
       "sliverState": {
@@ -2179,18 +2674,21 @@
         "description": "Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail",
         "required": false,
         "schema": {
-          "type": "string",
-          "enum": [
-            "Nascent",
-            "Ticketed",
-            "Active",
-            "ActiveTicketed",
-            "Closed",
-            "CloseWait",
-            "Failed",
-            "Unknown",
-            "CloseFail"
-          ]
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "Nascent",
+              "Ticketed",
+              "Active",
+              "ActiveTicketed",
+              "Closed",
+              "CloseWait",
+              "Failed",
+              "Unknown",
+              "CloseFail"
+            ]
+          }
         }
       },
       "sliceState": {
@@ -2199,20 +2697,23 @@
         "description": "Filter by slice state; allowed values Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK",
         "required": false,
         "schema": {
-          "type": "string",
-          "enum": [
-            "Nascent",
-            "Configuring",
-            "StableError",
-            "StableOK",
-            "Closing",
-            "Dead",
-            "Modifying",
-            "ModifyOK",
-            "ModifyError",
-            "AllocatedError",
-            "AllocatedOK"
-          ]
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "Nascent",
+              "Configuring",
+              "StableError",
+              "StableOK",
+              "Closing",
+              "Dead",
+              "Modifying",
+              "ModifyOK",
+              "ModifyError",
+              "AllocatedError",
+              "AllocatedOK"
+            ]
+          }
         }
       },
       "site": {
@@ -2221,7 +2722,22 @@
         "description": "Filter by site",
         "required": false,
         "schema": {
-          "type": "string"
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "excludeSite": {
+        "name": "exclude_site",
+        "in": "query",
+        "description": "Exclude sites",
+        "required": false,
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "host": {
@@ -2230,7 +2746,22 @@
         "description": "Filter by host",
         "required": false,
         "schema": {
-          "type": "string"
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "excludeHost": {
+        "name": "exclude_host",
+        "in": "query",
+        "description": "Exclude hosts",
+        "required": false,
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "ipSubnet": {
@@ -2239,7 +2770,10 @@
         "description": "Filter by specified IP subnet",
         "required": false,
         "schema": {
-          "type": "string"
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "bdf": {
@@ -2248,7 +2782,10 @@
         "description": "Filter by specified BDF (Bus:Device.Function) of interfaces/components",
         "required": false,
         "schema": {
-          "type": "string"
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "vlan": {
@@ -2257,7 +2794,10 @@
         "description": "Filter by VLAN associated with their sliver interfaces.",
         "required": false,
         "schema": {
-          "type": "string"
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "page": {

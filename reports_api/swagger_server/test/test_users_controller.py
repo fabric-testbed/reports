@@ -39,6 +39,11 @@ class TestUsersController(BaseTestCase):
                         ('ip_subnet', 'ip_subnet_example'),
                         ('site', 'site_example'),
                         ('host', 'host_example'),
+                        ('exclude_user_id', 'exclude_user_id_example'),
+                        ('exclude_user_email', 'exclude_user_email_example'),
+                        ('exclude_project_id', 'exclude_project_id_example'),
+                        ('exclude_site', 'exclude_site_example'),
+                        ('exclude_host', 'exclude_host_example'),
                         ('page', 1),
                         ('per_page', 100)]
         response = self.client.open(

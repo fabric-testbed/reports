@@ -31,13 +31,16 @@ from reports_api.swagger_server.models.site import Site
 from reports_api.swagger_server.models.sites import Sites
 
 
-def hosts_get(site: str):  # noqa: E501
+def hosts_get(site=None, exclude_site=None):  # noqa: E501
     """Get hosts
 
     Retrieve a list of hosts. # noqa: E501
 
     :param site: Filter by site
-    :type site: str
+    :type site: List[str]
+
+    :param exclude_site: Exclude sites
+    :type exclude_site: List[str]
 
     :rtype: Sites
     """
@@ -52,7 +55,7 @@ def hosts_get(site: str):  # noqa: E501
 
         response = Sites()
         response.data = []
-        for h in db_mgr.get_hosts(site=site):
+        for h in db_mgr.get_hosts(site=site, exclude_site=exclude_site):
             response.data.append(Site.from_dict(h))
         response.size = len(response.data)
         response.type = "hosts"

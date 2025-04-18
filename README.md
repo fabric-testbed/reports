@@ -1,6 +1,6 @@
 # reports
 ## Overview
-The Sliver Analytics Dashboard is a web-based tool for tracking and analyzing sliver allocations across projects and users. It provides insights into resource usage with time-based, user-based, and project-based filtering.
+The Reports Dashboard is a web-based tool for tracking and analyzing sliver allocations across projects and users. It provides insights into resource usage with time-based, user-based, and project-based filtering.
 
 The system consists of multiple services, including a PostgreSQL database, an API layer, a Dash-based visualization app, and Nginx for reverse proxying.
 
@@ -17,7 +17,7 @@ The system is composed of the following Docker containers:
 ### Service	Description
 - database: PostgreSQL database storing sliver data.
 - nginx: Nginx reverse proxy handling HTTPS traffic.
-- analytics-api: Backend API serving sliver-related data.
+- reports-api: Backend API serving sliver-related data.
 - dash-app: Dash-based web application for visualization.
 - vouch-proxy: Authentication proxy for securing API requests.
 
@@ -32,8 +32,8 @@ The system is composed of the following Docker containers:
 
 ### 1. Clone the Repository
 ```
-git clone https://github.com/yourusername/sliver-analytics.git
-cd sliver-analytics
+git clone https://github.com/yourusername/reports.git
+cd reports
 ```
 
 
@@ -46,7 +46,7 @@ POSTGRES_DB=analytics
 POSTGRES_USER=fabric
 POSTGRES_PASSWORD=fabric
 PGDATA=/var/lib/postgresql/data
-API_URL=http://analytics-api:5000
+API_URL=http://reports-api:8080
 ```
 
 ### 3. Build & Run the Services
@@ -79,7 +79,7 @@ GET /user_with_most_slivers?component_type=FPGA
 - Check Logs
 - To view logs for a specific container, use:
 ```
-docker logs -f analytics-api
+docker logs -f reports-api
 ```
 - Restart a Service
 If a service fails, restart it with:
