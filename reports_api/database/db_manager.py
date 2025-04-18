@@ -536,7 +536,7 @@ class DatabaseManager:
             if sliver_id:
                 filters.append(Slivers.sliver_guid.in_(sliver_id))
             if sliver_type:
-                filters.append(Slivers.sliver_type.in_(sliver_type))
+                filters.append(Slivers.sliver_type.in_([t.lower() for t in sliver_type]))
             if sliver_state:
                 filters.append(Slivers.state.in_(sliver_state))
             if ip_subnet:
@@ -716,7 +716,7 @@ class DatabaseManager:
             if sliver_id:
                 filters.append(Slivers.sliver_guid.in_(sliver_id))
             if sliver_type:
-                filters.append(Slivers.sliver_type.in_(sliver_type))
+                filters.append(Slivers.sliver_type.in_([t.lower() for t in sliver_type]))
             if sliver_state:
                 filters.append(Slivers.state.in_(sliver_state))
             if ip_subnet:
@@ -896,7 +896,7 @@ class DatabaseManager:
             if sliver_id:
                 filters.append(Slivers.sliver_guid.in_(sliver_id))
             if sliver_type:
-                filters.append(Slivers.sliver_type.in_(sliver_type))
+                filters.append(Slivers.sliver_type.in_([t.lower() for t in sliver_type]))
             if sliver_state:
                 filters.append(Slivers.state.in_(sliver_state))  # assuming state is stored as int
             if ip_subnet:
@@ -1090,7 +1090,7 @@ class DatabaseManager:
             if sliver_id:
                 filters.append(Slivers.sliver_guid.in_(sliver_id))
             if sliver_type:
-                filters.append(Slivers.sliver_type.in_(sliver_type))
+                filters.append(Slivers.sliver_type.in_([t.lower() for t in sliver_type]))
             if sliver_state:
                 filters.append(Slivers.state.in_(sliver_state))  # assuming state is stored as int
             if ip_subnet:

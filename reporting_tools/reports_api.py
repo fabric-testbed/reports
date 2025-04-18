@@ -2,6 +2,7 @@ import requests
 import json
 import os
 
+
 class ReportsApi:
     def __init__(self, base_url: str, token_file: str):
         self.base_url = base_url.rstrip("/")

@@ -23,6 +23,8 @@
 #
 #
 # Author: Komal Thareja (kthare10@renci.org)
+import traceback
+
 from reports_api.common.globals import GlobalsSingleton
 from reports_api.database.db_manager import DatabaseManager
 from reports_api.response_code.cors_response import cors_500
@@ -63,4 +65,5 @@ def hosts_get(site=None, exclude_site=None):  # noqa: E501
     except Exception as exc:
         details = 'Oops! something went wrong with hosts_get(): {0}'.format(exc)
         logger.error(details)
+        logger.error(traceback.format_exc())
         return cors_500(details=details)

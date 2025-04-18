@@ -108,15 +108,18 @@ def slivers_get(start_time=None, end_time=None, user_id=None, user_email=None, p
         response.data = []
         start = datetime.fromisoformat(start_time) if start_time else None
         end = datetime.fromisoformat(end_time) if end_time else None
+        sliver_states = [SliverStates.translate(s) for s in sliver_state] if sliver_state else None
+        slice_states = [SliceState.translate(s) for s in slice_state] if slice_state else None
+
         slivers = db_mgr.get_slivers(start_time=start, end_time=end, user_email=user_email, user_id=user_id, vlan=vlan,
-                                       sliver_id=sliver_id, sliver_type=sliver_type, slice_id=slice_id, bdf=bdf,
-                                       sliver_state=[SliverStates.translate(s) for s in sliver_state], site=site,
-                                       host=host, project_id=project_id, component_model=component_model,
-                                       slice_state=[SliceState.translate(s) for s in slice_state],
-                                       component_type=component_type, ip_subnet=ip_subnet, page=page, per_page=per_page,
-                                       exclude_user_id=exclude_user_id, exclude_user_email=exclude_user_email,
-                                       exclude_project_id=exclude_project_id, exclude_site=exclude_site,
-                                       exclude_host=exclude_host)
+                                     sliver_id=sliver_id, sliver_type=sliver_type, slice_id=slice_id, bdf=bdf,
+                                     sliver_state=sliver_states, site=site,
+                                     host=host, project_id=project_id, component_model=component_model,
+                                     slice_state=slice_states,
+                                     component_type=component_type, ip_subnet=ip_subnet, page=page, per_page=per_page,
+                                     exclude_user_id=exclude_user_id, exclude_user_email=exclude_user_email,
+                                     exclude_project_id=exclude_project_id, exclude_site=exclude_site,
+                                     exclude_host=exclude_host)
         for s in slivers.get("slivers"):
             response.data.append(Sliver.from_dict(s))
         response.size = len(response.data)
@@ -126,5 +129,5 @@ def slivers_get(start_time=None, end_time=None, user_id=None, user_email=None, p
     except Exception as exc:
         details = 'Oops! something went wrong with slivers_get(): {0}'.format(exc)
         logger.error(details)
-        traceback.print_exc()
+        logger.error(traceback.format_exc())
         return cors_500(details=details)
