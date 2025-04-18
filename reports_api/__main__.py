@@ -7,7 +7,7 @@ from reports_api.common.globals import Globals, GlobalsSingleton
 from reports_api.swagger_server import encoder
 rest_port_str = 8080
 
-Globals.config_file = "test_config.yml"
+#Globals.config_file = "test_config.yml"
 
 
 def main():
@@ -15,7 +15,7 @@ def main():
     app = connexion.App(__name__, specification_dir='swagger_server/swagger/',
                         options={"swagger_ui": True})
     app.app.json_encoder = encoder.JSONEncoder
-    app.add_api('swagger.yaml', arguments={'title': 'Analytics API with PostgreSQL'}, pythonic_params=True)
+    app.add_api('swagger.yaml', arguments={'title': 'Reports API with PostgreSQL'}, pythonic_params=True)
     app.debug = True
     waitress.serve(app, port=int(rest_port_str), threads=8)
 
