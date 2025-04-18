@@ -51,15 +51,15 @@ services:
       DATABASE_URL: "postgresql://fabric:fabric@reports-db:5432/analytics"
     volumes:
       - ./reports_api/config.yml:/usr/src/app/config.yml
-  dash-app:
-    build: ./dash-app
-    container_name: dash-app
-    depends_on:
-      - reports-api
-    networks:
-      - backend   # Ensure the API is on the backend network
-    environment:
-      - API_URL=http://reports-api:8080
+#  dash-app:
+#    build: ./dash-app
+#    container_name: dash-app
+#    depends_on:
+#      - reports-api
+#    networks:
+#      - backend   # Ensure the API is on the backend network
+#    environment:
+#      - API_URL=http://reports-api:8080
 
   vouch-proxy:
     container_name: reports-vouch-proxy
