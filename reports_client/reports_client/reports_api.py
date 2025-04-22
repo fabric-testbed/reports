@@ -47,7 +47,7 @@ class ReportsApi:
                      component_model: list[str] = None, bdf: list[str] = None, vlan: list[str] = None,
                      ip_subnet: list[str] = None, site: list[str] = None, host: list[str] = None,
                      exclude_user_id: list[str] = None, exclude_user_email: list[str] = None,
-                     exclude_project_id: list[str] = None, exclude_site: list[str] = None,
+                     exclude_project_id: list[str] = None, exclude_site: list[str] = None, facility: list[str] = None,
                      exclude_host: list[str] = None, page=0, per_page=100, fetch_all=True):
         """
         Fetch slices with optional filters. Supports fetching all pages or just one.
@@ -84,6 +84,8 @@ class ReportsApi:
         :type ip_subnet: List[str]
         :param site: Filter by site
         :type site: List[str]
+        :param host: Filter by host
+        :type host: List[str]
         :param host: Filter by host
         :type host: List[str]
         :param exclude_user_id: Exclude Users by IDs
@@ -125,6 +127,7 @@ class ReportsApi:
             "ip_subnet": ip_subnet,
             "site": site,
             "host": host,
+            "facility": facility,
             "exclude_user_id": exclude_user_id,
             "exclude_user_email": exclude_user_email,
             "exclude_project_id": exclude_project_id,
@@ -168,7 +171,7 @@ class ReportsApi:
                       component_model: list[str] = None, bdf: list[str] = None, vlan: list[str] = None,
                       ip_subnet: list[str] = None, site: list[str] = None, host: list[str] = None,
                       exclude_user_id: list[str] = None, exclude_user_email: list[str] = None,
-                      exclude_project_id: list[str] = None, exclude_site: list[str] = None,
+                      exclude_project_id: list[str] = None, exclude_site: list[str] = None, facility: list[str] = None,
                       exclude_host: list[str] = None, page=0, per_page=100, fetch_all=True):
         """
         Fetch slivers with optional filters. Supports fetching all pages or just one.
@@ -205,6 +208,8 @@ class ReportsApi:
         :type ip_subnet: List[str]
         :param site: Filter by site
         :type site: List[str]
+        :param host: Filter by host
+        :type host: List[str]
         :param host: Filter by host
         :type host: List[str]
         :param exclude_user_id: Exclude Users by IDs
@@ -247,6 +252,7 @@ class ReportsApi:
             "ip_subnet": ip_subnet,
             "site": site,
             "host": host,
+            "facility": facility,
             "exclude_user_id": exclude_user_id,
             "exclude_user_email": exclude_user_email,
             "exclude_project_id": exclude_project_id,
@@ -290,7 +296,7 @@ class ReportsApi:
                     component_model: list[str] = None, bdf: list[str] = None, vlan: list[str] = None,
                     ip_subnet: list[str] = None, site: list[str] = None, host: list[str] = None,
                     exclude_user_id: list[str] = None, exclude_user_email: list[str] = None,
-                    exclude_project_id: list[str] = None, exclude_site: list[str] = None,
+                    exclude_project_id: list[str] = None, exclude_site: list[str] = None, facility: list[str] = None,
                     exclude_host: list[str] = None, page=0, per_page=100, fetch_all=True):
         """
         Fetch users with optional filters. Supports fetching all pages or just one.
@@ -327,6 +333,8 @@ class ReportsApi:
         :type ip_subnet: List[str]
         :param site: Filter by site
         :type site: List[str]
+        :param host: Filter by host
+        :type host: List[str]
         :param host: Filter by host
         :type host: List[str]
         :param exclude_user_id: Exclude Users by IDs
@@ -369,6 +377,7 @@ class ReportsApi:
             "ip_subnet": ip_subnet,
             "site": site,
             "host": host,
+            "facility": facility,
             "exclude_user_id": exclude_user_id,
             "exclude_user_email": exclude_user_email,
             "exclude_project_id": exclude_project_id,
@@ -412,7 +421,7 @@ class ReportsApi:
                        component_model: list[str] = None, bdf: list[str] = None, vlan: list[str] = None,
                        ip_subnet: list[str] = None, site: list[str] = None, host: list[str] = None,
                        exclude_user_id: list[str] = None, exclude_user_email: list[str] = None,
-                       exclude_project_id: list[str] = None, exclude_site: list[str] = None,
+                       exclude_project_id: list[str] = None, exclude_site: list[str] = None, facility: list[str] = None,
                        exclude_host: list[str] = None, page=0, per_page=100, fetch_all=True):
         """
         Fetch projects with optional filters. Supports fetching all pages or just one.
@@ -449,6 +458,8 @@ class ReportsApi:
         :type ip_subnet: List[str]
         :param site: Filter by site
         :type site: List[str]
+        :param host: Filter by host
+        :type host: List[str]
         :param host: Filter by host
         :type host: List[str]
         :param exclude_user_id: Exclude Users by IDs
@@ -491,6 +502,7 @@ class ReportsApi:
             "ip_subnet": ip_subnet,
             "site": site,
             "host": host,
+            "facility": facility,
             "exclude_user_id": exclude_user_id,
             "exclude_user_email": exclude_user_email,
             "exclude_project_id": exclude_project_id,
@@ -526,3 +538,108 @@ class ReportsApi:
             "total": total,
             "data": all_projects
         }
+
+    def post_sliver(self, slice_id: str, sliver_id: str, sliver_payload: dict):
+        """
+        Create or update a sliver for a given slice ID and sliver ID.
+
+        :param slice_id: UUID of the slice
+        :type slice_id: str
+        :param sliver_id: UUID of the sliver
+        :type sliver_id: str
+        :param sliver_payload: Dictionary containing the sliver specification
+        :type sliver_payload: dict
+        :return: Server response as a dictionary
+        :rtype: dict
+
+        Example sliver dictionary:
+            sliver_payload = {
+                "project_id": "d78f130a-29b2-4f78-b9a9-87828d6cb2e2",
+                "project_name": "Edge AI Project",
+                "slice_id": "a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f",
+                "slice_name": "edge-ai-slice",
+                "user_id": "u98f124b-2332-483f-92b7-3bfbfb06b6e0",
+                "user_email": "alice@example.com",
+                "host": "host1.edge.fabric",
+                "site": "RENC",
+                "sliver_id": "c9d3f9b2-cc40-44b0-ae3a-f3a9f7a87771",
+                "node_id": "n1",
+                "state": "Active",
+                "sliver_type": "VM",
+                "ip_subnet": "192.168.1.0/24",
+                "error": None,
+                "image": "ubuntu-22.04",
+                "core": 4,
+                "ram": 8192,
+                "disk": 100,
+                "bandwidth": 10000,
+                "lease_start": "2025-05-01T12:00:00Z",
+                "lease_end": "2025-05-03T12:00:00Z",
+                "components": [
+                    {
+                        "component_id": "comp-01",
+                        "node_id": "n1",
+                        "component_node_id": "gpu-node-1",
+                        "type": "GPU",
+                        "model": "A100",
+                        "bdfs": ["0000:65:00.0", "0000:65:00.1"]
+                    }
+                ],
+                "interfaces": [
+                    {
+                        "interface_id": "eth0",
+                        "site": "RENC",
+                        "vlan": "123",
+                        "bdf": "0000:3b:00.0",
+                        "local_name": "ens3",
+                        "device_name": "mlx5_0",
+                        "name": "mgmt-net"
+                    }
+                ]
+            }
+        """
+        url = f"{self.base_url}/slivers/{slice_id}/{sliver_id}"
+
+        headers = self.headers.copy()
+        headers["Content-Type"] = "application/json"
+
+        response = requests.post(url, headers=headers, json=sliver_payload)
+
+        if response.status_code in (200, 201):
+            return response.json()
+        else:
+            raise Exception(f"Failed to post sliver: {response.status_code} - {response.text}")
+
+    def post_slice(self, slice_id: str, slice_payload: dict):
+        """
+        Create or update a slice.
+
+        :param slice_id: UUID of the slice
+        :type slice_id: str
+        :param slice_payload: Dictionary containing the slice specification
+        :type slice_payload: dict
+        :return: Server response as a dictionary
+        :rtype: dict
+
+        Example slice_payload:
+        slice_payload = {
+            "project_id": "d78f130a-29b2-4f78-b9a9-87828d6cb2e2",
+            "user_id": "u98f124b-2332-483f-92b7-3bfbfb06b6e0",
+            "slice_id": "a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f",
+            "slice_name": "edge-ai-slice",
+            "state": "StableOK",
+            "lease_start": "2025-05-01T12:00:00Z",
+            "lease_end": "2025-05-03T12:00:00Z"
+        }
+        """
+        url = f"{self.base_url}/slices/{slice_id}"
+
+        headers = self.headers.copy()
+        headers["Content-Type"] = "application/json"
+
+        response = requests.post(url, headers=headers, json=slice_payload)
+
+        if response.status_code in (200, 201):
+            return response.json()
+        else:
+            raise Exception(f"Failed to post slice: {response.status_code} - {response.text}")
