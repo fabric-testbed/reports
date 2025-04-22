@@ -1,5 +1,4 @@
 pytz
-ZODB
-requests
+fabric_reports_client
 pandas
 matplotlib
