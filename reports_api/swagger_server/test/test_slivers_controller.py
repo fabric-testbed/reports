@@ -37,6 +37,7 @@ class TestSliversController(BaseTestCase):
                         ('bdf', 'bdf_example'),
                         ('vlan', 'vlan_example'),
                         ('ip_subnet', 'ip_subnet_example'),
+                        ('facility', 'facility_example'),
                         ('site', 'site_example'),
                         ('host', 'host_example'),
                         ('exclude_user_id', 'exclude_user_id_example'),
@@ -50,6 +51,20 @@ class TestSliversController(BaseTestCase):
             '/RENCI3/analytics/1.0.0/slivers',
             method='GET',
             query_string=query_string)
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
+    def test_slivers_slice_id_sliver_id_post(self):
+        """Test case for slivers_slice_id_sliver_id_post
+
+        Create/Update Sliver
+        """
+        body = Sliver()
+        response = self.client.open(
+            '/RENCI3/analytics/1.0.0/slivers/{slice_id}/{sliver_id}'.format(slice_id='38400000-8cf0-11bd-b23e-10b96e4ef00d', sliver_id='38400000-8cf0-11bd-b23e-10b96e4ef00d'),
+            method='POST',
+            data=json.dumps(body),
+            content_type='text/plain')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 

@@ -218,7 +218,7 @@ class DatabaseManager:
                 sliver.host_id = host_id
                 sliver.site_id = site_id
                 sliver.state = state
-                sliver.sliver_type = sliver_type
+                sliver.sliver_type = sliver_type.lower()
                 if ip_subnet:
                     sliver.ip_subnet = ip_subnet
                 if image:
@@ -309,7 +309,7 @@ class DatabaseManager:
             session.rollback()
 
     def add_or_update_interface(self, sliver_id: int, interface_guid: str, vlan: str,
-                                bdf: str, local_name: str, device_name: str, name: str) -> str:
+                                bdf: str, local_name: str, device_name: str, name: str, site_id: int) -> str:
         """
         Adds an Interface if it doesn't exist, otherwise updates its fields.
         """
@@ -330,6 +330,8 @@ class DatabaseManager:
                     interface.facility = device_name
                 if name:
                     interface.name = name
+                if site_id:
+                    interface.site_id = site_id
             else:
                 interface = Interfaces(
                     sliver_id=sliver_id,
@@ -338,7 +340,8 @@ class DatabaseManager:
                     device_name=device_name,
                     vlan=vlan,
                     bdf=bdf,
-                    name=name
+                    name=name,
+                    site_id=site_id
                 )
                 session.add(interface)
 
@@ -438,7 +441,7 @@ class DatabaseManager:
                      site: list[str] = None, ip_subnet: list[str] = None, bdf: list[str] = None,
                      vlan: list[str] = None, host: list[str] = None, exclude_user_id: list[str] = None,
                      exclude_user_email: list[str] = None, exclude_project_id: list[str] = None,
-                     exclude_site: list[str] = None, exclude_host: list[str] = None,
+                     exclude_site: list[str] = None, exclude_host: list[str] = None, facility: list[str] = None,
                      page: int = 0, per_page: int = 100) -> dict:
         """
         Retrieve a list of projects filtered by related slices, slivers, users, components, interface attributes, and time range.
@@ -477,7 +480,8 @@ class DatabaseManager:
         :type vlan: list[str], optional
         :param host: Filter projects by one or more hostnames where slivers are running.
         :type host: list[str], optional
-
+        :param facility: Filter by facility
+        :type facility: List[str]
         :param exclude_user_id: Exclude projects associated with these user IDs.
         :type exclude_user_id: list[str], optional
         :param exclude_user_email: Exclude projects associated with these user emails.
@@ -553,6 +557,8 @@ class DatabaseManager:
                 filters.append(Interfaces.bdf == bdf)
             if vlan:
                 filters.append(Interfaces.vlan.in_(vlan))
+            if facility:
+                filters.append(or_(*[Interfaces.name.like(f"%{f}%") for f in facility]))
 
             # Host and Site
             if host:
@@ -586,7 +592,7 @@ class DatabaseManager:
 
                 if project_id:
                     users = self.get_users(start_time=start_time, end_time=end_time, user_email=user_email,
-                                           user_id=user_id, vlan=vlan,
+                                           user_id=user_id, vlan=vlan, facility=facility,
                                            sliver_id=sliver_id, sliver_type=sliver_type, slice_id=slice_id, bdf=bdf,
                                            sliver_state=sliver_state, site=site, host=host,
                                            project_id=project_id, component_model=component_model,
@@ -616,7 +622,7 @@ class DatabaseManager:
                   site: list[str] = None, ip_subnet: list[str] = None, bdf: list[str] = None,
                   vlan: list[str] = None, host: list[str] = None, exclude_user_id: list[str] = None,
                   exclude_user_email: list[str] = None, exclude_project_id: list[str] = None,
-                  exclude_site: list[str] = None, exclude_host: list[str] = None,
+                  exclude_site: list[str] = None, exclude_host: list[str] = None, facility: list[str] = None,
                   page: int = 0, per_page: int = 100) -> dict:
         """
         Retrieve a list of users filtered by associated slices, slivers, components, network interfaces, and time range.
@@ -656,7 +662,8 @@ class DatabaseManager:
         :type vlan: list[str], optional
         :param host: Filter users by hostnames where their slivers are running.
         :type host: list[str], optional
-
+        :param facility: Filter by facility
+        :type facility: List[str]
         :param exclude_user_id: Exclude users with these user IDs.
         :type exclude_user_id: list[str], optional
         :param exclude_user_email: Exclude users with these email addresses.
@@ -733,6 +740,8 @@ class DatabaseManager:
                 filters.append(Interfaces.bdf.in_(bdf))
             if vlan:
                 filters.append(Interfaces.vlan.in_(vlan))
+            if facility:
+                filters.append(or_(*[Interfaces.name.like(f"%{f}%") for f in facility]))
 
             # Site and host filters
             if site:
@@ -797,7 +806,7 @@ class DatabaseManager:
                     site: list[str] = None, ip_subnet: list[str] = None, bdf: list[str] = None,
                     vlan: list[str] = None, host: list[str] = None, exclude_user_id: list[str] = None,
                     exclude_user_email: list[str] = None, exclude_project_id: list[str] = None,
-                    exclude_site: list[str] = None, exclude_host: list[str] = None,
+                    exclude_site: list[str] = None, exclude_host: list[str] = None, facility: list[str] = None,
                     page: int = 0, per_page: int = 100) -> dict:
         """
         Retrieve a list of slivers filtered by time range, user, project, slice, component, and network-related fields.
@@ -836,7 +845,8 @@ class DatabaseManager:
         :type vlan: list[str], optional
         :param host: Filter by one or more hostnames where slivers are instantiated.
         :type host: list[str], optional
-
+        :param facility: Filter by facility
+        :type facility: List[str]
         :param exclude_user_id: Exclude slivers associated with these user IDs.
         :type exclude_user_id: list[str], optional
         :param exclude_user_email: Exclude slivers associated with these user email addresses.
@@ -913,6 +923,8 @@ class DatabaseManager:
                 filters.append(Interfaces.bdf.in_(bdf))
             if vlan:
                 filters.append(Interfaces.vlan.in_(vlan))
+            if facility:
+                filters.append(or_(*[Interfaces.name.like(f"%{f}%") for f in facility]))
 
             # Host/Site filters
             if site:
@@ -991,7 +1003,7 @@ class DatabaseManager:
                    site: list[str] = None, ip_subnet: list[str] = None, bdf: list[str] = None,
                    vlan: list[str] = None, host: list[str] = None, exclude_user_id: list[str] = None,
                    exclude_user_email: list[str] = None, exclude_project_id: list[str] = None,
-                   exclude_site: list[str] = None, exclude_host: list[str] = None,
+                   exclude_site: list[str] = None, exclude_host: list[str] = None, facility: list[str] = None,
                    page: int = 0, per_page: int = 100) -> dict:
         """
         Retrieve a list of slices filtered by time, user, project, sliver, component, and network attributes.
@@ -1030,7 +1042,8 @@ class DatabaseManager:
         :type vlan: list[str], optional
         :param host: Filter by one or more hostnames where slivers are running.
         :type host: list[str], optional
-
+        :param facility: Filter by facility
+        :type facility: List[str]
         :param exclude_user_id: Exclude slices associated with these user IDs.
         :type exclude_user_id: list[str], optional
         :param exclude_user_email: Exclude slices associated with these user email addresses.
@@ -1113,6 +1126,8 @@ class DatabaseManager:
                 filters.append(Sites.name.in_(site))
             if host:
                 filters.append(Hosts.name.in_(host))
+            if facility:
+                filters.append(or_(*[Interfaces.name.like(f"%{f}%") for f in facility]))
 
             if exclude_project_id:
                 filters.append(Projects.project_uuid.notin_(exclude_project_id))

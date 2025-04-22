@@ -22,7 +22,8 @@ class TestHostsController(BaseTestCase):
 
         Get hosts
         """
-        query_string = [('site', 'site_example')]
+        query_string = [('site', 'site_example'),
+                        ('exclude_site', 'exclude_site_example')]
         response = self.client.open(
             '/RENCI3/analytics/1.0.0/hosts',
             method='GET',

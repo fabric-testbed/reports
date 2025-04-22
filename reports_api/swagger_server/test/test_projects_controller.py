@@ -37,6 +37,7 @@ class TestProjectsController(BaseTestCase):
                         ('bdf', 'bdf_example'),
                         ('vlan', 'vlan_example'),
                         ('ip_subnet', 'ip_subnet_example'),
+                        ('facility', 'facility_example'),
                         ('site', 'site_example'),
                         ('host', 'host_example'),
                         ('exclude_user_id', 'exclude_user_id_example'),

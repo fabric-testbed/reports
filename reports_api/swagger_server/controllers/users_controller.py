@@ -1,7 +1,11 @@
 from reports_api.response_code import users_controller as rc
 
 
-def users_get(start_time=None, end_time=None, user_id=None, user_email=None, project_id=None, slice_id=None, slice_state=None, sliver_id=None, sliver_type=None, sliver_state=None, component_type=None, component_model=None, bdf=None, vlan=None, ip_subnet=None, site=None, host=None, exclude_user_id=None, exclude_user_email=None, exclude_project_id=None, exclude_site=None, exclude_host=None, page=None, per_page=None):  # noqa: E501
+def users_get(start_time=None, end_time=None, user_id=None, user_email=None, project_id=None, slice_id=None,
+              slice_state=None, sliver_id=None, sliver_type=None, sliver_state=None, component_type=None,
+              component_model=None, bdf=None, vlan=None, ip_subnet=None, facility=None, site=None, host=None,
+              exclude_user_id=None, exclude_user_email=None, exclude_project_id=None, exclude_site=None,
+              exclude_host=None, page=None, per_page=None):  # noqa: E501
     """Get users
 
     Retrieve a list of users with optional filters. # noqa: E501
@@ -36,6 +40,8 @@ def users_get(start_time=None, end_time=None, user_id=None, user_email=None, pro
     :type vlan: List[str]
     :param ip_subnet: Filter by specified IP subnet
     :type ip_subnet: List[str]
+    :param facility: Filter by facility
+    :type facility: List[str]
     :param site: Filter by site
     :type site: List[str]
     :param host: Filter by host
@@ -60,7 +66,7 @@ def users_get(start_time=None, end_time=None, user_id=None, user_email=None, pro
     return rc.users_get(start_time=start_time, end_time=end_time, user_email=user_email, user_id=user_id, vlan=vlan,
                         sliver_id=sliver_id, sliver_type=sliver_type, slice_id=slice_id, bdf=bdf,
                         sliver_state=sliver_state,site=site, host=host, slice_state=slice_state,
-                        project_id=project_id, component_model=component_model,
+                        project_id=project_id, component_model=component_model, facility=facility,
                         component_type=component_type, ip_subnet=ip_subnet, page=page, per_page=per_page,
                         exclude_user_id=exclude_user_id, exclude_user_email=exclude_user_email,
                         exclude_project_id=exclude_project_id, exclude_site=exclude_site, exclude_host=exclude_host)

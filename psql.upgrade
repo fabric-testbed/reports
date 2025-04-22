@@ -1,0 +1,64 @@
+ALTER TABLE slivers
+ADD COLUMN node_id VARCHAR;
+
+CREATE INDEX idx_slivers_node_id ON slivers(node_id);
+
+ALTER TABLE components
+ADD COLUMN node_id VARCHAR;
+
+ALTER TABLE components
+ADD COLUMN component_node_id VARCHAR;
+
+CREATE INDEX idx_components_node_id ON components(node_id);
+CREATE INDEX idx_components_component_node_id ON components(component_node_id);
+
+ALTER TABLE hosts
+ADD CONSTRAINT fk_hosts_site
+FOREIGN KEY (site_id)
+REFERENCES sites(id)
+ON DELETE SET NULL;
+
+ALTER TABLE slivers
+ALTER COLUMN node_id DROP NOT NULL;
+
+ALTER TABLE slices
+ALTER COLUMN slice_name DROP NOT NULL;
+
+
+ALTER TABLE interfaces
+ADD COLUMN site_id INTEGER;
+
+ALTER TABLE interfaces
+ADD CONSTRAINT fk_interfaces_site_id FOREIGN KEY (site_id) REFERENCES sites(id);
+
+CREATE INDEX IF NOT EXISTS idx_interfaces_site_id ON interfaces (site_id);
+
+
+-- Slices
+CREATE INDEX IF NOT EXISTS idx_slices_user_project ON slices (user_id, project_id);
+CREATE INDEX IF NOT EXISTS idx_slices_state_project ON slices (state, project_id);
+
+-- Slivers
+CREATE INDEX IF NOT EXISTS idx_slivers_user_project ON slivers (user_id, project_id);
+CREATE INDEX IF NOT EXISTS idx_slivers_project_slice ON slivers (project_id, slice_id);
+CREATE INDEX IF NOT EXISTS idx_slivers_state_type ON slivers (state, sliver_type);
+CREATE INDEX IF NOT EXISTS idx_slivers_site_host ON slivers (site_id, host_id);
+CREATE INDEX IF NOT EXISTS idx_slivers_ip_subnet ON slivers (ip_subnet);
+
+-- Interfaces
+CREATE INDEX IF NOT EXISTS idx_interfaces_sliver_vlan ON interfaces (sliver_id, vlan);
+CREATE INDEX IF NOT EXISTS idx_interfaces_sliver_bdf ON interfaces (sliver_id, bdf);
+CREATE INDEX IF NOT EXISTS idx_interfaces_sliver_site ON interfaces (sliver_id, site_id);
+
+-- Components
+CREATE INDEX IF NOT EXISTS idx_components_type_model ON components (type, model);
+CREATE INDEX IF NOT EXISTS idx_components_sliver ON components (sliver_id);
+
+-- Users
+CREATE INDEX IF NOT EXISTS idx_users_uuid_email ON users (user_uuid, user_email);
+
+-- Projects
+CREATE INDEX IF NOT EXISTS idx_projects_uuid_name ON projects (project_uuid, project_name);
+
+-- Hosts
+CREATE INDEX IF NOT EXISTS idx_hosts_name_site ON hosts (name, site_id);

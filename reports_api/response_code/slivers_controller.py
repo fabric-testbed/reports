@@ -31,6 +31,7 @@ from reports_api.database.db_manager import DatabaseManager
 from reports_api.response_code.cors_response import cors_500
 from reports_api.response_code.slice_sliver_states import SliverStates, SliceState
 from reports_api.response_code.utils import authorize, cors_success_response
+from reports_api.swagger_server.models import Status200OkNoContentData, Status200OkNoContent
 from reports_api.swagger_server.models.sliver import Sliver
 from reports_api.swagger_server.models.slivers import Slivers  # noqa: E501
 
@@ -38,7 +39,7 @@ from reports_api.swagger_server.models.slivers import Slivers  # noqa: E501
 def slivers_get(start_time=None, end_time=None, user_id=None, user_email=None, project_id=None, slice_id=None,
                 slice_state=None, sliver_id=None, sliver_type=None, sliver_state=None, component_type=None,
                 component_model=None, bdf=None, vlan=None, ip_subnet=None, site=None, host=None, exclude_user_id=None,
-                exclude_user_email=None, exclude_project_id=None, exclude_site=None, exclude_host=None,
+                exclude_user_email=None, exclude_project_id=None, exclude_site=None, exclude_host=None, facility=None,
                 page=None, per_page=None):  # noqa: E501
     """Get slivers
 
@@ -78,6 +79,8 @@ def slivers_get(start_time=None, end_time=None, user_id=None, user_email=None, p
     :type site: List[str]
     :param host: Filter by host
     :type host: List[str]
+    :param facility: Filter by facility
+    :type facility: List[str]
     :param exclude_user_id: Exclude Users by IDs
     :type exclude_user_id: List[str]
     :param exclude_user_email: Exclude Users by emails
@@ -115,7 +118,7 @@ def slivers_get(start_time=None, end_time=None, user_id=None, user_email=None, p
                                      sliver_id=sliver_id, sliver_type=sliver_type, slice_id=slice_id, bdf=bdf,
                                      sliver_state=sliver_states, site=site,
                                      host=host, project_id=project_id, component_model=component_model,
-                                     slice_state=slice_states,
+                                     slice_state=slice_states, facility=facility,
                                      component_type=component_type, ip_subnet=ip_subnet, page=page, per_page=per_page,
                                      exclude_user_id=exclude_user_id, exclude_user_email=exclude_user_email,
                                      exclude_project_id=exclude_project_id, exclude_site=exclude_site,
@@ -128,6 +131,79 @@ def slivers_get(start_time=None, end_time=None, user_id=None, user_email=None, p
         return cors_success_response(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with slivers_get(): {0}'.format(exc)
+        logger.error(details)
+        logger.error(traceback.format_exc())
+        return cors_500(details=details)
+
+
+def slivers_slice_id_sliver_id_post(body: Sliver, slice_id: str, sliver_id: str):  # noqa: E501
+    """Create/Update Sliver
+
+    Create/Update Sliver. # noqa: E501
+
+    :param body: Create/Modify sliver
+    :type body: dict | bytes
+    :param slice_id:
+    :type slice_id:
+    :param sliver_id:
+    :type sliver_id:
+
+    :rtype: Status200OkNoContent
+    """
+    logger = GlobalsSingleton.get().log
+    try:
+        fabric_token = authorize()
+        global_obj = GlobalsSingleton.get()
+        db_mgr = DatabaseManager(user=global_obj.config.database_config.get("db-user"),
+                                 password=global_obj.config.database_config.get("db-password"),
+                                 database=global_obj.config.database_config.get("db-name"),
+                                 db_host=global_obj.config.database_config.get("db-host"))
+
+        p_id = db_mgr.add_or_update_project(project_uuid=body.project_id, project_name=body.project_name)
+        u_id = db_mgr.add_or_update_user(user_uuid=body.user_id, user_email=body.user_email)
+
+        s_id = db_mgr.add_or_update_slice(project_id=p_id, user_id=u_id, slice_guid=body.slice_id,
+                                          slice_name=body.slice_name, state=SliverStates.translate(body.state),
+                                          lease_start=body.lease_start, lease_end=body.lease_end)
+        if body.site:
+            site_id = db_mgr.add_or_update_site(site_name=body.site)
+        else:
+            site_id = None
+
+        if body.host:
+            host_id = db_mgr.add_or_update_host(host_name=body.host, site_id=site_id)
+        else:
+            host_id = None
+
+        sl_id = db_mgr.add_or_update_sliver(project_id=p_id, user_id=u_id, slice_id=s_id, site_id=site_id,
+                                            host_id=host_id, sliver_guid=sliver_id, lease_start=body.lease_start,
+                                            lease_end=body.lease_end, state=SliverStates(body.state),
+                                            ip_subnet=body.ip_subnet, core=body.core, ram=body.ram, disk=body.disk,
+                                            image=body.image, bandwidth=body.bandwidth, sliver_type=body.sliver_type,
+                                            error=body.error)
+        if body.components:
+            for c in body.components.data:
+                db_mgr.add_or_update_component(sliver_id=sl_id, component_guid=c.component_id,
+                                               component_type=c.type, model=c.model, bdfs=c.bdfs,
+                                               component_node_id=c.component_node_id, node_id=c.node_id)
+
+        if body.interfaces:
+            for ifc in body.interfaces.data:
+                db_mgr.add_or_update_interface(sliver_id=sl_id, interface_guid=ifc.interface_id, name=ifc.name,
+                                               local_name=ifc.local_name, device_name=ifc.device_name, bdf=ifc.bdf,
+                                               vlan=ifc.vlan, site_id=site_id)
+
+        response_details = Status200OkNoContentData()
+        response_details.details = f"Sliver '{sliver_id}' has been successfully created/updated"
+        response = Status200OkNoContent()
+        response.data = [response_details]
+        response.size = len(response.data)
+        response.status = 200
+        response.type = 'no_content'
+
+        return cors_success_response(response_body=response)
+    except Exception as exc:
+        details = 'Oops! something went wrong with slices_slice_id_post(): {0}'.format(exc)
         logger.error(details)
         logger.error(traceback.format_exc())
         return cors_500(details=details)
