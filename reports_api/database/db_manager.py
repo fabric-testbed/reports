@@ -512,8 +512,8 @@ class DatabaseManager:
                 .join(Slices, Slices.project_id == Projects.id) \
                 .join(Users, Slices.user_id == Users.id) \
                 .join(Slivers, Slivers.project_id == Projects.id) \
-                .join(Hosts, Slivers.host_id == Hosts.id) \
-                .join(Sites, Slivers.site_id == Sites.id) \
+                .outerjoin(Hosts, Slivers.host_id == Hosts.id) \
+                .outerjoin(Sites, Slivers.site_id == Sites.id) \
                 .outerjoin(Components, Slivers.id == Components.sliver_id) \
                 .outerjoin(Interfaces, Slivers.id == Interfaces.sliver_id)
 
@@ -695,8 +695,8 @@ class DatabaseManager:
                 .join(Slices, Users.id == Slices.user_id) \
                 .join(Slivers, Users.id == Slivers.user_id) \
                 .join(Projects, Slivers.project_id == Projects.id) \
-                .join(Hosts, Slivers.host_id == Hosts.id) \
-                .join(Sites, Slivers.site_id == Sites.id) \
+                .outerjoin(Hosts, Slivers.host_id == Hosts.id) \
+                .outerjoin(Sites, Slivers.site_id == Sites.id) \
                 .outerjoin(Components, Slivers.id == Components.sliver_id) \
                 .outerjoin(Interfaces, Slivers.id == Interfaces.sliver_id)
 
@@ -878,8 +878,8 @@ class DatabaseManager:
                 .join(Slices, Slivers.slice_id == Slices.id) \
                 .join(Users, Slivers.user_id == Users.id) \
                 .join(Projects, Slivers.project_id == Projects.id) \
-                .join(Hosts, Slivers.host_id == Hosts.id) \
-                .join(Sites, Slivers.site_id == Sites.id) \
+                .outerjoin(Hosts, Slivers.host_id == Hosts.id) \
+                .outerjoin(Sites, Slivers.site_id == Sites.id) \
                 .outerjoin(Components, Slivers.id == Components.sliver_id) \
                 .outerjoin(Interfaces, Slivers.id == Interfaces.sliver_id)
 
@@ -1075,8 +1075,8 @@ class DatabaseManager:
                 .join(Users, Slices.user_id == Users.id) \
                 .join(Projects, Slices.project_id == Projects.id) \
                 .join(Slivers, Slices.id == Slivers.slice_id) \
-                .join(Hosts, Slivers.host_id == Hosts.id) \
-                .join(Sites, Slivers.site_id == Sites.id) \
+                .outerjoin(Hosts, Slivers.host_id == Hosts.id) \
+                .outerjoin(Sites, Slivers.site_id == Sites.id) \
                 .outerjoin(Components, Slivers.id == Components.sliver_id) \
                 .outerjoin(Interfaces, Slivers.id == Interfaces.sliver_id)
 
