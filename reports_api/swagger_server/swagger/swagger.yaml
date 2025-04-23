@@ -340,22 +340,22 @@ paths:
             type: string
       - name: page
         in: query
-        description: Page number for pagination. Default is 1.
+        description: Page number for pagination. Default is 0.
         required: false
         style: form
         explode: true
         schema:
           type: integer
-          default: 1
+          default: 0
       - name: per_page
         in: query
-        description: Number of records per page. Default is 10.
+        description: Number of records per page. Default is 200.
         required: false
         style: form
         explode: true
         schema:
           type: integer
-          default: 100
+          default: 200
       responses:
         "200":
           description: OK
@@ -809,22 +809,22 @@ paths:
             type: string
       - name: page
         in: query
-        description: Page number for pagination. Default is 1.
+        description: Page number for pagination. Default is 0.
         required: false
         style: form
         explode: true
         schema:
           type: integer
-          default: 1
+          default: 0
       - name: per_page
         in: query
-        description: Number of records per page. Default is 10.
+        description: Number of records per page. Default is 200.
         required: false
         style: form
         explode: true
         schema:
           type: integer
-          default: 100
+          default: 200
       responses:
         "200":
           description: OK
@@ -1231,22 +1231,22 @@ paths:
             type: string
       - name: page
         in: query
-        description: Page number for pagination. Default is 1.
+        description: Page number for pagination. Default is 0.
         required: false
         style: form
         explode: true
         schema:
           type: integer
-          default: 1
+          default: 0
       - name: per_page
         in: query
-        description: Number of records per page. Default is 10.
+        description: Number of records per page. Default is 200.
         required: false
         style: form
         explode: true
         schema:
           type: integer
-          default: 100
+          default: 200
       responses:
         "200":
           description: OK
@@ -1585,22 +1585,22 @@ paths:
             type: string
       - name: page
         in: query
-        description: Page number for pagination. Default is 1.
+        description: Page number for pagination. Default is 0.
         required: false
         style: form
         explode: true
         schema:
           type: integer
-          default: 1
+          default: 0
       - name: per_page
         in: query
-        description: Number of records per page. Default is 10.
+        description: Number of records per page. Default is 200.
         required: false
         style: form
         explode: true
         schema:
           type: integer
-          default: 100
+          default: 200
       responses:
         "200":
           description: OK
@@ -1925,7 +1925,7 @@ components:
           default: error
         size:
           type: integer
-          default: 1
+          default: 0
         status:
           type: integer
           default: 401
@@ -1941,7 +1941,7 @@ components:
           default: error
         size:
           type: integer
-          default: 1
+          default: 0
         status:
           type: integer
           default: 403
@@ -1957,7 +1957,7 @@ components:
           default: error
         size:
           type: integer
-          default: 1
+          default: 0
         status:
           type: integer
           default: 404
@@ -1973,7 +1973,7 @@ components:
           default: error
         size:
           type: integer
-          default: 1
+          default: 0
         status:
           type: integer
           default: 500
@@ -1990,7 +1990,7 @@ components:
           default: error
         size:
           type: integer
-          default: 1
+          default: 0
         status:
           type: integer
           default: 400
@@ -2049,7 +2049,7 @@ components:
           default: no_content
         size:
           type: integer
-          default: 1
+          default: 0
         status:
           type: integer
           default: 200
@@ -2067,7 +2067,7 @@ components:
       properties:
         size:
           type: integer
-          default: 1
+          default: 0
         status:
           type: integer
           default: 200
@@ -2453,23 +2453,23 @@ components:
     page:
       name: page
       in: query
-      description: Page number for pagination. Default is 1.
+      description: Page number for pagination. Default is 0.
       required: false
       style: form
       explode: true
       schema:
         type: integer
-        default: 1
+        default: 0
     perPage:
       name: per_page
       in: query
-      description: Number of records per page. Default is 10.
+      description: Number of records per page. Default is 200.
       required: false
       style: form
       explode: true
       schema:
         type: integer
-        default: 100
+        default: 200
   requestBodies:
     payload_sliver:
       description: Create/Modify sliver
