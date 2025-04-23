@@ -192,7 +192,7 @@ def slivers_slice_id_sliver_id_post(body: Sliver, slice_id: str, sliver_id: str)
         u_id = db_mgr.add_or_update_user(user_uuid=body.user_id, user_email=body.user_email)
 
         s_id = db_mgr.add_or_update_slice(project_id=p_id, user_id=u_id, slice_guid=body.slice_id,
-                                          slice_name=body.slice_name, state=SliverStates.translate(body.state),
+                                          slice_name=body.slice_name, state=None,
                                           lease_start=body.lease_start, lease_end=body.lease_end)
         if body.site:
             site_id = db_mgr.add_or_update_site(site_name=body.site)
@@ -232,7 +232,7 @@ def slivers_slice_id_sliver_id_post(body: Sliver, slice_id: str, sliver_id: str)
 
         return cors_success_response(response_body=response)
     except Exception as exc:
-        details = 'Oops! something went wrong with slices_slice_id_post(): {0}'.format(exc)
+        details = 'Oops! something went wrong with slivers_slice_id_sliver_id_post(): {0}'.format(exc)
         logger.error(details)
         logger.error(traceback.format_exc())
         return cors_500(details=details)
