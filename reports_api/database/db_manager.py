@@ -967,8 +967,11 @@ class DatabaseManager:
                 host = session.query(Hosts).filter_by(id=s.host_id).first()
                 slice = session.query(Slices).filter_by(id=s.slice_id).first()
 
-                sliver = DatabaseManager.sliver_to_dict(sliver=s, user=user, project=project, site=site.name,
-                                                        host=host.name, slice_id=slice.slice_guid)
+                site_name = site.name if site else None
+                host_name = host.name if host else None
+
+                sliver = DatabaseManager.sliver_to_dict(sliver=s, user=user, project=project, site=site_name,
+                                                        host=host_name, slice_id=slice.slice_guid)
                 result.append(sliver)
 
                 if sliver_id or slice_id:
