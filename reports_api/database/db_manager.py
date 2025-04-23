@@ -56,7 +56,7 @@ class DatabaseManager:
         """
         Initializes the connection to the PostgreSQL database.
         """
-        self.db_engine = create_engine(f"postgresql+psycopg2://{user}:{password}@{db_host}/{database}", echo=True)
+        self.db_engine = create_engine(f"postgresql+psycopg2://{user}:{password}@{db_host}/{database}")
         self.session_factory = sessionmaker(bind=self.db_engine)
         self.sessions = {}
         Base.metadata.create_all(self.db_engine)
