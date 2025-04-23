@@ -84,10 +84,9 @@ def authorize() -> Union[FabricToken, dict, Response]:
         return cors_401(details=f"{fabric_token.uuid}/{fabric_token.email} is not authorized!")
 
     # Role-based authorization
-    allowed_roles = set(runtime_config.get("allowed_roles", []))
-    user_roles = set(fabric_token.roles)
-
-    if allowed_roles & user_roles:
-        return fabric_token
+    allowed_roles = runtime_config.get("allowed_roles", [])
+    for role in fabric_token.roles:
+        if role.get("name") in allowed_roles:
+            return fabric_token
 
     return cors_401(details="User is not authorized!")

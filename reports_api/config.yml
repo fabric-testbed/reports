@@ -34,6 +34,7 @@ runtime:
     - abc123xyz456longtokenvalue
   allowed_roles:
     - portal-admins
+    - Jupyterhub
 
 logging:
   ## The directory in which actor should create log files.
@@ -74,4 +75,4 @@ database:
   db-user: fabric
   db-password: fabric
   db-name: analytics
-  db-host: reports.fabric-testbed.net:5432
+  db-host: reports-db:5432

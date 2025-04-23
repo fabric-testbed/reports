@@ -51,6 +51,7 @@ services:
       DATABASE_URL: "postgresql://fabric:fabric@reports-db:5432/analytics"
     volumes:
       - ./reports_api/config.yml:/usr/src/app/config.yml
+      - ./reports-logs:/var/log/reports
 #  dash-app:
 #    build: ./dash-app
 #    container_name: dash-app
