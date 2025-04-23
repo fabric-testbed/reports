@@ -1,7 +1,15 @@
+import connexion
+
 from reports_api.response_code import slivers_controller as rc
+from reports_api.response_code.cors_response import cors_400
+from reports_api.swagger_server.models import Sliver
 
 
-def slivers_get(start_time=None, end_time=None, user_id=None, user_email=None, project_id=None, slice_id=None, slice_state=None, sliver_id=None, sliver_type=None, sliver_state=None, component_type=None, component_model=None, bdf=None, vlan=None, ip_subnet=None, site=None, host=None, exclude_user_id=None, exclude_user_email=None, exclude_project_id=None, exclude_site=None, exclude_host=None, page=None, per_page=None):  # noqa: E501
+def slivers_get(start_time=None, end_time=None, user_id=None, user_email=None, project_id=None, slice_id=None,
+                slice_state=None, sliver_id=None, sliver_type=None, sliver_state=None, component_type=None,
+                component_model=None, bdf=None, vlan=None, ip_subnet=None, facility=None, site=None, host=None,
+                exclude_user_id=None, exclude_user_email=None, exclude_project_id=None, exclude_site=None,
+                exclude_host=None, page=None, per_page=None):  # noqa: E501
     """Get slivers
 
     Retrieve a list of slivers with optional filters. # noqa: E501
@@ -36,6 +44,8 @@ def slivers_get(start_time=None, end_time=None, user_id=None, user_email=None, p
     :type vlan: List[str]
     :param ip_subnet: Filter by specified IP subnet
     :type ip_subnet: List[str]
+    :param facility: Filter by facility
+    :type facility: List[str]
     :param site: Filter by site
     :type site: List[str]
     :param host: Filter by host
@@ -60,8 +70,32 @@ def slivers_get(start_time=None, end_time=None, user_id=None, user_email=None, p
     return rc.slivers_get(start_time=start_time, end_time=end_time, user_email=user_email, user_id=user_id, vlan=vlan,
                           sliver_id=sliver_id, sliver_type=sliver_type, slice_id=slice_id, bdf=bdf,
                           sliver_state=sliver_state,site=site, host=host, slice_state=slice_state,
-                          project_id=project_id, component_model=component_model,
+                          project_id=project_id, component_model=component_model, facility=facility,
                           component_type=component_type, ip_subnet=ip_subnet, page=page, per_page=per_page,
                           exclude_user_id=exclude_user_id, exclude_user_email=exclude_user_email,
                           exclude_project_id=exclude_project_id, exclude_site=exclude_site, exclude_host=exclude_host)
 
+
+def slivers_slice_id_sliver_id_post(body, slice_id, sliver_id):  # noqa: E501
+    """Create/Update Sliver
+
+    Create/Update Sliver. # noqa: E501
+
+    :param body: Create/Modify sliver
+    :type body: dict | bytes
+    :param slice_id: 
+    :type slice_id: 
+    :param sliver_id: 
+    :type sliver_id: 
+
+    :rtype: Status200OkNoContent
+    """
+    if connexion.request.is_json:
+        body = Sliver.from_dict(connexion.request.get_json())  # noqa: E501
+        if slice_id != body.slice_id:
+            return cors_400(details="slice_id in uri doesn't match slice_id in body")
+
+        if sliver_id != body.sliver_id:
+            return cors_400(details="sliver_id in uri doesn't match sliver_id in body")
+
+    return rc.slivers_slice_id_sliver_id_post(body=body, slice_id=slice_id, sliver_id=sliver_id)

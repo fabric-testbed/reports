@@ -78,6 +78,8 @@ paths:
           type: array
           items:
             type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
       - name: user_email
         in: query
         description: Filter by user email
@@ -98,6 +100,8 @@ paths:
           type: array
           items:
             type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
       - name: slice_id
         in: query
         description: Filter by slice uuid
@@ -108,6 +112,8 @@ paths:
           type: array
           items:
             type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
       - name: slice_state
         in: query
         description: "Filter by slice state; allowed values Nascent, Configuring,\
@@ -142,6 +148,8 @@ paths:
           type: array
           items:
             type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
       - name: sliver_type
         in: query
         description: "Filter by sliver type; allowed values VM, Switch, Facility,\
@@ -246,6 +254,16 @@ paths:
           type: array
           items:
             type: string
+      - name: facility
+        in: query
+        description: Filter by facility
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
       - name: site
         in: query
         description: Filter by site
@@ -276,6 +294,8 @@ paths:
           type: array
           items:
             type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
       - name: exclude_user_email
         in: query
         description: Exclude Users by emails
@@ -296,6 +316,8 @@ paths:
           type: array
           items:
             type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
       - name: exclude_site
         in: query
         description: Exclude sites
@@ -318,22 +340,22 @@ paths:
             type: string
       - name: page
         in: query
-        description: Page number for pagination. Default is 1.
+        description: Page number for pagination. Default is 0.
         required: false
         style: form
         explode: true
         schema:
           type: integer
-          default: 1
+          default: 0
       - name: per_page
         in: query
-        description: Number of records per page. Default is 10.
+        description: Number of records per page. Default is 200.
         required: false
         style: form
         explode: true
         schema:
           type: integer
-          default: 100
+          default: 200
       responses:
         "200":
           description: OK
@@ -525,6 +547,8 @@ paths:
           type: array
           items:
             type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
       - name: user_email
         in: query
         description: Filter by user email
@@ -545,6 +569,8 @@ paths:
           type: array
           items:
             type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
       - name: slice_id
         in: query
         description: Filter by slice uuid
@@ -555,6 +581,8 @@ paths:
           type: array
           items:
             type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
       - name: slice_state
         in: query
         description: "Filter by slice state; allowed values Nascent, Configuring,\
@@ -589,6 +617,8 @@ paths:
           type: array
           items:
             type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
       - name: sliver_type
         in: query
         description: "Filter by sliver type; allowed values VM, Switch, Facility,\
@@ -693,6 +723,16 @@ paths:
           type: array
           items:
             type: string
+      - name: facility
+        in: query
+        description: Filter by facility
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
       - name: site
         in: query
         description: Filter by site
@@ -723,6 +763,8 @@ paths:
           type: array
           items:
             type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
       - name: exclude_user_email
         in: query
         description: Exclude Users by emails
@@ -743,6 +785,8 @@ paths:
           type: array
           items:
             type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
       - name: exclude_site
         in: query
         description: Exclude sites
@@ -765,22 +809,22 @@ paths:
             type: string
       - name: page
         in: query
-        description: Page number for pagination. Default is 1.
+        description: Page number for pagination. Default is 0.
         required: false
         style: form
         explode: true
         schema:
           type: integer
-          default: 1
+          default: 0
       - name: per_page
         in: query
-        description: Number of records per page. Default is 10.
+        description: Number of records per page. Default is 200.
         required: false
         style: form
         explode: true
         schema:
           type: integer
-          default: 100
+          default: 200
       responses:
         "200":
           description: OK
@@ -788,6 +832,74 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/slivers'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      security:
+      - bearerAuth: []
+      x-openapi-router-controller: reports_api.swagger_server.controllers.slivers_controller
+  /slivers/{slice_id}/{sliver_id}:
+    post:
+      tags:
+      - slivers
+      summary: Create/Update Sliver
+      description: Create/Update Sliver.
+      operationId: slivers_slice_id_sliver_id_post
+      parameters:
+      - name: slice_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+          example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
+      - name: sliver_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+          example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
+      requestBody:
+        $ref: '#/components/requestBodies/payload_sliver'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
         "400":
           description: Bad Request
           content:
@@ -857,6 +969,8 @@ paths:
           type: array
           items:
             type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
       - name: user_email
         in: query
         description: Filter by user email
@@ -877,6 +991,8 @@ paths:
           type: array
           items:
             type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
       - name: slice_id
         in: query
         description: Filter by slice uuid
@@ -887,6 +1003,8 @@ paths:
           type: array
           items:
             type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
       - name: slice_state
         in: query
         description: "Filter by slice state; allowed values Nascent, Configuring,\
@@ -921,6 +1039,8 @@ paths:
           type: array
           items:
             type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
       - name: sliver_type
         in: query
         description: "Filter by sliver type; allowed values VM, Switch, Facility,\
@@ -1025,6 +1145,16 @@ paths:
           type: array
           items:
             type: string
+      - name: facility
+        in: query
+        description: Filter by facility
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
       - name: site
         in: query
         description: Filter by site
@@ -1055,6 +1185,8 @@ paths:
           type: array
           items:
             type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
       - name: exclude_user_email
         in: query
         description: Exclude Users by emails
@@ -1075,6 +1207,8 @@ paths:
           type: array
           items:
             type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
       - name: exclude_site
         in: query
         description: Exclude sites
@@ -1097,22 +1231,22 @@ paths:
             type: string
       - name: page
         in: query
-        description: Page number for pagination. Default is 1.
+        description: Page number for pagination. Default is 0.
         required: false
         style: form
         explode: true
         schema:
           type: integer
-          default: 1
+          default: 0
       - name: per_page
         in: query
-        description: Number of records per page. Default is 10.
+        description: Number of records per page. Default is 200.
         required: false
         style: form
         explode: true
         schema:
           type: integer
-          default: 100
+          default: 200
       responses:
         "200":
           description: OK
@@ -1189,6 +1323,8 @@ paths:
           type: array
           items:
             type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
       - name: user_email
         in: query
         description: Filter by user email
@@ -1209,6 +1345,8 @@ paths:
           type: array
           items:
             type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
       - name: slice_id
         in: query
         description: Filter by slice uuid
@@ -1219,6 +1357,8 @@ paths:
           type: array
           items:
             type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
       - name: slice_state
         in: query
         description: "Filter by slice state; allowed values Nascent, Configuring,\
@@ -1253,6 +1393,8 @@ paths:
           type: array
           items:
             type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
       - name: sliver_type
         in: query
         description: "Filter by sliver type; allowed values VM, Switch, Facility,\
@@ -1357,6 +1499,16 @@ paths:
           type: array
           items:
             type: string
+      - name: facility
+        in: query
+        description: Filter by facility
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
       - name: site
         in: query
         description: Filter by site
@@ -1387,6 +1539,8 @@ paths:
           type: array
           items:
             type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
       - name: exclude_user_email
         in: query
         description: Exclude Users by emails
@@ -1407,6 +1561,8 @@ paths:
           type: array
           items:
             type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
       - name: exclude_site
         in: query
         description: Exclude sites
@@ -1429,22 +1585,22 @@ paths:
             type: string
       - name: page
         in: query
-        description: Page number for pagination. Default is 1.
+        description: Page number for pagination. Default is 0.
         required: false
         style: form
         explode: true
         schema:
           type: integer
-          default: 1
+          default: 0
       - name: per_page
         in: query
-        description: Number of records per page. Default is 10.
+        description: Number of records per page. Default is 200.
         required: false
         style: form
         explode: true
         schema:
           type: integer
-          default: 100
+          default: 200
       responses:
         "200":
           description: OK
@@ -1452,6 +1608,65 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/slices'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      security:
+      - bearerAuth: []
+      x-openapi-router-controller: reports_api.swagger_server.controllers.slices_controller
+  /slices/{slice_id}:
+    post:
+      tags:
+      - slices
+      summary: Create/Update a slice
+      description: Create a Slice
+      operationId: slices_slice_id_post
+      parameters:
+      - name: slice_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+          example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
+      requestBody:
+        $ref: '#/components/requestBodies/payload_slice'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
         "400":
           description: Bad Request
           content:
@@ -1619,6 +1834,8 @@ components:
           type: string
         ip_subnet:
           type: string
+        error:
+          type: string
         image:
           type: string
         core:
@@ -1661,15 +1878,17 @@ components:
       properties:
         interface_id:
           type: string
-        port:
-          type: string
-        interface:
-          type: string
-        facility:
+        site:
           type: string
         vlan:
           type: string
         bdf:
+          type: string
+        local_name:
+          type: string
+        device_name:
+          type: string
+        name:
           type: string
     status_200_ok_paginated:
       type: object
@@ -1706,7 +1925,7 @@ components:
           default: error
         size:
           type: integer
-          default: 1
+          default: 0
         status:
           type: integer
           default: 401
@@ -1722,7 +1941,7 @@ components:
           default: error
         size:
           type: integer
-          default: 1
+          default: 0
         status:
           type: integer
           default: 403
@@ -1738,7 +1957,7 @@ components:
           default: error
         size:
           type: integer
-          default: 1
+          default: 0
         status:
           type: integer
           default: 404
@@ -1754,7 +1973,7 @@ components:
           default: error
         size:
           type: integer
-          default: 1
+          default: 0
         status:
           type: integer
           default: 500
@@ -1771,7 +1990,7 @@ components:
           default: error
         size:
           type: integer
-          default: 1
+          default: 0
         status:
           type: integer
           default: 400
@@ -1807,12 +2026,48 @@ components:
           default: Internal Server Error
         details:
           type: string
+    status_200_ok_no_content_data:
+      type: object
+      properties:
+        message:
+          type: string
+          default: No Content
+        details:
+          type: string
+      example:
+        details: details
+        message: No Content
+    status_200_ok_no_content:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/status_200_ok_no_content_data'
+        type:
+          type: string
+          default: no_content
+        size:
+          type: integer
+          default: 0
+        status:
+          type: integer
+          default: 200
+      example:
+        data:
+        - details: details
+          message: No Content
+        - details: details
+          message: No Content
+        size: 0
+        type: no_content
+        status: 6
     status_200_ok_single:
       type: object
       properties:
         size:
           type: integer
-          default: 1
+          default: 0
         status:
           type: integer
           default: 200
@@ -1835,7 +2090,7 @@ components:
       properties:
         reference:
           type: string
-          example: https://github.com/fabric-testbed/reports
+          example: https://github.com/fabric-testbed/sliver-analytics
         version:
           type: string
           example: 1.0.0
@@ -1916,6 +2171,8 @@ components:
         type: array
         items:
           type: string
+          format: uuid
+          example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
     userEmail:
       name: user_email
       in: query
@@ -1938,6 +2195,8 @@ components:
         type: array
         items:
           type: string
+          format: uuid
+          example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
     excludeUserEmail:
       name: exclude_user_email
       in: query
@@ -1960,6 +2219,8 @@ components:
         type: array
         items:
           type: string
+          format: uuid
+          example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
     excludeProjectId:
       name: exclude_project_id
       in: query
@@ -1971,6 +2232,8 @@ components:
         type: array
         items:
           type: string
+          format: uuid
+          example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
     sliceId:
       name: slice_id
       in: query
@@ -1982,6 +2245,8 @@ components:
         type: array
         items:
           type: string
+          format: uuid
+          example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
     sliverId:
       name: sliver_id
       in: query
@@ -1993,6 +2258,8 @@ components:
         type: array
         items:
           type: string
+          format: uuid
+          example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
     componentType:
       name: component_type
       in: query
@@ -2106,6 +2373,17 @@ components:
         type: array
         items:
           type: string
+    facility:
+      name: facility
+      in: query
+      description: Filter by facility
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: array
+        items:
+          type: string
     excludeSite:
       name: exclude_site
       in: query
@@ -2175,23 +2453,37 @@ components:
     page:
       name: page
       in: query
-      description: Page number for pagination. Default is 1.
+      description: Page number for pagination. Default is 0.
       required: false
       style: form
       explode: true
       schema:
         type: integer
-        default: 1
+        default: 0
     perPage:
       name: per_page
       in: query
-      description: Number of records per page. Default is 10.
+      description: Number of records per page. Default is 200.
       required: false
       style: form
       explode: true
       schema:
         type: integer
-        default: 100
+        default: 200
+  requestBodies:
+    payload_sliver:
+      description: Create/Modify sliver
+      content:
+        text/plain:
+          schema:
+            $ref: '#/components/schemas/sliver'
+      required: true
+    payload_slice:
+      description: Create new Slice
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/slice'
   securitySchemes:
     bearerAuth:
       type: http

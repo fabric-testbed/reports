@@ -14,45 +14,50 @@ class Interface(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, interface_id: str=None, port: str=None, interface: str=None, facility: str=None, vlan: str=None, bdf: str=None):  # noqa: E501
+    def __init__(self, interface_id: str=None, site: str=None, vlan: str=None, bdf: str=None, local_name: str=None, device_name: str=None, name: str=None):  # noqa: E501
         """Interface - a model defined in Swagger
 
         :param interface_id: The interface_id of this Interface.  # noqa: E501
         :type interface_id: str
-        :param port: The port of this Interface.  # noqa: E501
-        :type port: str
-        :param interface: The interface of this Interface.  # noqa: E501
-        :type interface: str
-        :param facility: The facility of this Interface.  # noqa: E501
-        :type facility: str
+        :param site: The site of this Interface.  # noqa: E501
+        :type site: str
         :param vlan: The vlan of this Interface.  # noqa: E501
         :type vlan: str
         :param bdf: The bdf of this Interface.  # noqa: E501
         :type bdf: str
+        :param local_name: The local_name of this Interface.  # noqa: E501
+        :type local_name: str
+        :param device_name: The device_name of this Interface.  # noqa: E501
+        :type device_name: str
+        :param name: The name of this Interface.  # noqa: E501
+        :type name: str
         """
         self.swagger_types = {
             'interface_id': str,
-            'port': str,
-            'interface': str,
-            'facility': str,
+            'site': str,
             'vlan': str,
-            'bdf': str
+            'bdf': str,
+            'local_name': str,
+            'device_name': str,
+            'name': str
         }
 
         self.attribute_map = {
             'interface_id': 'interface_id',
-            'port': 'port',
-            'interface': 'interface',
-            'facility': 'facility',
+            'site': 'site',
             'vlan': 'vlan',
-            'bdf': 'bdf'
+            'bdf': 'bdf',
+            'local_name': 'local_name',
+            'device_name': 'device_name',
+            'name': 'name'
         }
         self._interface_id = interface_id
-        self._port = port
-        self._interface = interface
-        self._facility = facility
+        self._site = site
         self._vlan = vlan
         self._bdf = bdf
+        self._local_name = local_name
+        self._device_name = device_name
+        self._name = name
 
     @classmethod
     def from_dict(cls, dikt) -> 'Interface':
@@ -87,67 +92,25 @@ class Interface(Model):
         self._interface_id = interface_id
 
     @property
-    def port(self) -> str:
-        """Gets the port of this Interface.
+    def site(self) -> str:
+        """Gets the site of this Interface.
 
 
-        :return: The port of this Interface.
+        :return: The site of this Interface.
         :rtype: str
         """
-        return self._port
+        return self._site
 
-    @port.setter
-    def port(self, port: str):
-        """Sets the port of this Interface.
+    @site.setter
+    def site(self, site: str):
+        """Sets the site of this Interface.
 
 
-        :param port: The port of this Interface.
-        :type port: str
+        :param site: The site of this Interface.
+        :type site: str
         """
 
-        self._port = port
-
-    @property
-    def interface(self) -> str:
-        """Gets the interface of this Interface.
-
-
-        :return: The interface of this Interface.
-        :rtype: str
-        """
-        return self._interface
-
-    @interface.setter
-    def interface(self, interface: str):
-        """Sets the interface of this Interface.
-
-
-        :param interface: The interface of this Interface.
-        :type interface: str
-        """
-
-        self._interface = interface
-
-    @property
-    def facility(self) -> str:
-        """Gets the facility of this Interface.
-
-
-        :return: The facility of this Interface.
-        :rtype: str
-        """
-        return self._facility
-
-    @facility.setter
-    def facility(self, facility: str):
-        """Sets the facility of this Interface.
-
-
-        :param facility: The facility of this Interface.
-        :type facility: str
-        """
-
-        self._facility = facility
+        self._site = site
 
     @property
     def vlan(self) -> str:
@@ -190,3 +153,66 @@ class Interface(Model):
         """
 
         self._bdf = bdf
+
+    @property
+    def local_name(self) -> str:
+        """Gets the local_name of this Interface.
+
+
+        :return: The local_name of this Interface.
+        :rtype: str
+        """
+        return self._local_name
+
+    @local_name.setter
+    def local_name(self, local_name: str):
+        """Sets the local_name of this Interface.
+
+
+        :param local_name: The local_name of this Interface.
+        :type local_name: str
+        """
+
+        self._local_name = local_name
+
+    @property
+    def device_name(self) -> str:
+        """Gets the device_name of this Interface.
+
+
+        :return: The device_name of this Interface.
+        :rtype: str
+        """
+        return self._device_name
+
+    @device_name.setter
+    def device_name(self, device_name: str):
+        """Sets the device_name of this Interface.
+
+
+        :param device_name: The device_name of this Interface.
+        :type device_name: str
+        """
+
+        self._device_name = device_name
+
+    @property
+    def name(self) -> str:
+        """Gets the name of this Interface.
+
+
+        :return: The name of this Interface.
+        :rtype: str
+        """
+        return self._name
+
+    @name.setter
+    def name(self, name: str):
+        """Sets the name of this Interface.
+
+
+        :param name: The name of this Interface.
+        :type name: str
+        """
+
+        self._name = name

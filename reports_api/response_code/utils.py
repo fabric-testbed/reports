@@ -27,6 +27,7 @@ from http.client import BAD_REQUEST, UNAUTHORIZED, FORBIDDEN, NOT_FOUND
 from typing import Union
 
 import connexion
+from flask import Response
 
 from reports_api.common.globals import GlobalsSingleton
 from reports_api.response_code.analytics_exception import AnalyticsException
@@ -64,8 +65,28 @@ def cors_success_response(response_body) -> cors_response:
     return cors_200(response_body=response_body)
 
 
-def authorize() -> FabricToken:
+def authorize() -> Union[FabricToken, dict, Response]:
     token = get_token()
-    verify_exp = GlobalsSingleton.get().config.oauth_config.get("verify-exp", True)
-    return GlobalsSingleton.get().token_validator.validate_token(token=token,
-                                                                 verify_exp=verify_exp)
+    globals_ = GlobalsSingleton.get()
+    config = globals_.config
+    runtime_config = config.runtime_config
+    oauth_config = config.oauth_config
+
+    # Check for static bearer token (fast path)
+    if token in runtime_config.get("bearer_tokens", []):
+        return {}
+
+    # Validate Fabric token
+    verify_exp = oauth_config.get("verify-exp", True)
+    fabric_token = globals_.token_validator.validate_token(token=token, verify_exp=verify_exp)
+
+    if not fabric_token.roles:
+        return cors_401(details=f"{fabric_token.uuid}/{fabric_token.email} is not authorized!")
+
+    # Role-based authorization
+    allowed_roles = runtime_config.get("allowed_roles", [])
+    for role in fabric_token.roles:
+        if role.get("name") in allowed_roles:
+            return fabric_token
+
+    return cors_401(details="User is not authorized!")

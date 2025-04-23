@@ -16,7 +16,7 @@ class Sliver(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, project_id: str=None, project_name: str=None, slice_id: str=None, slice_name: str=None, user_id: str=None, user_email: str=None, host: str=None, site: str=None, sliver_id: str=None, node_id: str=None, state: str=None, sliver_type: str=None, ip_subnet: str=None, image: str=None, core: int=None, ram: int=None, disk: int=None, bandwidth: int=None, lease_start: datetime=None, lease_end: datetime=None, components: SliverComponents=None, interfaces: SliverInterfaces=None):  # noqa: E501
+    def __init__(self, project_id: str=None, project_name: str=None, slice_id: str=None, slice_name: str=None, user_id: str=None, user_email: str=None, host: str=None, site: str=None, sliver_id: str=None, node_id: str=None, state: str=None, sliver_type: str=None, ip_subnet: str=None, error: str=None, image: str=None, core: int=None, ram: int=None, disk: int=None, bandwidth: int=None, lease_start: datetime=None, lease_end: datetime=None, components: SliverComponents=None, interfaces: SliverInterfaces=None):  # noqa: E501
         """Sliver - a model defined in Swagger
 
         :param project_id: The project_id of this Sliver.  # noqa: E501
@@ -45,6 +45,8 @@ class Sliver(Model):
         :type sliver_type: str
         :param ip_subnet: The ip_subnet of this Sliver.  # noqa: E501
         :type ip_subnet: str
+        :param error: The error of this Sliver.  # noqa: E501
+        :type error: str
         :param image: The image of this Sliver.  # noqa: E501
         :type image: str
         :param core: The core of this Sliver.  # noqa: E501
@@ -78,6 +80,7 @@ class Sliver(Model):
             'state': str,
             'sliver_type': str,
             'ip_subnet': str,
+            'error': str,
             'image': str,
             'core': int,
             'ram': int,
@@ -103,6 +106,7 @@ class Sliver(Model):
             'state': 'state',
             'sliver_type': 'sliver_type',
             'ip_subnet': 'ip_subnet',
+            'error': 'error',
             'image': 'image',
             'core': 'core',
             'ram': 'ram',
@@ -126,6 +130,7 @@ class Sliver(Model):
         self._state = state
         self._sliver_type = sliver_type
         self._ip_subnet = ip_subnet
+        self._error = error
         self._image = image
         self._core = core
         self._ram = ram
@@ -419,6 +424,27 @@ class Sliver(Model):
         """
 
         self._ip_subnet = ip_subnet
+
+    @property
+    def error(self) -> str:
+        """Gets the error of this Sliver.
+
+
+        :return: The error of this Sliver.
+        :rtype: str
+        """
+        return self._error
+
+    @error.setter
+    def error(self, error: str):
+        """Sets the error of this Sliver.
+
+
+        :param error: The error of this Sliver.
+        :type error: str
+        """
+
+        self._error = error
 
     @property
     def image(self) -> str:

@@ -15,13 +15,17 @@ class Slice(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, project_id: str=None, user_id: str=None, slice_id: str=None, slice_name: str=None, state: str=None, lease_start: datetime=None, lease_end: datetime=None, slivers: SliceSlivers=None):  # noqa: E501
+    def __init__(self, project_id: str=None, project_name: str=None, user_id: str=None, user_email: str=None, slice_id: str=None, slice_name: str=None, state: str=None, lease_start: datetime=None, lease_end: datetime=None, slivers: SliceSlivers=None):  # noqa: E501
         """Slice - a model defined in Swagger
 
         :param project_id: The project_id of this Slice.  # noqa: E501
         :type project_id: str
+        :param project_name: The project_name of this Slice.  # noqa: E501
+        :type project_name: str
         :param user_id: The user_id of this Slice.  # noqa: E501
         :type user_id: str
+        :param user_email: The user_email of this Slice.  # noqa: E501
+        :type user_email: str
         :param slice_id: The slice_id of this Slice.  # noqa: E501
         :type slice_id: str
         :param slice_name: The slice_name of this Slice.  # noqa: E501
@@ -37,7 +41,9 @@ class Slice(Model):
         """
         self.swagger_types = {
             'project_id': str,
+            'project_name': str,
             'user_id': str,
+            'user_email': str,
             'slice_id': str,
             'slice_name': str,
             'state': str,
@@ -48,7 +54,9 @@ class Slice(Model):
 
         self.attribute_map = {
             'project_id': 'project_id',
+            'project_name': 'project_name',
             'user_id': 'user_id',
+            'user_email': 'user_email',
             'slice_id': 'slice_id',
             'slice_name': 'slice_name',
             'state': 'state',
@@ -57,7 +65,9 @@ class Slice(Model):
             'slivers': 'slivers'
         }
         self._project_id = project_id
+        self._project_name = project_name
         self._user_id = user_id
+        self._user_email = user_email
         self._slice_id = slice_id
         self._slice_name = slice_name
         self._state = state
@@ -98,6 +108,27 @@ class Slice(Model):
         self._project_id = project_id
 
     @property
+    def project_name(self) -> str:
+        """Gets the project_name of this Slice.
+
+
+        :return: The project_name of this Slice.
+        :rtype: str
+        """
+        return self._project_name
+
+    @project_name.setter
+    def project_name(self, project_name: str):
+        """Sets the project_name of this Slice.
+
+
+        :param project_name: The project_name of this Slice.
+        :type project_name: str
+        """
+
+        self._project_name = project_name
+
+    @property
     def user_id(self) -> str:
         """Gets the user_id of this Slice.
 
@@ -117,6 +148,27 @@ class Slice(Model):
         """
 
         self._user_id = user_id
+
+    @property
+    def user_email(self) -> str:
+        """Gets the user_email of this Slice.
+
+
+        :return: The user_email of this Slice.
+        :rtype: str
+        """
+        return self._user_email
+
+    @user_email.setter
+    def user_email(self, user_email: str):
+        """Sets the user_email of this Slice.
+
+
+        :param user_email: The user_email of this Slice.
+        :type user_email: str
+        """
+
+        self._user_email = user_email
 
     @property
     def slice_id(self) -> str:
