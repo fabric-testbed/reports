@@ -5,9 +5,9 @@ from datetime import date, datetime  # noqa: F401
 
 from typing import List, Dict  # noqa: F401
 
-from swagger_server.models.base_model_ import Model
-from swagger_server.models.status200_ok_no_content_data import Status200OkNoContentData  # noqa: F401,E501
-from swagger_server import util
+from reports_api.swagger_server.models.base_model_ import Model
+from reports_api.swagger_server.models.status200_ok_no_content_data import Status200OkNoContentData  # noqa: F401,E501
+from reports_api.swagger_server import util
 
 
 class Status200OkNoContent(Model):
