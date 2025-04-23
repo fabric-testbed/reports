@@ -17,7 +17,7 @@ class Hosts(Base):
     site_id = Column(Integer, ForeignKey('sites.id'), index=True)
     name = Column(String, nullable=False, index=True)
     __table_args__ = (
-        Index('idx_hosts_name_site', 'name', 'site_id')
+        Index('idx_hosts_name_site', 'name', 'site_id'),
     )
 
 
@@ -27,7 +27,7 @@ class Projects(Base):
     project_uuid = Column(String, nullable=False, index=True)
     project_name = Column(String, nullable=True, index=True)
     __table_args__ = (
-        Index('idx_projects_uuid_name', 'project_uuid', 'project_name')
+        Index('idx_projects_uuid_name', 'project_uuid', 'project_name'),
     )
 
 
@@ -37,8 +37,7 @@ class Users(Base):
     user_uuid = Column(String, nullable=False, index=True)
     user_email = Column(String, nullable=False, index=True)
     __table_args__ = (
-        Index('idx_users_uuid_email', 'user_uuid', 'user_email')
-
+        Index('idx_users_uuid_email', 'user_uuid', 'user_email'),
     )
 
 
@@ -56,7 +55,7 @@ class Slices(Base):
     __table_args__ = (
         Index('idx_slice_lease_range', 'lease_start', 'lease_end'),
         Index('idx_slices_user_project', 'user_id', 'project_id'),
-        Index('idx_slices_state_project', 'state', 'project_id')
+        Index('idx_slices_state_project', 'state', 'project_id'),
     )
 
 
@@ -88,7 +87,7 @@ class Slivers(Base):
         Index('idx_slivers_site_host', 'site_id', 'host_id'),
         Index('idx_slivers_project_slice', 'project_id', 'slice_id'),
         Index('idx_slivers_state_type', 'state', 'sliver_type'),
-        Index('idx_slivers_ip_subnet', 'ip_subnet')
+        Index('idx_slivers_ip_subnet', 'ip_subnet'),
     )
 
 
@@ -104,7 +103,7 @@ class Components(Base):
 
     __table_args__ = (
         Index('idx_components_type_model', 'type', 'model'),
-        Index('idx_components_sliver', 'sliver_id')
+        Index('idx_components_sliver', 'sliver_id'),
     )
 
 
@@ -122,5 +121,5 @@ class Interfaces(Base):
     __table_args__ = (
         Index('idx_interfaces_sliver_vlan', 'sliver_id', 'vlan'),
         Index('idx_interfaces_sliver_bdf', 'sliver_id', 'bdf'),
-        Index('idx_interfaces_sliver_site', 'sliver_id', 'site_id')
+        Index('idx_interfaces_sliver_site', 'sliver_id', 'site_id'),
     )
