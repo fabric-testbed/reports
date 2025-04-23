@@ -210,13 +210,13 @@ def slivers_slice_id_sliver_id_post(body: Sliver, slice_id: str, sliver_id: str)
                                             ip_subnet=body.ip_subnet, core=body.core, ram=body.ram, disk=body.disk,
                                             image=body.image, bandwidth=body.bandwidth, sliver_type=body.sliver_type,
                                             error=body.error)
-        if body.components:
+        if body.components and body.components.data:
             for c in body.components.data:
                 db_mgr.add_or_update_component(sliver_id=sl_id, component_guid=c.component_id,
                                                component_type=c.type, model=c.model, bdfs=c.bdfs,
                                                component_node_id=c.component_node_id, node_id=c.node_id)
 
-        if body.interfaces:
+        if body.interfaces and body.interfaces.data:
             for ifc in body.interfaces.data:
                 db_mgr.add_or_update_interface(sliver_id=sl_id, interface_guid=ifc.interface_id, name=ifc.name,
                                                local_name=ifc.local_name, device_name=ifc.device_name, bdf=ifc.bdf,
