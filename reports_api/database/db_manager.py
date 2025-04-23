@@ -254,7 +254,7 @@ class DatabaseManager:
                     sliver_guid=sliver_guid,
                     node_id=node_id,
                     state=state,
-                    sliver_type=sliver_type,
+                    sliver_type=sliver_type.lower(),
                     ip_subnet=ip_subnet,
                     image=image,
                     core=core,
@@ -287,9 +287,9 @@ class DatabaseManager:
 
             if component:
                 if component_type:
-                    component.type = component_type
+                    component.type = component_type.lower()
                 if model:
-                    component.model = model
+                    component.model = model.lower()
                 if bdfs:
                     component.bdfs = bdfs  # Store as JSON
                 if node_id:
@@ -300,8 +300,8 @@ class DatabaseManager:
                 component = Components(
                     sliver_id=sliver_id,
                     component_guid=component_guid,
-                    type=component_type,
-                    model=model,
+                    type=component_type.lower() if component_type else None,
+                    model=model.lower() if model else None,
                     bdfs=bdfs,
                     node_id=node_id,
                     component_node_id=component_node_id
@@ -332,7 +332,7 @@ class DatabaseManager:
                 if bdf:
                     interface.bdf = bdf
                 if device_name:
-                    interface.facility = device_name
+                    interface.device_name = device_name
                 if name:
                     interface.name = name
                 if site_id:
