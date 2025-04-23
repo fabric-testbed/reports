@@ -26,11 +26,14 @@
 import traceback
 from datetime import datetime
 
+from flask import Response
+
 from reports_api.common.globals import GlobalsSingleton
 from reports_api.database.db_manager import DatabaseManager
 from reports_api.response_code.cors_response import cors_500
 from reports_api.response_code.slice_sliver_states import SliverStates, SliceState
 from reports_api.response_code.utils import authorize, cors_success_response
+from reports_api.security.fabric_token import FabricToken
 from reports_api.swagger_server.models.user import User
 from reports_api.swagger_server.models.users import Users  # noqa: E501
 
@@ -99,7 +102,20 @@ def users_get(start_time=None, end_time=None, user_id=None, user_email=None, pro
     """
     logger = GlobalsSingleton.get().log
     try:
-        fabric_token = authorize()
+        ret_val = authorize()
+
+        if isinstance(ret_val, Response):
+            # This is a 401 Unauthorized response, already constructed
+            return ret_val
+
+        elif isinstance(ret_val, dict):
+            # This was authorized via static bearer token (returns empty dict)
+            logger.debug("Authorized via bearer token")
+
+        elif isinstance(ret_val, FabricToken):
+            # This was authorized via
+            logger.debug("Authorized via Fabric token")
+
         global_obj = GlobalsSingleton.get()
         db_mgr = DatabaseManager(user=global_obj.config.database_config.get("db-user"),
                                  password=global_obj.config.database_config.get("db-password"),

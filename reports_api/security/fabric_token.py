@@ -51,6 +51,10 @@ class FabricToken:
         """
         return self.decoded_token.get("projects")
 
+    @property
+    def roles(self) -> list:
+        return self.decoded_token.get("roles")
+
     def __str__(self):
         return f"Token: {self.decoded_token}"
 
