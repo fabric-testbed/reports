@@ -158,10 +158,14 @@ class DatabaseManager:
         try:
             slice_obj = session.query(Slices).filter(Slices.slice_guid == slice_guid).first()
             if slice_obj:
-                slice_obj.project_id = project_id
-                slice_obj.user_id = user_id
-                slice_obj.slice_name = slice_name
-                slice_obj.state = state
+                if project_id:
+                    slice_obj.project_id = project_id
+                if user_id:
+                    slice_obj.user_id = user_id
+                if slice_name:
+                    slice_obj.slice_name = slice_name
+                if state:
+                    slice_obj.state = state
                 if lease_start:
                     slice_obj.lease_start = lease_start
                 if lease_end:
