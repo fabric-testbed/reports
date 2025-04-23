@@ -13,7 +13,7 @@ rest_port_str = 8080
 
 def main():
     GlobalsSingleton.get()
-    logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
+    logging.getLogger('sqlalchemy.engine.Engine').setLevel(logging.WARNING)
     app = connexion.App(__name__, specification_dir='swagger_server/swagger/',
                         options={"swagger_ui": True})
     app.app.json_encoder = encoder.JSONEncoder
