@@ -60,14 +60,14 @@ class LogHelper:
         log = logging.getLogger(logger)
         log.setLevel(log_level)
         default_log_format = \
-            '%(asctime) - %(name) - {%(filename):%(lineno)d} - [%(threadName)-%(thread_id)]- %(levelname) - %(message)'
+            '%(asctime)s - %(name)s - {%(filename)s:%(lineno)d} - [%(threadName)s]- %(levelname)s - %(message)s'
         if log_format is not None:
             default_log_format = log_format
 
         os.makedirs(os.path.dirname(log_path), exist_ok=True)
 
         file_handler = RotatingFileHandler(log_path, backupCount=int(log_retain), maxBytes=int(log_size))
-        file_handler.addFilter(LogHelper.thread_id_filter)
+        #file_handler.addFilter(LogHelper.thread_id_filter)
         file_handler.setFormatter(logging.Formatter(default_log_format))
         log.addHandler(file_handler)
 
