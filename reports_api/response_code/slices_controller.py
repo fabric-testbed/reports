@@ -30,7 +30,7 @@ from flask import Response
 
 from reports_api.common.globals import GlobalsSingleton
 from reports_api.database.db_manager import DatabaseManager
-from reports_api.response_code.cors_response import cors_500
+from reports_api.response_code.cors_response import cors_500, cors_401
 from reports_api.response_code.slice_sliver_states import SliverStates, SliceState
 from reports_api.response_code.utils import authorize, cors_success_response
 from reports_api.security.fabric_token import FabricToken
@@ -180,8 +180,7 @@ def slices_slice_id_post(slice_id, body: Slice):  # noqa: E501
             logger.debug("Authorized via bearer token")
 
         elif isinstance(ret_val, FabricToken):
-            # This was authorized via
-            logger.debug("Authorized via Fabric token")
+            return cors_401(details=f"{ret_val.uuid}/{ret_val.email} is not authorized!")
 
         global_obj = GlobalsSingleton.get()
         db_mgr = DatabaseManager(user=global_obj.config.database_config.get("db-user"),
