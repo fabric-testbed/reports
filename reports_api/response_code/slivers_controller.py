@@ -103,6 +103,7 @@ def slivers_get(start_time=None, end_time=None, user_id=None, user_email=None, p
     """
     logger = GlobalsSingleton.get().log
     try:
+        logger.debug("Processing - slivers_get")
         ret_val = authorize()
 
         if isinstance(ret_val, Response):
@@ -144,6 +145,7 @@ def slivers_get(start_time=None, end_time=None, user_id=None, user_email=None, p
         response.size = len(response.data)
         response.type = "slivers"
         response.total = slivers.get("total")
+        logger.debug("Processed - slivers_get")
         return cors_success_response(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with slivers_get(): {0}'.format(exc)
@@ -168,6 +170,7 @@ def slivers_slice_id_sliver_id_post(body: Sliver, slice_id: str, sliver_id: str)
     """
     logger = GlobalsSingleton.get().log
     try:
+        logger.debug("Processing - slivers_slice_id_sliver_id_post")
         ret_val = authorize()
 
         if isinstance(ret_val, Response):
@@ -229,7 +232,7 @@ def slivers_slice_id_sliver_id_post(body: Sliver, slice_id: str, sliver_id: str)
         response.size = len(response.data)
         response.status = 200
         response.type = 'no_content'
-
+        logger.debug("Processed - slivers_slice_id_sliver_id_post")
         return cors_success_response(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with slivers_slice_id_sliver_id_post(): {0}'.format(exc)

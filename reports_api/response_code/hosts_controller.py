@@ -51,6 +51,7 @@ def hosts_get(site=None, exclude_site=None):  # noqa: E501
     """
     logger = GlobalsSingleton.get().log
     try:
+        logger.debug("Processing - hosts_get")
         ret_val = authorize()
 
         if isinstance(ret_val, Response):
@@ -62,7 +63,7 @@ def hosts_get(site=None, exclude_site=None):  # noqa: E501
             logger.debug("Authorized via bearer token")
 
         elif isinstance(ret_val, FabricToken):
-            # This was authorized via 
+            # This was authorized via
             logger.debug("Authorized via Fabric token")
 
         global_obj = GlobalsSingleton.get()
@@ -77,6 +78,7 @@ def hosts_get(site=None, exclude_site=None):  # noqa: E501
             response.data.append(Site.from_dict(h))
         response.size = len(response.data)
         response.type = "hosts"
+        logger.debug("Processed - hosts_get")
         return cors_success_response(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with hosts_get(): {0}'.format(exc)
