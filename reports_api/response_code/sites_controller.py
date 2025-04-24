@@ -47,6 +47,7 @@ def sites_get():  # noqa: E501
     :rtype: Sites
     """
     logger = GlobalsSingleton.get().log
+    logger.debug("Processing - sites_get")
     try:
         ret_val = authorize()
 
@@ -74,6 +75,7 @@ def sites_get():  # noqa: E501
             response.data.append(Site.from_dict(s))
         response.size = len(response.data)
         response.type = "sites"
+        logger.debug("Processed - sites_get")
         return cors_success_response(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with sites_get(): {0}'.format(exc)

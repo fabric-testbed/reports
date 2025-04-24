@@ -60,7 +60,7 @@ class LogHelper:
         log = logging.getLogger(logger)
         log.setLevel(log_level)
         default_log_format = \
-            '%(asctime)sliver - %(name)sliver - {%(filename)sliver:%(lineno)d} - [%(threadName)sliver-%(thread_id)sliver]- %(levelname)sliver - %(message)sliver'
+            '%(asctime) - %(name) - {%(filename):%(lineno)d} - [%(threadName)-%(thread_id)]- %(levelname) - %(message)'
         if log_format is not None:
             default_log_format = log_format
 

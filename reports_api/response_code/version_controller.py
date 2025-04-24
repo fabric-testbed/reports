@@ -41,6 +41,7 @@ def version_get() -> Version:  # noqa: E501
     """
     logger = GlobalsSingleton.get().log
     try:
+        logger.debug("Processing - version_get")
         version = VersionData()
         version.reference = __API_REFERENCE__
         version.version = __version__
@@ -49,6 +50,7 @@ def version_get() -> Version:  # noqa: E501
         response.size = len(response.data)
         response.status = 200
         response.type = 'version'
+        logger.debug("Processed- version_get")
         return cors_200(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with version_get(): {0}'.format(exc)

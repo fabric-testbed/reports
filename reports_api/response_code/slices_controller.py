@@ -103,6 +103,7 @@ def slices_get(start_time=None, end_time=None, user_id=None, user_email=None, pr
     """
     logger = GlobalsSingleton.get().log
     try:
+        logger.debug("Processing - slices_get")
         ret_val = authorize()
 
         if isinstance(ret_val, Response):
@@ -143,7 +144,8 @@ def slices_get(start_time=None, end_time=None, user_id=None, user_email=None, pr
             response.data.append(Slice.from_dict(s))
         response.size = len(response.data)
         response.type = "slices"
-        response.total =result.get("total")
+        response.total = result.get("total")
+        logger.debug("Processed - slices_get")
         return cors_success_response(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with slices_get(): {0}'.format(exc)
@@ -166,6 +168,7 @@ def slices_slice_id_post(slice_id, body: Slice):  # noqa: E501
     """
     logger = GlobalsSingleton.get().log
     try:
+        logger.debug("Processing - slices_slice_id_post")
         ret_val = authorize()
 
         if isinstance(ret_val, Response):
@@ -200,7 +203,7 @@ def slices_slice_id_post(slice_id, body: Slice):  # noqa: E501
         response.size = len(response.data)
         response.status = 200
         response.type = 'no_content'
-
+        logger.debug("Processed - slices_slice_id_post")
         return cors_success_response(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with slices_slice_id_post(): {0}'.format(exc)

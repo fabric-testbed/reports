@@ -2,8 +2,8 @@ services:
   database:
     image: fabrictestbed/postgres:12.3
     container_name: reports-db
-    ports:
-      - 5432:5432
+    #ports:
+    #  - 5432:5432
     networks:
       - frontend
       - backend
@@ -52,15 +52,6 @@ services:
     volumes:
       - ./reports_api/config.yml:/usr/src/app/config.yml
       - ./reports-logs:/var/log/reports
-#  dash-app:
-#    build: ./dash-app
-#    container_name: dash-app
-#    depends_on:
-#      - reports-api
-#    networks:
-#      - backend   # Ensure the API is on the backend network
-#    environment:
-#      - API_URL=http://reports-api:8080
 
   vouch-proxy:
     container_name: reports-vouch-proxy

@@ -102,6 +102,7 @@ def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, 
     """
     logger = GlobalsSingleton.get().log
     try:
+        logger.debug("Processing - projects_get")
         ret_val = authorize()
 
         if isinstance(ret_val, Response):
@@ -142,6 +143,7 @@ def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, 
         response.size = len(response.data)
         response.type = "projects"
         response.total = projects.get("total")
+        logger.debug("Processed - projects_get")
         return cors_success_response(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with projects_get(): {0}'.format(exc)

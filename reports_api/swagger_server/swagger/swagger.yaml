@@ -349,13 +349,13 @@ paths:
           default: 0
       - name: per_page
         in: query
-        description: Number of records per page. Default is 200.
+        description: Number of records per page. Default is 100.
         required: false
         style: form
         explode: true
         schema:
           type: integer
-          default: 200
+          default: 100
       responses:
         "200":
           description: OK
@@ -818,13 +818,13 @@ paths:
           default: 0
       - name: per_page
         in: query
-        description: Number of records per page. Default is 200.
+        description: Number of records per page. Default is 100.
         required: false
         style: form
         explode: true
         schema:
           type: integer
-          default: 200
+          default: 100
       responses:
         "200":
           description: OK
@@ -1240,13 +1240,13 @@ paths:
           default: 0
       - name: per_page
         in: query
-        description: Number of records per page. Default is 200.
+        description: Number of records per page. Default is 100.
         required: false
         style: form
         explode: true
         schema:
           type: integer
-          default: 200
+          default: 100
       responses:
         "200":
           description: OK
@@ -1594,13 +1594,13 @@ paths:
           default: 0
       - name: per_page
         in: query
-        description: Number of records per page. Default is 200.
+        description: Number of records per page. Default is 100.
         required: false
         style: form
         explode: true
         schema:
           type: integer
-          default: 200
+          default: 100
       responses:
         "200":
           description: OK
@@ -1901,7 +1901,7 @@ components:
           type: integer
         status:
           type: integer
-          default: 200
+          default: 100
         total:
           type: integer
         type:
@@ -2052,7 +2052,7 @@ components:
           default: 0
         status:
           type: integer
-          default: 200
+          default: 100
       example:
         data:
         - details: details
@@ -2070,7 +2070,7 @@ components:
           default: 0
         status:
           type: integer
-          default: 200
+          default: 100
         type:
           type: string
     version:
@@ -2463,13 +2463,13 @@ components:
     perPage:
       name: per_page
       in: query
-      description: Number of records per page. Default is 200.
+      description: Number of records per page. Default is 100.
       required: false
       style: form
       explode: true
       schema:
         type: integer
-        default: 200
+        default: 100
   requestBodies:
     payload_sliver:
       description: Create/Modify sliver

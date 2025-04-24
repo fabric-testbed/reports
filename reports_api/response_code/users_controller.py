@@ -102,6 +102,7 @@ def users_get(start_time=None, end_time=None, user_id=None, user_email=None, pro
     """
     logger = GlobalsSingleton.get().log
     try:
+        logger.debug("Processing - users_get")
         ret_val = authorize()
 
         if isinstance(ret_val, Response):
@@ -142,7 +143,8 @@ def users_get(start_time=None, end_time=None, user_id=None, user_email=None, pro
             response.data.append(User.from_dict(u))
         response.size = len(response.data)
         response.type = "users"
-        response.total =users.get("total")
+        response.total = users.get("total")
+        logger.debug("Processed - users_get")
         return cors_success_response(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with users_get(): {0}'.format(exc)
