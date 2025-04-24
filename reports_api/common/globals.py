@@ -77,11 +77,11 @@ class Globals:
             raise RuntimeError('No logging  config information available')
 
         log_dir = self.config.logging_config.get("log-directory", ".")
-        log_file = self.config.logging_config.get("log-file", "analytics.log")
+        log_file = self.config.logging_config.get("log-file", "reports.log")
         log_level = self.config.logging_config.get("log-level", None)
         log_retain = int(self.config.logging_config.get("log-retain", 50))
         log_size = int(self.config.logging_config.get("log-size", 5000000))
-        logger = self.config.logging_config.get("logger", "analytics")
+        logger = self.config.logging_config.get("logger", "reports")
 
         return LogHelper.make_logger(log_dir=log_dir, log_file=log_file, log_level=log_level, log_retain=log_retain,
                                      log_size=log_size, logger=logger)
