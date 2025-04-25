@@ -15,8 +15,8 @@ The system consists of multiple services, including a PostgreSQL database, an AP
 The system is composed of the following Docker containers:
 
 ### Service	Description
-- database: PostgreSQL database storing sliver data.
-- nginx: Nginx reverse proxy handling HTTPS traffic.
+- reports-db: PostgreSQL database storing sliver data.
+- reports-nginx: Nginx reverse proxy handling HTTPS traffic.
 - reports-api: Backend API serving sliver-related data.
 - dash-app: Dash-based web application for visualization.
 - vouch-proxy: Authentication proxy for securing API requests.
@@ -58,18 +58,12 @@ docker-compose up --build -d
 
 ## Usage
 Accessing the Dashboard
-Once the containers are running, open your browser and navigate to: https://localhost:8443
+Once the containers are running, open your browser and navigate to: https://reports.fabric-testbed.net:8443/
 
 Ensure you have the proper SSL certificates configured in the `./ssl/` directory.
 
 ### API Endpoints
-The backend API provides endpoints for fetching sliver-related data:
-
-```
-GET /slivers_by_component?component_type=GPU&start_date=2024-01-01&end_date=2024-01-31
-GET /project_with_most_slivers?component_type=SmartNIC
-GET /user_with_most_slivers?component_type=FPGA
-```
+The backend API provides endpoints for fetching sliver-related data: https://reports.fabric-testbed.net:8443/reports/ui/
 
 ### Security & Authentication
 - Vouch Proxy ensures API requests are authenticated.
