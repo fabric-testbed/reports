@@ -122,7 +122,8 @@ def slices_get(start_time=None, end_time=None, user_id=None, user_email=None, pr
         db_mgr = DatabaseManager(user=global_obj.config.database_config.get("db-user"),
                                  password=global_obj.config.database_config.get("db-password"),
                                  database=global_obj.config.database_config.get("db-name"),
-                                 db_host=global_obj.config.database_config.get("db-host"))
+                                 db_host=global_obj.config.database_config.get("db-host"),
+                                 logger=logger)
 
         response = Slices()
         response.data = []
@@ -186,7 +187,8 @@ def slices_slice_id_post(slice_id, body: Slice):  # noqa: E501
         db_mgr = DatabaseManager(user=global_obj.config.database_config.get("db-user"),
                                  password=global_obj.config.database_config.get("db-password"),
                                  database=global_obj.config.database_config.get("db-name"),
-                                 db_host=global_obj.config.database_config.get("db-host"))
+                                 db_host=global_obj.config.database_config.get("db-host"),
+                                 logger=logger)
 
         p_id = db_mgr.add_or_update_project(project_uuid=body.project_id, project_name=body.project_name)
         u_id = db_mgr.add_or_update_user(user_uuid=body.user_id, user_email=body.user_email)
