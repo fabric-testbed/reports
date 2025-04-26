@@ -24,7 +24,9 @@
 #
 # Author: Komal Thareja (kthare10@renci.org)
 import json
+import logging
 import threading
+import time
 from collections import defaultdict
 from contextlib import contextmanager
 from typing import List, Optional, Union
@@ -52,13 +54,14 @@ def session_scope(psql_db_engine):
 
 
 class DatabaseManager:
-    def __init__(self, user: str, password: str, database: str, db_host: str):
+    def __init__(self, user: str, password: str, database: str, db_host: str, logger: logging.Logger):
         """
         Initializes the connection to the PostgreSQL database.
         """
         self.db_engine = create_engine(f"postgresql+psycopg2://{user}:{password}@{db_host}/{database}")
         self.session_factory = sessionmaker(bind=self.db_engine)
         self.sessions = {}
+        self.logger = logger
         Base.metadata.create_all(self.db_engine)
 
     def get_session(self):
@@ -508,6 +511,7 @@ class DatabaseManager:
         """
         session = self.get_session()
         try:
+            get_pr_ts = time.time()
             rows = session.query(Projects).distinct() \
                 .join(Slices, Slices.project_id == Projects.id) \
                 .join(Users, Slices.user_id == Users.id) \
@@ -516,6 +520,8 @@ class DatabaseManager:
                 .outerjoin(Sites, Slivers.site_id == Sites.id) \
                 .outerjoin(Components, Slivers.id == Components.sliver_id) \
                 .outerjoin(Interfaces, Slivers.id == Interfaces.sliver_id)
+            self.logger.info(f"Query Projects = {time.time() - get_pr_ts:.0f}")
+            get_pr_ts = time.time()
 
             filters = []
 
@@ -585,10 +591,19 @@ class DatabaseManager:
             # Apply filters
             if filters:
                 rows = rows.filter(and_(*filters))
+            self.logger.info(f"Query Projects filters = {time.time() - get_pr_ts:.0f}")
+            get_pr_ts = time.time()
 
             total_projects = rows.count()
+
+            self.logger.info(f"Query Projects row count = {time.time() - get_pr_ts:.0f}")
+            get_pr_ts = time.time()
+
             # Pagination
             rows = rows.offset(page * per_page).limit(per_page)
+
+            self.logger.info(f"Query Projects rows = {time.time() - get_pr_ts:.0f}")
+            get_pr_ts = time.time()
 
             projects = rows.all()
             result = []
@@ -607,12 +622,17 @@ class DatabaseManager:
                         "total": users.get("total"),
                         "data": users.get("users")
                     }
+                '''
                 else:
                     project["users"] = {
                         "total": self.__get_user_count_for_project(p.id)
                     }
+                '''
 
                 result.append(project)
+            self.logger.info(f"Query Projects dict = {time.time() - get_pr_ts:.0f}")
+            get_pr_ts = time.time()
+
             return {
                 "total": total_projects,
                 "projects": result
@@ -791,10 +811,12 @@ class DatabaseManager:
                         "total": slices.get("total"),
                         "data": slices.get("slices")
                     }
+                '''
                 else:
                     user["slices"] = {
                         "total": session.query(func.count(Slices.id)).filter_by(user_id=u.id).scalar()
                     }
+                '''
                 result.append(user)
             return {
                 "total": total_users,
