@@ -1322,7 +1322,7 @@ class DatabaseManager:
             # Time filter (on Slices)
             if start_time or end_time:
                 time_filter = self.__build_time_filter(Slices, start_time, end_time)
-                if time_filter:
+                if time_filter is not None:
                     filters.append(time_filter)
 
             # Filters
