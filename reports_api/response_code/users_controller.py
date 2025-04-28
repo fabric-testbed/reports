@@ -134,6 +134,8 @@ def users_get(start_time=None, end_time=None, user_id=None, user_email=None, pro
         end = datetime.fromisoformat(end_time) if end_time else None
         sliver_states = [SliverStates.translate(s) for s in sliver_state] if sliver_state else None
         slice_states = [SliceState.translate(s) for s in slice_state] if slice_state else None
+        exclude_sliver_states = [SliverStates.translate(s) for s in exclude_sliver_state] if exclude_sliver_state else None
+        exclude_slice_states = [SliceState.translate(s) for s in exclude_slice_state] if exclude_slice_state else None
 
         users = db_mgr.get_users(start_time=start, end_time=end, user_email=user_email, user_id=user_id, vlan=vlan,
                                  sliver_id=sliver_id, sliver_type=sliver_type, slice_id=slice_id, bdf=bdf,
@@ -143,8 +145,8 @@ def users_get(start_time=None, end_time=None, user_id=None, user_email=None, pro
                                  component_type=component_type, ip_subnet=ip_subnet, page=page, per_page=per_page,
                                  exclude_user_id=exclude_user_id, exclude_user_email=exclude_user_email,
                                  exclude_project_id=exclude_project_id, exclude_site=exclude_site,
-                                 exclude_host=exclude_host, exclude_sliver_state=exclude_sliver_state,
-                                 exclude_slice_state=exclude_slice_state)
+                                 exclude_host=exclude_host, exclude_sliver_state=exclude_sliver_states,
+                                 exclude_slice_state=exclude_slice_states)
         for u in users.get("users"):
             response.data.append(User.from_dict(u))
         response.size = len(response.data)
