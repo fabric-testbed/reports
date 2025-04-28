@@ -48,7 +48,9 @@ class ReportsApi:
                      ip_subnet: list[str] = None, site: list[str] = None, host: list[str] = None,
                      exclude_user_id: list[str] = None, exclude_user_email: list[str] = None,
                      exclude_project_id: list[str] = None, exclude_site: list[str] = None, facility: list[str] = None,
-                     exclude_host: list[str] = None, page=0, per_page=1000, fetch_all=True):
+                     exclude_host: list[str] = None, exclude_slice_state: list[str] = None,
+                     exclude_sliver_state: list[str] = None,
+                     page=0, per_page=1000, fetch_all=True):
         """
         Fetch slices with optional filters. Supports fetching all pages or just one.
 
@@ -98,6 +100,10 @@ class ReportsApi:
         :type exclude_site: List[str]
         :param exclude_host: Exclude hosts
         :type exclude_host: List[str]
+        :param exclude_slice_state: Filter by slice state; allowed values Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK
+        :type exclude_slice_state: List[str]
+        :param exclude_sliver_state: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
+        :type exclude_sliver_state: List[str]
         :param page: Page number for pagination. Default is 1.
         :type page: int
         :param per_page: Number of records per page. Default is 10.
@@ -133,6 +139,8 @@ class ReportsApi:
             "exclude_project_id": exclude_project_id,
             "exclude_site": exclude_site,
             "exclude_host": exclude_host,
+            "exclude_slice_state": exclude_slice_state,
+            "exclude_sliver_state": exclude_sliver_state,
             "per_page": per_page  # page will be added per iteration
         }
 
@@ -172,7 +180,8 @@ class ReportsApi:
                       ip_subnet: list[str] = None, site: list[str] = None, host: list[str] = None,
                       exclude_user_id: list[str] = None, exclude_user_email: list[str] = None,
                       exclude_project_id: list[str] = None, exclude_site: list[str] = None, facility: list[str] = None,
-                      exclude_host: list[str] = None, page=0, per_page=1000, fetch_all=True):
+                      exclude_host: list[str] = None, exclude_slice_state: list[str] = None,
+                     exclude_sliver_state: list[str] = None, page=0, per_page=1000, fetch_all=True):
         """
         Fetch slivers with optional filters. Supports fetching all pages or just one.
 
@@ -222,6 +231,10 @@ class ReportsApi:
         :type exclude_site: List[str]
         :param exclude_host: Exclude hosts
         :type exclude_host: List[str]
+        :param exclude_slice_state: Filter by slice state; allowed values Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK
+        :type exclude_slice_state: List[str]
+        :param exclude_sliver_state: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
+        :type exclude_sliver_state: List[str]
         :param page: Page number for pagination. Default is 1.
         :type page: int
         :param per_page: Number of records per page. Default is 10.
@@ -258,6 +271,8 @@ class ReportsApi:
             "exclude_project_id": exclude_project_id,
             "exclude_site": exclude_site,
             "exclude_host": exclude_host,
+            "exclude_slice_state": exclude_slice_state,
+            "exclude_sliver_state": exclude_sliver_state,
             "per_page": per_page  # page will be added per iteration
         }
 
@@ -297,7 +312,8 @@ class ReportsApi:
                     ip_subnet: list[str] = None, site: list[str] = None, host: list[str] = None,
                     exclude_user_id: list[str] = None, exclude_user_email: list[str] = None,
                     exclude_project_id: list[str] = None, exclude_site: list[str] = None, facility: list[str] = None,
-                    exclude_host: list[str] = None, page=0, per_page=1000, fetch_all=True):
+                    exclude_host: list[str] = None, exclude_slice_state: list[str] = None,
+                     exclude_sliver_state: list[str] = None, page=0, per_page=1000, fetch_all=True):
         """
         Fetch users with optional filters. Supports fetching all pages or just one.
 
@@ -347,6 +363,11 @@ class ReportsApi:
         :type exclude_site: List[str]
         :param exclude_host: Exclude hosts
         :type exclude_host: List[str]
+        :param exclude_slice_state: Filter by slice state; allowed values Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK
+        :type exclude_slice_state: List[str]
+        :param exclude_sliver_state: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
+        :type exclude_sliver_state: List[str]
+
         :param page: Page number for pagination. Default is 1.
         :type page: int
         :param per_page: Number of records per page. Default is 10.
@@ -383,6 +404,8 @@ class ReportsApi:
             "exclude_project_id": exclude_project_id,
             "exclude_site": exclude_site,
             "exclude_host": exclude_host,
+            "exclude_slice_state": exclude_slice_state,
+            "exclude_sliver_state": exclude_sliver_state,
             "per_page": per_page  # page will be added per iteration
         }
 
@@ -422,7 +445,8 @@ class ReportsApi:
                        ip_subnet: list[str] = None, site: list[str] = None, host: list[str] = None,
                        exclude_user_id: list[str] = None, exclude_user_email: list[str] = None,
                        exclude_project_id: list[str] = None, exclude_site: list[str] = None, facility: list[str] = None,
-                       exclude_host: list[str] = None, page=0, per_page=1000, fetch_all=True):
+                       exclude_host: list[str] = None, exclude_slice_state: list[str] = None,
+                     exclude_sliver_state: list[str] = None, page=0, per_page=1000, fetch_all=True):
         """
         Fetch projects with optional filters. Supports fetching all pages or just one.
 
@@ -472,6 +496,11 @@ class ReportsApi:
         :type exclude_site: List[str]
         :param exclude_host: Exclude hosts
         :type exclude_host: List[str]
+        :param exclude_slice_state: Filter by slice state; allowed values Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK
+        :type exclude_slice_state: List[str]
+        :param exclude_sliver_state: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
+        :type exclude_sliver_state: List[str]
+
         :param page: Page number for pagination. Default is 1.
         :type page: int
         :param per_page: Number of records per page. Default is 10.
@@ -508,6 +537,8 @@ class ReportsApi:
             "exclude_project_id": exclude_project_id,
             "exclude_site": exclude_site,
             "exclude_host": exclude_host,
+            "exclude_slice_state": exclude_slice_state,
+            "exclude_sliver_state": exclude_sliver_state,
             "per_page": per_page  # page will be added per iteration
         }
 
