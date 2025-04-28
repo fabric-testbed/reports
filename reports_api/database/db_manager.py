@@ -558,10 +558,11 @@ class DatabaseManager:
 
             # Only join Slivers if any Sliver-related filter is used
             if any([sliver_id, sliver_type, sliver_state, ip_subnet,
-                    host, site, component_type, component_model, bdf, vlan, facility]):
+                    host, site, component_type, component_model, bdf, vlan, facility, exclude_site,
+                    exclude_host, exclude_sliver_state]):
                 query = query.join(Slivers, Slivers.project_id == Projects.id)
 
-                if host or site:
+                if host or site or exclude_host or exclude_site:
                     query = query.outerjoin(Hosts, Slivers.host_id == Hosts.id)\
                                  .outerjoin(Sites, Slivers.site_id == Sites.id)
                 if component_type or component_model:
@@ -644,10 +645,11 @@ class DatabaseManager:
                 count_query = count_query.filter(and_(*filters))
 
             if any([sliver_id, sliver_type, sliver_state, ip_subnet,
-                    host, site, component_type, component_model, bdf, vlan, facility]):
+                    host, site, component_type, component_model, bdf, vlan, facility, exclude_site,
+                    exclude_host, exclude_sliver_state]):
                 count_query = count_query.join(Slivers, Slivers.project_id == Projects.id)
 
-                if host or site:
+                if host or site or exclude_host or exclude_site:
                     count_query = count_query.outerjoin(Hosts, Slivers.host_id == Hosts.id)\
                                              .outerjoin(Sites, Slivers.site_id == Sites.id)
                 if component_type or component_model:
@@ -680,7 +682,10 @@ class DatabaseManager:
                                            sliver_state=sliver_state, site=site, host=host,
                                            project_id=project_id, component_model=component_model,
                                            component_type=component_type, ip_subnet=ip_subnet, page=page,
-                                           per_page=per_page)
+                                           per_page=per_page, exclude_site=exclude_site, exclude_host=exclude_host,
+                                           exclude_slice_state=exclude_slice_state, exclude_sliver_state=exclude_sliver_state,
+                                           exclude_project_id=exclude_project_id, exclude_user_id=exclude_user_id,
+                                           exclude_user_email=exclude_user_email)
                     project["users"] = {
                         "total": users.get("total"),
                         "data": users.get("users")
@@ -783,7 +788,7 @@ class DatabaseManager:
             requires_sliver = any([
                 sliver_id, sliver_type, sliver_state, ip_subnet,
                 host, site, component_type, component_model, bdf, vlan, facility,
-                exclude_site, exclude_slice_state, exclude_host
+                exclude_site, exclude_sliver_state, exclude_host
             ])
 
             now = datetime.utcnow()
@@ -814,7 +819,7 @@ class DatabaseManager:
             if requires_sliver:
                 query = query.join(Slivers, Users.id == Slivers.user_id)
 
-                if host or site:
+                if host or site or exclude_host or exclude_site:
                     query = query.outerjoin(Hosts, Slivers.host_id == Hosts.id).outerjoin(Sites,
                                                                                           Slivers.site_id == Sites.id)
 
@@ -913,7 +918,7 @@ class DatabaseManager:
             if requires_sliver:
                 count_query = count_query.join(Slivers, Users.id == Slivers.user_id)
 
-                if host or site:
+                if host or site or exclude_host or exclude_site:
                     count_query = count_query.outerjoin(Hosts, Slivers.host_id == Hosts.id)\
                                              .outerjoin(Sites, Slivers.site_id == Sites.id)
 
@@ -947,7 +952,10 @@ class DatabaseManager:
                         user_id=[u.user_uuid], vlan=vlan, sliver_id=sliver_id, sliver_type=sliver_type,
                         slice_id=slice_id, bdf=bdf, sliver_state=sliver_state, site=site, host=host,
                         project_id=project_id, component_model=component_model, component_type=component_type,
-                        ip_subnet=ip_subnet
+                        ip_subnet=ip_subnet, exclude_site=exclude_site, exclude_host=exclude_host,
+                        exclude_slice_state=exclude_slice_state, exclude_sliver_state=exclude_sliver_state,
+                        exclude_project_id=exclude_project_id, exclude_user_id=exclude_user_id,
+                        exclude_user_email=exclude_user_email
                     )
                     user["slices"] = {
                         "total": slices.get("total"),
@@ -1063,7 +1071,7 @@ class DatabaseManager:
             query = query.join(Users, Slivers.user_id == Users.id)
             query = query.join(Projects, Slivers.project_id == Projects.id)
 
-            if host or site:
+            if host or site or exclude_host or exclude_site:
                 query = query.outerjoin(Hosts, Slivers.host_id == Hosts.id)\
                              .outerjoin(Sites, Slivers.site_id == Sites.id)
             if component_type or component_model:
@@ -1152,7 +1160,7 @@ class DatabaseManager:
                                      .join(Users, Slivers.user_id == Users.id)\
                                      .join(Projects, Slivers.project_id == Projects.id)
 
-            if host or site:
+            if host or site or exclude_host or exclude_site:
                 count_query = count_query.outerjoin(Hosts, Slivers.host_id == Hosts.id)\
                                          .outerjoin(Sites, Slivers.site_id == Sites.id)
             if component_type or component_model:
@@ -1327,12 +1335,13 @@ class DatabaseManager:
             # Join slivers only if needed
             join_slivers = any([
                 sliver_id, sliver_type, sliver_state, ip_subnet,
-                site, host, component_type, component_model, bdf, vlan, facility
+                site, host, component_type, component_model, bdf, vlan, facility,
+                exclude_site, exclude_host, exclude_sliver_state
             ])
 
             if join_slivers:
                 query = query.join(Slivers, Slices.id == Slivers.slice_id)
-                if host or site:
+                if host or site or exclude_host or exclude_site:
                     query = query.outerjoin(Hosts, Slivers.host_id == Hosts.id).outerjoin(Sites, Slivers.site_id == Sites.id)
                 if component_type or component_model:
                     query = query.outerjoin(Components, Slivers.id == Components.sliver_id)
@@ -1419,7 +1428,7 @@ class DatabaseManager:
             if join_slivers:
                 count_query = count_query.join(Slivers, Slices.id == Slivers.slice_id)
 
-                if host or site:
+                if host or site or exclude_host or exclude_site:
                     count_query = count_query.outerjoin(Hosts, Slivers.host_id == Hosts.id).outerjoin(Sites, Slivers.site_id == Sites.id)
                 if component_type or component_model:
                     count_query = count_query.outerjoin(Components, Slivers.id == Components.sliver_id)
@@ -1458,7 +1467,11 @@ class DatabaseManager:
                         start_time=start_time, end_time=end_time, user_email=user_email,
                         user_id=user_id, vlan=vlan, sliver_id=sliver_id, sliver_type=sliver_type, slice_id=[s.slice_guid],
                         bdf=bdf, sliver_state=sliver_state, site=site, host=host, project_id=project_id,
-                        component_model=component_model, component_type=component_type, ip_subnet=ip_subnet
+                        component_model=component_model, component_type=component_type, ip_subnet=ip_subnet,
+                        exclude_site=exclude_site, exclude_host=exclude_host,
+                        exclude_slice_state=exclude_slice_state, exclude_sliver_state=exclude_sliver_state,
+                        exclude_project_id=exclude_project_id, exclude_user_id=exclude_user_id,
+                        exclude_user_email=exclude_user_email
                     )
                     slice_obj["slivers"] = {
                         "total": slivers.get("total"),
