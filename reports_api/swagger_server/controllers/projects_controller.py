@@ -1,11 +1,8 @@
 from reports_api.response_code import projects_controller as rc
 
 
-def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, project_id=None, slice_id=None,
-                 slice_state=None, sliver_id=None, sliver_type=None, sliver_state=None, component_type=None,
-                 component_model=None, bdf=None, vlan=None, ip_subnet=None, facility=None, site=None, host=None,
-                 exclude_user_id=None, exclude_user_email=None, exclude_project_id=None, exclude_site=None,
-                 exclude_host=None, page=None, per_page=None):  # noqa: E501
+
+def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, project_id=None, slice_id=None, slice_state=None, sliver_id=None, sliver_type=None, sliver_state=None, component_type=None, component_model=None, bdf=None, vlan=None, ip_subnet=None, facility=None, site=None, host=None, exclude_user_id=None, exclude_user_email=None, exclude_project_id=None, exclude_site=None, exclude_host=None, exclude_slice_state=None, exclude_sliver_state=None, page=None, per_page=None):  # noqa: E501
     """Retrieve a list of projects
 
     Returns a paginated list of projects with their UUIDs. # noqa: E501
@@ -56,9 +53,13 @@ def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, 
     :type exclude_site: List[str]
     :param exclude_host: Exclude hosts
     :type exclude_host: List[str]
-    :param page: Page number for pagination. Default is 1.
+    :param exclude_slice_state: Filter by slice state; allowed values Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK
+    :type exclude_slice_state: List[str]
+    :param exclude_sliver_state: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
+    :type exclude_sliver_state: List[str]
+    :param page: Page number for pagination. Default is 0.
     :type page: int
-    :param per_page: Number of records per page. Default is 10.
+    :param per_page: Number of records per page. Default is 200.
     :type per_page: int
 
     :rtype: Projects

@@ -45,8 +45,10 @@ class TestSliversController(BaseTestCase):
                         ('exclude_project_id', 'exclude_project_id_example'),
                         ('exclude_site', 'exclude_site_example'),
                         ('exclude_host', 'exclude_host_example'),
-                        ('page', 1),
-                        ('per_page', 100)]
+                        ('exclude_slice_state', 'exclude_slice_state_example'),
+                        ('exclude_sliver_state', 'exclude_sliver_state_example'),
+                        ('page', 0),
+                        ('per_page', 200)]
         response = self.client.open(
             '/RENCI3/analytics/1.0.0/slivers',
             method='GET',

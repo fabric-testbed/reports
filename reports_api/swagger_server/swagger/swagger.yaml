@@ -338,6 +338,51 @@ paths:
           type: array
           items:
             type: string
+      - name: exclude_slice_state
+        in: query
+        description: "Filter by slice state; allowed values Nascent, Configuring,\
+          \ StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError,\
+          \ AllocatedError, AllocatedOK"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - Nascent
+            - Configuring
+            - StableError
+            - StableOK
+            - Closing
+            - Dead
+            - Modifying
+            - ModifyOK
+            - ModifyError
+            - AllocatedError
+            - AllocatedOK
+      - name: exclude_sliver_state
+        in: query
+        description: "Filter by sliver state; allowed values Nascent, Ticketed, Active,\
+          \ ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - Nascent
+            - Ticketed
+            - Active
+            - ActiveTicketed
+            - Closed
+            - CloseWait
+            - Failed
+            - Unknown
+            - CloseFail
       - name: page
         in: query
         description: Page number for pagination. Default is 0.
@@ -349,13 +394,13 @@ paths:
           default: 0
       - name: per_page
         in: query
-        description: Number of records per page. Default is 100.
+        description: Number of records per page. Default is 200.
         required: false
         style: form
         explode: true
         schema:
           type: integer
-          default: 100
+          default: 200
       responses:
         "200":
           description: OK
@@ -807,6 +852,51 @@ paths:
           type: array
           items:
             type: string
+      - name: exclude_slice_state
+        in: query
+        description: "Filter by slice state; allowed values Nascent, Configuring,\
+          \ StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError,\
+          \ AllocatedError, AllocatedOK"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - Nascent
+            - Configuring
+            - StableError
+            - StableOK
+            - Closing
+            - Dead
+            - Modifying
+            - ModifyOK
+            - ModifyError
+            - AllocatedError
+            - AllocatedOK
+      - name: exclude_sliver_state
+        in: query
+        description: "Filter by sliver state; allowed values Nascent, Ticketed, Active,\
+          \ ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - Nascent
+            - Ticketed
+            - Active
+            - ActiveTicketed
+            - Closed
+            - CloseWait
+            - Failed
+            - Unknown
+            - CloseFail
       - name: page
         in: query
         description: Page number for pagination. Default is 0.
@@ -818,13 +908,13 @@ paths:
           default: 0
       - name: per_page
         in: query
-        description: Number of records per page. Default is 100.
+        description: Number of records per page. Default is 200.
         required: false
         style: form
         explode: true
         schema:
           type: integer
-          default: 100
+          default: 200
       responses:
         "200":
           description: OK
@@ -1229,6 +1319,51 @@ paths:
           type: array
           items:
             type: string
+      - name: exclude_slice_state
+        in: query
+        description: "Filter by slice state; allowed values Nascent, Configuring,\
+          \ StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError,\
+          \ AllocatedError, AllocatedOK"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - Nascent
+            - Configuring
+            - StableError
+            - StableOK
+            - Closing
+            - Dead
+            - Modifying
+            - ModifyOK
+            - ModifyError
+            - AllocatedError
+            - AllocatedOK
+      - name: exclude_sliver_state
+        in: query
+        description: "Filter by sliver state; allowed values Nascent, Ticketed, Active,\
+          \ ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - Nascent
+            - Ticketed
+            - Active
+            - ActiveTicketed
+            - Closed
+            - CloseWait
+            - Failed
+            - Unknown
+            - CloseFail
       - name: page
         in: query
         description: Page number for pagination. Default is 0.
@@ -1240,13 +1375,13 @@ paths:
           default: 0
       - name: per_page
         in: query
-        description: Number of records per page. Default is 100.
+        description: Number of records per page. Default is 200.
         required: false
         style: form
         explode: true
         schema:
           type: integer
-          default: 100
+          default: 200
       responses:
         "200":
           description: OK
@@ -1583,6 +1718,51 @@ paths:
           type: array
           items:
             type: string
+      - name: exclude_slice_state
+        in: query
+        description: "Filter by slice state; allowed values Nascent, Configuring,\
+          \ StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError,\
+          \ AllocatedError, AllocatedOK"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - Nascent
+            - Configuring
+            - StableError
+            - StableOK
+            - Closing
+            - Dead
+            - Modifying
+            - ModifyOK
+            - ModifyError
+            - AllocatedError
+            - AllocatedOK
+      - name: exclude_sliver_state
+        in: query
+        description: "Filter by sliver state; allowed values Nascent, Ticketed, Active,\
+          \ ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - Nascent
+            - Ticketed
+            - Active
+            - ActiveTicketed
+            - Closed
+            - CloseWait
+            - Failed
+            - Unknown
+            - CloseFail
       - name: page
         in: query
         description: Page number for pagination. Default is 0.
@@ -1594,13 +1774,13 @@ paths:
           default: 0
       - name: per_page
         in: query
-        description: Number of records per page. Default is 100.
+        description: Number of records per page. Default is 200.
         required: false
         style: form
         explode: true
         schema:
           type: integer
-          default: 100
+          default: 200
       responses:
         "200":
           description: OK
@@ -1779,7 +1959,11 @@ components:
       properties:
         project_id:
           type: string
+        project_name:
+          type: string
         user_id:
+          type: string
+        user_email:
           type: string
         slice_id:
           type: string
@@ -1901,7 +2085,7 @@ components:
           type: integer
         status:
           type: integer
-          default: 100
+          default: 200
         total:
           type: integer
         type:
@@ -1925,7 +2109,7 @@ components:
           default: error
         size:
           type: integer
-          default: 0
+          default: 1
         status:
           type: integer
           default: 401
@@ -1941,7 +2125,7 @@ components:
           default: error
         size:
           type: integer
-          default: 0
+          default: 1
         status:
           type: integer
           default: 403
@@ -1957,7 +2141,7 @@ components:
           default: error
         size:
           type: integer
-          default: 0
+          default: 1
         status:
           type: integer
           default: 404
@@ -1973,7 +2157,7 @@ components:
           default: error
         size:
           type: integer
-          default: 0
+          default: 1
         status:
           type: integer
           default: 500
@@ -1990,7 +2174,7 @@ components:
           default: error
         size:
           type: integer
-          default: 0
+          default: 1
         status:
           type: integer
           default: 400
@@ -2049,10 +2233,10 @@ components:
           default: no_content
         size:
           type: integer
-          default: 0
+          default: 1
         status:
           type: integer
-          default: 100
+          default: 200
       example:
         data:
         - details: details
@@ -2067,10 +2251,10 @@ components:
       properties:
         size:
           type: integer
-          default: 0
+          default: 1
         status:
           type: integer
-          default: 100
+          default: 200
         type:
           type: string
     version:
@@ -2337,8 +2521,55 @@ components:
           - Failed
           - Unknown
           - CloseFail
+    excludeSliverState:
+      name: exclude_sliver_state
+      in: query
+      description: "Filter by sliver state; allowed values Nascent, Ticketed, Active,\
+        \ ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail"
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: array
+        items:
+          type: string
+          enum:
+          - Nascent
+          - Ticketed
+          - Active
+          - ActiveTicketed
+          - Closed
+          - CloseWait
+          - Failed
+          - Unknown
+          - CloseFail
     sliceState:
       name: slice_state
+      in: query
+      description: "Filter by slice state; allowed values Nascent, Configuring, StableError,\
+        \ StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError,\
+        \ AllocatedOK"
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: array
+        items:
+          type: string
+          enum:
+          - Nascent
+          - Configuring
+          - StableError
+          - StableOK
+          - Closing
+          - Dead
+          - Modifying
+          - ModifyOK
+          - ModifyError
+          - AllocatedError
+          - AllocatedOK
+    excludeSliceState:
+      name: exclude_slice_state
       in: query
       description: "Filter by slice state; allowed values Nascent, Configuring, StableError,\
         \ StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError,\
@@ -2463,13 +2694,13 @@ components:
     perPage:
       name: per_page
       in: query
-      description: Number of records per page. Default is 100.
+      description: Number of records per page. Default is 200.
       required: false
       style: form
       explode: true
       schema:
         type: integer
-        default: 100
+        default: 200
   requestBodies:
     payload_sliver:
       description: Create/Modify sliver
