@@ -452,6 +452,7 @@ class DatabaseManager:
                      vlan: list[str] = None, host: list[str] = None, exclude_user_id: list[str] = None,
                      exclude_user_email: list[str] = None, exclude_project_id: list[str] = None,
                      exclude_site: list[str] = None, exclude_host: list[str] = None, facility: list[str] = None,
+                     exclude_slice_state: list[int] = None, exclude_sliver_state: list[int] = None,
                      page: int = 0, per_page: int = 100) -> dict:
         """
         Retrieve a list of projects filtered by related slices, slivers, users, components, interface attributes, and time range.
@@ -502,6 +503,10 @@ class DatabaseManager:
         :type exclude_site: list[str], optional
         :param exclude_host: Exclude projects running on these hostnames.
         :type exclude_host: list[str], optional
+        :param exclude_slice_state: Filter by slice state; allowed values Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK
+        :type exclude_slice_state: List[int]
+        :param exclude_sliver_state: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
+        :type exclude_sliver_state: List[int]
 
         :param page: Page number for paginated results (0-based index).
         :type page: int, optional
@@ -514,7 +519,8 @@ class DatabaseManager:
         # Detect if any fields that require Sliver JOIN are used
         requires_sliver = any([
             sliver_id, sliver_type, sliver_state, ip_subnet,
-            host, site, component_type, component_model, bdf, vlan, facility
+            host, site, component_type, component_model, bdf, vlan, facility, exclude_site,
+            exclude_host, exclude_sliver_state
         ])
 
         # Set proper time window if missing
@@ -618,6 +624,10 @@ class DatabaseManager:
                 filters.append(Sites.name.notin_(exclude_site))
             if exclude_host:
                 filters.append(Hosts.name.notin_(exclude_host))
+            if exclude_slice_state:
+                filters.append(Slices.state.notin_(exclude_slice_state))
+            if exclude_sliver_state:
+                filters.append(Slivers.state.notin_(exclude_sliver_state))
 
             if filters:
                 query = query.filter(and_(*filters))
@@ -700,6 +710,7 @@ class DatabaseManager:
                   vlan: list[str] = None, host: list[str] = None, exclude_user_id: list[str] = None,
                   exclude_user_email: list[str] = None, exclude_project_id: list[str] = None,
                   exclude_site: list[str] = None, exclude_host: list[str] = None, facility: list[str] = None,
+                  exclude_slice_state: list[int] = None, exclude_sliver_state: list[int] = None,
                   page: int = 0, per_page: int = 100) -> dict:
         """
         Retrieve a list of users filtered by associated slices, slivers, components, network interfaces, and time range.
@@ -751,6 +762,10 @@ class DatabaseManager:
         :type exclude_site: list[str], optional
         :param exclude_host: Exclude users whose slivers are hosted on these hosts.
         :type exclude_host: list[str], optional
+        :param exclude_slice_state: Filter by slice state; allowed values Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK
+        :type exclude_slice_state: List[int]
+        :param exclude_sliver_state: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
+        :type exclude_sliver_state: List[int]
 
         :param page: Page number for paginated results (0-based index).
         :type page: int, optional
@@ -767,7 +782,8 @@ class DatabaseManager:
             # Detect if sliver-related fields are involved
             requires_sliver = any([
                 sliver_id, sliver_type, sliver_state, ip_subnet,
-                host, site, component_type, component_model, bdf, vlan, facility
+                host, site, component_type, component_model, bdf, vlan, facility,
+                exclude_site, exclude_slice_state, exclude_host
             ])
 
             now = datetime.utcnow()
@@ -871,6 +887,10 @@ class DatabaseManager:
                 filters.append(Sites.name.notin_(exclude_site))
             if exclude_host:
                 filters.append(Hosts.name.notin_(exclude_host))
+            if exclude_slice_state:
+                filters.append(Slices.state.notin_(exclude_slice_state))
+            if exclude_sliver_state:
+                filters.append(Slivers.state.notin_(exclude_sliver_state))
 
             # Apply filters
             if filters:
@@ -959,6 +979,7 @@ class DatabaseManager:
                     vlan: list[str] = None, host: list[str] = None, exclude_user_id: list[str] = None,
                     exclude_user_email: list[str] = None, exclude_project_id: list[str] = None,
                     exclude_site: list[str] = None, exclude_host: list[str] = None, facility: list[str] = None,
+                    exclude_slice_state: list[int] = None, exclude_sliver_state: list[int] = None,
                     page: int = 0, per_page: int = 100) -> dict:
         """
         Retrieve a list of slivers filtered by time range, user, project, slice, component, and network-related fields.
@@ -1009,6 +1030,10 @@ class DatabaseManager:
         :type exclude_site: list[str], optional
         :param exclude_host: Exclude slivers hosted on these hostnames.
         :type exclude_host: list[str], optional
+        :param exclude_slice_state: Filter by slice state; allowed values Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK
+        :type exclude_slice_state: List[int]
+        :param exclude_sliver_state: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
+        :type exclude_sliver_state: List[int]
 
         :param page: Page number for paginated results (0-based index).
         :type page: int, optional
@@ -1024,14 +1049,6 @@ class DatabaseManager:
             now = datetime.utcnow()
 
             # Always force time filter if missing (because Slivers is big!)
-            '''
-            if not start_time and not end_time:
-                end_time = now
-                start_time = now - timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS)
-                self.logger.warning(
-                    f"Forcing default time window: {start_time.date()} to {end_time.date()} for sliver query"
-                )
-            '''
             if start_time and not end_time:
                 end_time = start_time + timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS)
                 self.logger.info(f"Only start_time given. Setting end_time to 30 days from start_time: {end_time.isoformat()}")
@@ -1115,6 +1132,10 @@ class DatabaseManager:
                 filters.append(Sites.name.notin_(exclude_site))
             if exclude_host:
                 filters.append(Hosts.name.notin_(exclude_host))
+            if exclude_slice_state:
+                filters.append(Slices.state.notin_(exclude_slice_state))
+            if exclude_sliver_state:
+                filters.append(Slivers.state.notin_(exclude_sliver_state))
 
             if filters:
                 query = query.filter(and_(*filters))
@@ -1219,6 +1240,7 @@ class DatabaseManager:
                    vlan: list[str] = None, host: list[str] = None, exclude_user_id: list[str] = None,
                    exclude_user_email: list[str] = None, exclude_project_id: list[str] = None,
                    exclude_site: list[str] = None, exclude_host: list[str] = None, facility: list[str] = None,
+                   exclude_slice_state: list[int] = None, exclude_sliver_state: list[int] = None,
                    page: int = 0, per_page: int = 100) -> dict:
         """
         Retrieve a list of slices filtered by time, user, project, sliver, component, and network attributes.
@@ -1269,6 +1291,10 @@ class DatabaseManager:
         :type exclude_site: list[str], optional
         :param exclude_host: Exclude slices running on these hostnames.
         :type exclude_host: list[str], optional
+        :param exclude_slice_state: Filter by slice state; allowed values Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK
+        :type exclude_slice_state: List[int]
+        :param exclude_sliver_state: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
+        :type exclude_sliver_state: List[int]
 
         :param page: Page number for paginated results (0-based index).
         :type page: int, optional
@@ -1285,14 +1311,6 @@ class DatabaseManager:
             now = datetime.utcnow()
 
             # Force default time range if no time provided
-            '''
-            if not start_time and not end_time:
-                end_time = now
-                start_time = now - timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS)
-                self.logger.warning(
-                    f"Forcing default time window: {start_time.date()} to {end_time.date()} for slices query"
-                )
-            '''
             if start_time and not end_time:
                 end_time = start_time + timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS)
                 self.logger.info(f"Only start_time given. Setting end_time to 30 days from start_time: {end_time.isoformat()}")
@@ -1380,6 +1398,10 @@ class DatabaseManager:
                 filters.append(Sites.name.notin_(exclude_site))
             if exclude_host:
                 filters.append(Hosts.name.notin_(exclude_host))
+            if exclude_slice_state:
+                filters.append(Slices.state.notin_(exclude_slice_state))
+            if exclude_sliver_state:
+                filters.append(Slivers.state.notin_(exclude_sliver_state))
 
             if filters:
                 query = query.filter(and_(*filters))
