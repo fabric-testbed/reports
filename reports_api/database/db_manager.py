@@ -1316,8 +1316,6 @@ class DatabaseManager:
         try:
             start_ts = time.time()
 
-            now = datetime.utcnow()
-
             # Force default time range if no time provided
             if start_time and not end_time:
                 end_time = start_time + timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS)

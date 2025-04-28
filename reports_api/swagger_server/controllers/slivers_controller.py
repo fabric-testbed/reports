@@ -73,7 +73,8 @@ def slivers_get(start_time=None, end_time=None, user_id=None, user_email=None, p
                           project_id=project_id, component_model=component_model, facility=facility,
                           component_type=component_type, ip_subnet=ip_subnet, page=page, per_page=per_page,
                           exclude_user_id=exclude_user_id, exclude_user_email=exclude_user_email,
-                          exclude_project_id=exclude_project_id, exclude_site=exclude_site, exclude_host=exclude_host)
+                          exclude_project_id=exclude_project_id, exclude_site=exclude_site, exclude_host=exclude_host,
+                          exclude_slice_state=exclude_slice_state, exclude_sliver_state=exclude_sliver_state)
 
 
 def slivers_slice_id_sliver_id_post(body, slice_id, sliver_id):  # noqa: E501
