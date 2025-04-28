@@ -43,7 +43,8 @@ def slices_get(start_time=None, end_time=None, user_id=None, user_email=None, pr
                slice_state=None, sliver_id=None, sliver_type=None, sliver_state=None, component_type=None,
                component_model=None, bdf=None, vlan=None, ip_subnet=None, site=None, host=None, facility=None,
                exclude_user_id=None, exclude_user_email=None, exclude_project_id=None, exclude_site=None,
-               exclude_host=None, page=None, per_page=None):  # noqa: E501
+               exclude_host=None, exclude_slice_state=None, exclude_sliver_state=None,
+               page=None, per_page=None):  # noqa: E501
     """Get slices
 
     Retrieve a list of slices with optional filters. # noqa: E501
@@ -94,6 +95,10 @@ def slices_get(start_time=None, end_time=None, user_id=None, user_email=None, pr
     :type exclude_site: List[str]
     :param exclude_host: Exclude hosts
     :type exclude_host: List[str]
+    :param exclude_slice_state: Filter by slice state; allowed values Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK
+    :type exclude_slice_state: List[str]
+    :param exclude_sliver_state: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
+    :type exclude_sliver_state: List[str]
     :param page: Page number for pagination. Default is 1.
     :type page: int
     :param per_page: Number of records per page. Default is 10.
@@ -131,6 +136,8 @@ def slices_get(start_time=None, end_time=None, user_id=None, user_email=None, pr
         end = datetime.fromisoformat(end_time) if end_time else None
         sliver_states = [SliverStates.translate(s) for s in sliver_state] if sliver_state else None
         slice_states = [SliceState.translate(s) for s in slice_state] if slice_state else None
+        exclude_sliver_states = [SliverStates.translate(s) for s in exclude_sliver_state] if exclude_sliver_state else None
+        exclude_slice_states = [SliceState.translate(s) for s in exclude_slice_state] if exclude_slice_state else None
 
         result = db_mgr.get_slices(start_time=start, end_time=end, user_email=user_email, user_id=user_id, vlan=vlan,
                                    sliver_id=sliver_id, sliver_type=sliver_type, slice_id=slice_id, bdf=bdf,
@@ -140,7 +147,8 @@ def slices_get(start_time=None, end_time=None, user_id=None, user_email=None, pr
                                    component_type=component_type, ip_subnet=ip_subnet, page=page, per_page=per_page,
                                    exclude_user_id=exclude_user_id, exclude_user_email=exclude_user_email,
                                    exclude_project_id=exclude_project_id, exclude_site=exclude_site,
-                                   exclude_host=exclude_host)
+                                   exclude_host=exclude_host, exclude_sliver_state=exclude_sliver_states,
+                                   exclude_slice_state=exclude_slice_states)
         for s in result.get("slices"):
             response.data.append(Slice.from_dict(s))
         response.size = len(response.data)
@@ -194,7 +202,7 @@ def slices_slice_id_post(slice_id, body: Slice):  # noqa: E501
         u_id = db_mgr.add_or_update_user(user_uuid=body.user_id, user_email=body.user_email)
 
         db_mgr.add_or_update_slice(project_id=p_id, user_id=u_id, slice_guid=body.slice_id,
-                                   slice_name=body.slice_name, state=SliceState.translate(body.state).value,
+                                   slice_name=body.slice_name, state=SliceState.translate(body.state),
                                    lease_start=body.lease_start, lease_end=body.lease_end)
 
         response_details = Status200OkNoContentData()

@@ -21,7 +21,7 @@ DIRS_TO_COPY=(
   response
 )
 
-swagger-codegen generate -i openapi.json -l python-flask -o ${STUB_DIR}
+swagger-codegen generate -i openapi.yml -l python-flask -o ${STUB_DIR}
 find ${STUB_DIR}/swagger_server \( -type d -name .git -prune \) -o -type f -print0 | xargs -0 sed -i '' 'sliver/swagger_server/reports_api.swagger_server/g'
 
 

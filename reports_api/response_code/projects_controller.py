@@ -42,7 +42,8 @@ def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, 
                  slice_state=None, sliver_id=None, sliver_type=None, sliver_state=None, component_type=None,
                  component_model=None, bdf=None, vlan=None, ip_subnet=None, site=None, host=None,
                  exclude_user_id=None, exclude_user_email=None, exclude_project_id=None, exclude_site=None,
-                 exclude_host=None, facility=None, page=0, per_page=100):  # noqa: E501
+                 exclude_host=None, exclude_slice_state=None, exclude_sliver_state=None,
+                 facility=None, page=0, per_page=100):  # noqa: E501
     """Retrieve a list of projects
 
     Returns a paginated list of projects with their UUIDs. # noqa: E501
@@ -91,6 +92,10 @@ def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, 
     :type exclude_site: List[str]
     :param exclude_host: Exclude hosts
     :type exclude_host: List[str]
+    :param exclude_slice_state: Filter by slice state; allowed values Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK
+    :type exclude_slice_state: List[str]
+    :param exclude_sliver_state: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
+    :type exclude_sliver_state: List[str]
     :param facility: Filter by facility
     :type facility: List[str]
     :param page: Page number for pagination. Default is 1.
@@ -130,6 +135,9 @@ def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, 
         end = datetime.fromisoformat(end_time) if end_time else None
         sliver_states = [SliverStates.translate(s) for s in sliver_state] if sliver_state else None
         slice_states = [SliceState.translate(s) for s in slice_state] if slice_state else None
+        exclude_sliver_states = [SliverStates.translate(s) for s in exclude_sliver_state] if exclude_sliver_state else None
+        exclude_slice_states = [SliceState.translate(s) for s in exclude_slice_state] if exclude_slice_state else None
+
         projects = db_mgr.get_projects(start_time=start, end_time=end, user_email=user_email, user_id=user_id, vlan=vlan,
                                        sliver_id=sliver_id, sliver_type=sliver_type, slice_id=slice_id, bdf=bdf,
                                        sliver_state=sliver_states, site=site,
@@ -138,7 +146,8 @@ def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, 
                                        component_type=component_type, ip_subnet=ip_subnet, page=page, per_page=per_page,
                                        exclude_user_id=exclude_user_id, exclude_user_email=exclude_user_email,
                                        exclude_project_id=exclude_project_id, exclude_site=exclude_site,
-                                       exclude_host=exclude_host)
+                                       exclude_host=exclude_host, exclude_sliver_state=exclude_sliver_states,
+                                       exclude_slice_state=exclude_slice_states)
         for s in projects.get("projects"):
             response.data.append(Project.from_dict(s))
         response.size = len(response.data)

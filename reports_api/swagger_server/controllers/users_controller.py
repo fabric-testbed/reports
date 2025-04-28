@@ -1,11 +1,8 @@
 from reports_api.response_code import users_controller as rc
 
 
-def users_get(start_time=None, end_time=None, user_id=None, user_email=None, project_id=None, slice_id=None,
-              slice_state=None, sliver_id=None, sliver_type=None, sliver_state=None, component_type=None,
-              component_model=None, bdf=None, vlan=None, ip_subnet=None, facility=None, site=None, host=None,
-              exclude_user_id=None, exclude_user_email=None, exclude_project_id=None, exclude_site=None,
-              exclude_host=None, page=None, per_page=None):  # noqa: E501
+
+def users_get(start_time=None, end_time=None, user_id=None, user_email=None, project_id=None, slice_id=None, slice_state=None, sliver_id=None, sliver_type=None, sliver_state=None, component_type=None, component_model=None, bdf=None, vlan=None, ip_subnet=None, facility=None, site=None, host=None, exclude_user_id=None, exclude_user_email=None, exclude_project_id=None, exclude_site=None, exclude_host=None, exclude_slice_state=None, exclude_sliver_state=None, page=None, per_page=None):  # noqa: E501
     """Get users
 
     Retrieve a list of users with optional filters. # noqa: E501
@@ -56,9 +53,13 @@ def users_get(start_time=None, end_time=None, user_id=None, user_email=None, pro
     :type exclude_site: List[str]
     :param exclude_host: Exclude hosts
     :type exclude_host: List[str]
-    :param page: Page number for pagination. Default is 1.
+    :param exclude_slice_state: Filter by slice state; allowed values Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK
+    :type exclude_slice_state: List[str]
+    :param exclude_sliver_state: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
+    :type exclude_sliver_state: List[str]
+    :param page: Page number for pagination. Default is 0.
     :type page: int
-    :param per_page: Number of records per page. Default is 10.
+    :param per_page: Number of records per page. Default is 200.
     :type per_page: int
 
     :rtype: Users
@@ -69,5 +70,6 @@ def users_get(start_time=None, end_time=None, user_id=None, user_email=None, pro
                         project_id=project_id, component_model=component_model, facility=facility,
                         component_type=component_type, ip_subnet=ip_subnet, page=page, per_page=per_page,
                         exclude_user_id=exclude_user_id, exclude_user_email=exclude_user_email,
-                        exclude_project_id=exclude_project_id, exclude_site=exclude_site, exclude_host=exclude_host)
+                        exclude_project_id=exclude_project_id, exclude_site=exclude_site, exclude_host=exclude_host,
+                        exclude_slice_state=exclude_slice_state, exclude_sliver_state=exclude_sliver_state)
 

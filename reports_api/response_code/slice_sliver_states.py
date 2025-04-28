@@ -124,33 +124,33 @@ class SliceState(Enum):
         return result
 
     @staticmethod
-    def translate(state_name: str):
+    def translate(state_name: str) -> Union[int, None]:
         if not state_name:
             return None
         if state_name.lower() == SliceState.Nascent.name.lower():
-            return SliceState.Nascent
+            return SliceState.Nascent.value
         elif state_name.lower() == SliceState.Configuring.name.lower():
-            return SliceState.Configuring
+            return SliceState.Configuring.value
         elif state_name.lower() == SliceState.StableOK.name.lower():
-            return SliceState.StableOK
+            return SliceState.StableOK.value
         elif state_name.lower() == SliceState.StableError.name.lower():
-            return SliceState.StableError
+            return SliceState.StableError.value
         elif state_name.lower() == SliceState.ModifyOK.name.lower():
-            return SliceState.ModifyOK
+            return SliceState.ModifyOK.value
         elif state_name.lower() == SliceState.ModifyError.name.lower():
-            return SliceState.ModifyError
+            return SliceState.ModifyError.value
         elif state_name.lower() == SliceState.Modifying.name.lower():
-            return SliceState.Modifying
+            return SliceState.Modifying.value
         elif state_name.lower() == SliceState.Closing.name.lower():
-            return SliceState.Closing
+            return SliceState.Closing.value
         elif state_name.lower() == SliceState.Dead.name.lower():
-            return SliceState.Dead
+            return SliceState.Dead.value
         elif state_name.lower() == SliceState.AllocatedOK.name.lower():
-            return SliceState.Closing
+            return SliceState.Closing.value
         elif state_name.lower() == SliceState.AllocatedError.name.lower():
-            return SliceState.Dead
+            return SliceState.Dead.value
         else:
-            return SliceState.All
+            return SliceState.All.value
 
     @staticmethod
     def is_dead_or_closing(*, state) -> bool:
