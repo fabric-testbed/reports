@@ -24,14 +24,16 @@
 #
 # Author: Komal Thareja (kthare10@renci.org)
 import json
+import logging
 import threading
+import time
 from collections import defaultdict
 from contextlib import contextmanager
 from typing import List, Optional, Union
 
-from sqlalchemy import create_engine, and_, or_, func
+from sqlalchemy import create_engine, and_, or_, func, distinct
 from sqlalchemy.orm import sessionmaker, scoped_session
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from reports_api.database import Slices, Slivers, Hosts, Sites, Users, Projects, Components, Interfaces, Base
 from reports_api.response_code.slice_sliver_states import SliceState, SliverStates
@@ -52,13 +54,16 @@ def session_scope(psql_db_engine):
 
 
 class DatabaseManager:
-    def __init__(self, user: str, password: str, database: str, db_host: str):
+    DEFAULT_TIME_WINDOW_DAYS = 30
+
+    def __init__(self, user: str, password: str, database: str, db_host: str, logger: logging.Logger):
         """
         Initializes the connection to the PostgreSQL database.
         """
         self.db_engine = create_engine(f"postgresql+psycopg2://{user}:{password}@{db_host}/{database}")
         self.session_factory = sessionmaker(bind=self.db_engine)
         self.sessions = {}
+        self.logger = logger
         Base.metadata.create_all(self.db_engine)
 
     def get_session(self):
@@ -506,42 +511,77 @@ class DatabaseManager:
         :return: A dictionary containing the list of projects and associated metadata.
         :rtype: dict
         """
+        # Detect if any fields that require Sliver JOIN are used
+        requires_sliver = any([
+            sliver_id, sliver_type, sliver_state, ip_subnet,
+            host, site, component_type, component_model, bdf, vlan, facility
+        ])
+
+        # Set proper time window if missing
+        if requires_sliver:
+            now = datetime.utcnow()
+
+            if not start_time and not end_time:
+                end_time = now
+                start_time = now - timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS)
+                self.logger.warning(
+                    f"Forcing default time window: {start_time.date()} to {end_time.date()} because sliver-related fields are used without time filter"
+                )
+            elif start_time and not end_time:
+                end_time = start_time + timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS)
+                self.logger.info(
+                    f"Only start_time given. Setting end_time to 30 days from start_time: {end_time.isoformat()}"
+                )
+            elif end_time and not start_time:
+                # If user only gives end_time, assume start from a default large range before
+                start_time = end_time - timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS)
+                self.logger.info(
+                    f"Only end_time given. Setting start_time to {start_time.isoformat()}"
+                )
+
         session = self.get_session()
         try:
-            rows = session.query(Projects).distinct() \
+            start_ts = time.time()
+
+            # Base query for Projects
+            query = session.query(Projects).distinct() \
                 .join(Slices, Slices.project_id == Projects.id) \
-                .join(Users, Slices.user_id == Users.id) \
-                .join(Slivers, Slivers.project_id == Projects.id) \
-                .outerjoin(Hosts, Slivers.host_id == Hosts.id) \
-                .outerjoin(Sites, Slivers.site_id == Sites.id) \
-                .outerjoin(Components, Slivers.id == Components.sliver_id) \
-                .outerjoin(Interfaces, Slivers.id == Interfaces.sliver_id)
+                .join(Users, Slices.user_id == Users.id)
 
             filters = []
 
-            # Time filter
+            # Only join Slivers if any Sliver-related filter is used
+            if any([sliver_id, sliver_type, sliver_state, ip_subnet,
+                    host, site, component_type, component_model, bdf, vlan, facility]):
+                query = query.join(Slivers, Slivers.project_id == Projects.id)
+
+                if host or site:
+                    query = query.outerjoin(Hosts, Slivers.host_id == Hosts.id)\
+                                 .outerjoin(Sites, Slivers.site_id == Sites.id)
+                if component_type or component_model:
+                    query = query.outerjoin(Components, Slivers.id == Components.sliver_id)
+                if bdf or vlan or facility:
+                    query = query.outerjoin(Interfaces, Slivers.id == Interfaces.sliver_id)
+
+            # Build filters
             if start_time or end_time:
-                time_filter = self.__build_time_filter(Slivers, start_time, end_time)
+                time_filter = self.__build_time_filter(Slices, start_time, end_time)
                 if time_filter is not None:
                     filters.append(time_filter)
 
-            # Project ID
             if project_id:
                 filters.append(Projects.project_uuid.in_(project_id))
 
-            # Slice ID
             if slice_id:
                 filters.append(Slices.slice_guid.in_(slice_id))
             if slice_state:
                 filters.append(Slices.state.in_(slice_state))
 
-            # User
             if user_id:
                 filters.append(Users.user_uuid.in_(user_id))
             if user_email:
                 filters.append(Users.user_email.in_(user_email))
 
-            # Sliver attributes
             if sliver_id:
                 filters.append(Slivers.sliver_guid.in_(sliver_id))
             if sliver_type:
@@ -551,13 +591,11 @@ class DatabaseManager:
             if ip_subnet:
                 filters.append(Slivers.ip_subnet.in_(ip_subnet))
 
-            # Component filters
             if component_type:
                 filters.append(Components.type.in_([t.lower() for t in component_type]))
             if component_model:
                 filters.append(Components.model.in_([t.lower() for t in component_model]))
 
-            # Interface filters
             if bdf:
                 filters.append(Interfaces.bdf == bdf)
             if vlan:
@@ -565,7 +603,6 @@ class DatabaseManager:
             if facility:
                 filters.append(or_(*[Interfaces.name.like(f"%{f}%") for f in facility]))
 
-            # Host and Site
             if host:
                 filters.append(Hosts.name.in_(host))
             if site:
@@ -576,21 +613,52 @@ class DatabaseManager:
             if exclude_user_id:
                 filters.append(Users.user_uuid.notin_(exclude_user_id))
             if exclude_user_email:
-                filters.append(Users.user_uuid.notin_(exclude_user_email))
+                filters.append(Users.user_email.notin_(exclude_user_email))
             if exclude_site:
                 filters.append(Sites.name.notin_(exclude_site))
             if exclude_host:
                 filters.append(Hosts.name.notin_(exclude_host))
 
-            # Apply filters
             if filters:
-                rows = rows.filter(and_(*filters))
+                query = query.filter(and_(*filters))
 
-            total_projects = rows.count()
-            # Pagination
-            rows = rows.offset(page * per_page).limit(per_page)
+            self.logger.info(f"Query Projects (building query) = {time.time() - start_ts:.2f}s")
+            query_ts = time.time()
 
-            projects = rows.all()
+            # Separate lightweight count query
+            count_query = session.query(func.count(distinct(Projects.id))) \
+                .join(Slices, Slices.project_id == Projects.id) \
+                .join(Users, Slices.user_id == Users.id)
+
+            if filters:
+                count_query = count_query.filter(and_(*filters))
+
+            if any([sliver_id, sliver_type, sliver_state, ip_subnet,
+                    host, site, component_type, component_model, bdf, vlan, facility]):
+                count_query = count_query.join(Slivers, Slivers.project_id == Projects.id)
+
+                if host or site:
+                    count_query = count_query.outerjoin(Hosts, Slivers.host_id == Hosts.id)\
+                                             .outerjoin(Sites, Slivers.site_id == Sites.id)
+                if component_type or component_model:
+                    count_query = count_query.outerjoin(Components, Slivers.id == Components.sliver_id)
+                if bdf or vlan or facility:
+                    count_query = count_query.outerjoin(Interfaces, Slivers.id == Interfaces.sliver_id)
+
+            if filters:
+                count_query = count_query.filter(and_(*filters))
+
+            total_projects = count_query.scalar()
+
+            self.logger.info(f"Query Projects (count) = {time.time() - query_ts:.2f}s")
+            fetch_ts = time.time()
+
+            # Apply pagination and fetch results
+            projects = query.offset(page * per_page).limit(per_page).all()
+
+            self.logger.info(f"Query Projects (fetch rows) = {time.time() - fetch_ts:.2f}s")
+            parse_ts = time.time()
+
             result = []
             for p in projects:
                 project = DatabaseManager.project_to_dict(p)
@@ -613,12 +681,16 @@ class DatabaseManager:
                     }
 
                 result.append(project)
+
+            self.logger.info(f"Query Projects (dict building) = {time.time() - parse_ts:.2f}s")
+
             return {
                 "total": total_projects,
                 "projects": result
             }
+
         finally:
-            session.rollback()
+            session.close()
 
     def get_users(self, start_time: datetime = None, end_time: datetime = None, user_email: list[str] = None,
                   user_id: list[str] = None, project_id: list[str] = None, component_type: list[str] = None,
@@ -688,23 +760,59 @@ class DatabaseManager:
         :return: A dictionary containing the list of users and pagination metadata.
         :rtype: dict
         """
-
         session = self.get_session()
         try:
-            rows = session.query(Users).distinct() \
-                .join(Slices, Users.id == Slices.user_id) \
-                .join(Slivers, Users.id == Slivers.user_id) \
-                .join(Projects, Slivers.project_id == Projects.id) \
-                .outerjoin(Hosts, Slivers.host_id == Hosts.id) \
-                .outerjoin(Sites, Slivers.site_id == Sites.id) \
-                .outerjoin(Components, Slivers.id == Components.sliver_id) \
-                .outerjoin(Interfaces, Slivers.id == Interfaces.sliver_id)
+            start_ts = time.time()
+
+            # Detect if sliver-related fields are involved
+            requires_sliver = any([
+                sliver_id, sliver_type, sliver_state, ip_subnet,
+                host, site, component_type, component_model, bdf, vlan, facility
+            ])
+
+            now = datetime.utcnow()
+
+            # Auto-set missing time filters if needed
+            if requires_sliver:
+                if not start_time and not end_time:
+                    end_time = now
+                    start_time = now - timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS)
+                    self.logger.warning(
+                        f"Forcing default time window: {start_time.date()} to {end_time.date()} because sliver-related fields are used without time filter"
+                    )
+                elif start_time and not end_time:
+                    end_time = start_time + timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS)
+                    self.logger.info(f"Only start_time given. Setting end_time to 30 days from start_time: {end_time.isoformat()}")
+                elif end_time and not start_time:
+                    start_time = end_time - timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS)
+                    self.logger.info(f"Only end_time given. Setting start_time to {start_time.isoformat()}")
+
+            # Base query for Users
+            query = session.query(Users).distinct() \
+                .join(Slices, Users.id == Slices.user_id)
+
+            if project_id:
+                query = query.join(Projects, Slices.project_id == Projects.id)
+
+            # Only join Slivers if needed
+            if requires_sliver:
+                query = query.join(Slivers, Users.id == Slivers.user_id)
+
+                if host or site:
+                    query = query.outerjoin(Hosts, Slivers.host_id == Hosts.id).outerjoin(Sites,
+                                                                                          Slivers.site_id == Sites.id)
+
+                if component_type or component_model:
+                    query = query.outerjoin(Components, Slivers.id == Components.sliver_id)
+
+                if bdf or vlan or facility:
+                    query = query.outerjoin(Interfaces, Slivers.id == Interfaces.sliver_id)
 
             filters = []
 
             # Time range filter
             if start_time or end_time:
-                time_filter = self.__build_time_filter(Slivers, start_time, end_time)
+                time_filter = self.__build_time_filter(Slices, start_time, end_time)
                 if time_filter is not None:
                     filters.append(time_filter)
 
@@ -714,17 +822,17 @@ class DatabaseManager:
             if user_id:
                 filters.append(Users.user_uuid.in_(user_id))
 
-            # Project filter
+            # Project filters
             if project_id:
                 filters.append(Projects.project_uuid.in_(project_id))
 
-            # Slice filter
+            # Slice filters
             if slice_id:
                 filters.append(Slices.slice_guid.in_(slice_id))
             if slice_state:
                 filters.append(Slices.state.in_(slice_state))
 
-            # Sliver attributes
+            # Sliver filters
             if sliver_id:
                 filters.append(Slivers.sliver_guid.in_(sliver_id))
             if sliver_type:
@@ -734,13 +842,11 @@ class DatabaseManager:
             if ip_subnet:
                 filters.append(Slivers.ip_subnet.in_(ip_subnet))
 
-            # Component filters
             if component_type:
                 filters.append(Components.type.in_([t.lower() for t in component_type]))
             if component_model:
                 filters.append(Components.model.in_([t.lower() for t in component_model]))
 
-            # Interface filters
             if bdf:
                 filters.append(Interfaces.bdf.in_(bdf))
             if vlan:
@@ -748,18 +854,19 @@ class DatabaseManager:
             if facility:
                 filters.append(or_(*[Interfaces.name.like(f"%{f}%") for f in facility]))
 
-            # Site and host filters
+            # Host and Site
             if site:
                 filters.append(Sites.name.in_(site))
             if host:
                 filters.append(Hosts.name.in_(host))
 
+            # Exclusions
             if exclude_project_id:
                 filters.append(Projects.project_uuid.notin_(exclude_project_id))
             if exclude_user_id:
                 filters.append(Users.user_uuid.notin_(exclude_user_id))
             if exclude_user_email:
-                filters.append(Users.user_uuid.notin_(exclude_user_email))
+                filters.append(Users.user_email.notin_(exclude_user_email))
             if exclude_site:
                 filters.append(Sites.name.notin_(exclude_site))
             if exclude_host:
@@ -767,42 +874,82 @@ class DatabaseManager:
 
             # Apply filters
             if filters:
-                rows = rows.filter(and_(*filters))
+                query = query.filter(and_(*filters))
 
-            total_users = rows.count()
-            # Pagination
-            rows = rows.offset(page * per_page).limit(per_page)
+            self.logger.info(f"Query Users (building query) = {time.time() - start_ts:.2f}s")
+            count_ts = time.time()
 
-            users = rows.all()
+            # Use DISTINCT COUNT
+            count_query = session.query(func.count(distinct(Users.id)))
+
+            count_query = count_query.join(Slices, Users.id == Slices.user_id)
+
+            if project_id:
+                count_query = count_query.join(Projects, Slices.project_id == Projects.id)
+
+            if filters:
+                count_query = count_query.filter(and_(*filters))
+
+            if requires_sliver:
+                count_query = count_query.join(Slivers, Users.id == Slivers.user_id)
+
+                if host or site:
+                    count_query = count_query.outerjoin(Hosts, Slivers.host_id == Hosts.id)\
+                                             .outerjoin(Sites, Slivers.site_id == Sites.id)
+
+                if component_type or component_model:
+                    count_query = count_query.outerjoin(Components, Slivers.id == Components.sliver_id)
+
+                if bdf or vlan or facility:
+                    count_query = count_query.outerjoin(Interfaces, Slivers.id == Interfaces.sliver_id)
+
+            if filters:
+                count_query = count_query.filter(and_(*filters))
+
+            total_users = count_query.scalar()
+
+            self.logger.info(f"Query Users (count) = {time.time() - count_ts:.2f}s")
+            fetch_ts = time.time()
+
+            # Apply pagination and fetch results
+            users = query.offset(page * per_page).limit(per_page).all()
+
+            self.logger.info(f"Query Users (fetch rows) = {time.time() - fetch_ts:.2f}s")
+            parse_ts = time.time()
 
             result = []
             for u in users:
                 user = DatabaseManager.user_to_dict(u)
 
                 if project_id or user_id or user_email:
-                    slices = self.get_slices(start_time=start_time, end_time=end_time, user_email=user_email,
-                                             user_id=user_id, vlan=vlan,
-                                             sliver_id=sliver_id, sliver_type=sliver_type, slice_id=slice_id, bdf=bdf,
-                                             sliver_state=sliver_state, site=site, host=host,
-                                             project_id=project_id, component_model=component_model,
-                                             component_type=component_type, ip_subnet=ip_subnet, page=page,
-                                             per_page=per_page)
+                    slices = self.get_slices(
+                        start_time=start_time, end_time=end_time, user_email=[u.user_email],
+                        user_id=[u.user_uuid], vlan=vlan, sliver_id=sliver_id, sliver_type=sliver_type,
+                        slice_id=slice_id, bdf=bdf, sliver_state=sliver_state, site=site, host=host,
+                        project_id=project_id, component_model=component_model, component_type=component_type,
+                        ip_subnet=ip_subnet
+                    )
                     user["slices"] = {
                         "total": slices.get("total"),
                         "data": slices.get("slices")
                     }
                 else:
+                    # Simpler direct count
                     user["slices"] = {
-                        "total": session.query(func.count(Slices.id)).filter_by(user_id=u.id).scalar()
+                        "total": session.query(func.count(Slices.id)).filter(Slices.user_id == u.id).scalar()
                     }
+
                 result.append(user)
+
+            self.logger.info(f"Query Users (dict building) = {time.time() - parse_ts:.2f}s")
+
             return {
                 "total": total_users,
                 "users": result
             }
 
         finally:
-            session.rollback()
+            session.close()
 
     def get_slivers(self, start_time: datetime = None, end_time: datetime = None, user_email: list[str] = None,
                     user_id: list[str] = None, project_id: list[str] = None, component_type: list[str] = None,
@@ -871,21 +1018,44 @@ class DatabaseManager:
         :return: A dictionary containing the list of slivers and pagination metadata.
         :rtype: dict
         """
-
         session = self.get_session()
         try:
-            rows = session.query(Slivers).distinct() \
-                .join(Slices, Slivers.slice_id == Slices.id) \
-                .join(Users, Slivers.user_id == Users.id) \
-                .join(Projects, Slivers.project_id == Projects.id) \
-                .outerjoin(Hosts, Slivers.host_id == Hosts.id) \
-                .outerjoin(Sites, Slivers.site_id == Sites.id) \
-                .outerjoin(Components, Slivers.id == Components.sliver_id) \
-                .outerjoin(Interfaces, Slivers.id == Interfaces.sliver_id)
+            start_ts = time.time()
+            now = datetime.utcnow()
+
+            # Always force time filter if missing (because Slivers is big!)
+            '''
+            if not start_time and not end_time:
+                end_time = now
+                start_time = now - timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS)
+                self.logger.warning(
+                    f"Forcing default time window: {start_time.date()} to {end_time.date()} for sliver query"
+                )
+            '''
+            if start_time and not end_time:
+                end_time = start_time + timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS)
+                self.logger.info(f"Only start_time given. Setting end_time to 30 days from start_time: {end_time.isoformat()}")
+            elif end_time and not start_time:
+                start_time = end_time - timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS)
+                self.logger.info(f"Only end_time given. Setting start_time to {start_time.isoformat()}")
+
+            query = session.query(Slivers).distinct()
+
+            # Join only what's necessary
+            query = query.join(Slices, Slivers.slice_id == Slices.id)
+            query = query.join(Users, Slivers.user_id == Users.id)
+            query = query.join(Projects, Slivers.project_id == Projects.id)
+
+            if host or site:
+                query = query.outerjoin(Hosts, Slivers.host_id == Hosts.id)\
+                             .outerjoin(Sites, Slivers.site_id == Sites.id)
+            if component_type or component_model:
+                query = query.outerjoin(Components, Slivers.id == Components.sliver_id)
+            if bdf or vlan or facility:
+                query = query.outerjoin(Interfaces, Slivers.id == Interfaces.sliver_id)
 
             filters = []
 
-            # Time range filter
             if start_time or end_time:
                 time_filter = self.__build_time_filter(Slivers, start_time, end_time)
                 if time_filter is not None:
@@ -897,33 +1067,31 @@ class DatabaseManager:
             if user_id:
                 filters.append(Users.user_uuid.in_(user_id))
 
-            # Project filter
+            # Project filters
             if project_id:
                 filters.append(Projects.project_uuid.in_(project_id))
 
-            # Slice filter
+            # Slice filters
             if slice_id:
                 filters.append(Slices.slice_guid.in_(slice_id))
             if slice_state:
                 filters.append(Slices.state.in_(slice_state))
 
-            # Sliver attributes
+            # Sliver filters
             if sliver_id:
                 filters.append(Slivers.sliver_guid.in_(sliver_id))
             if sliver_type:
                 filters.append(Slivers.sliver_type.in_([t.lower() for t in sliver_type]))
             if sliver_state:
-                filters.append(Slivers.state.in_(sliver_state))  # assuming state is stored as int
+                filters.append(Slivers.state.in_(sliver_state))
             if ip_subnet:
                 filters.append(Slivers.ip_subnet.in_(ip_subnet))
 
-            # Component filters
             if component_type:
                 filters.append(Components.type.in_([t.lower() for t in component_type]))
             if component_model:
                 filters.append(Components.model.in_([t.lower() for t in component_model]))
 
-            # Interface filters
             if bdf:
                 filters.append(Interfaces.bdf.in_(bdf))
             if vlan:
@@ -931,52 +1099,87 @@ class DatabaseManager:
             if facility:
                 filters.append(or_(*[Interfaces.name.like(f"%{f}%") for f in facility]))
 
-            # Host/Site filters
             if site:
                 filters.append(Sites.name.in_(site))
             if host:
                 filters.append(Hosts.name.in_(host))
 
+            # Exclude filters
             if exclude_project_id:
                 filters.append(Projects.project_uuid.notin_(exclude_project_id))
             if exclude_user_id:
                 filters.append(Users.user_uuid.notin_(exclude_user_id))
             if exclude_user_email:
-                filters.append(Users.user_uuid.notin_(exclude_user_email))
+                filters.append(Users.user_email.notin_(exclude_user_email))
             if exclude_site:
                 filters.append(Sites.name.notin_(exclude_site))
             if exclude_host:
                 filters.append(Hosts.name.notin_(exclude_host))
 
-            # Apply filters
             if filters:
-                rows = rows.filter(and_(*filters))
+                query = query.filter(and_(*filters))
 
-            total_slivers = rows.count()
+            self.logger.info(f"Query Slivers (build query) = {time.time() - start_ts:.2f}s")
+            count_ts = time.time()
 
-            # Pagination
-            rows = rows.offset(page * per_page).limit(per_page)
+            # Count distinct slivers
+            count_query = session.query(func.count(distinct(Slivers.id)))
+            if filters:
+                count_query = count_query.filter(and_(*filters))
 
-            slivers = rows.all()
+            count_query = count_query.join(Slices, Slivers.slice_id == Slices.id)\
+                                     .join(Users, Slivers.user_id == Users.id)\
+                                     .join(Projects, Slivers.project_id == Projects.id)
+
+            if host or site:
+                count_query = count_query.outerjoin(Hosts, Slivers.host_id == Hosts.id)\
+                                         .outerjoin(Sites, Slivers.site_id == Sites.id)
+            if component_type or component_model:
+                count_query = count_query.outerjoin(Components, Slivers.id == Components.sliver_id)
+            if bdf or vlan or facility:
+                count_query = count_query.outerjoin(Interfaces, Slivers.id == Interfaces.sliver_id)
+
+            if filters:
+                count_query = count_query.filter(and_(*filters))
+
+            total_slivers = count_query.scalar()
+
+            self.logger.info(f"Query Slivers (count) = {time.time() - count_ts:.2f}s")
+            fetch_ts = time.time()
+
+            slivers = query.offset(page * per_page).limit(per_page).all()
+
+            self.logger.info(f"Query Slivers (fetch rows) = {time.time() - fetch_ts:.2f}s")
+            parse_ts = time.time()
+
+            # Preload Users, Projects, Hosts, Sites, Slices to avoid N queries
+            user_ids = {s.user_id for s in slivers}
+            project_ids = {s.project_id for s in slivers}
+            site_ids = {s.site_id for s in slivers if s.site_id}
+            host_ids = {s.host_id for s in slivers if s.host_id}
+            slice_ids = {s.slice_id for s in slivers}
+
+            users_map = {u.id: u for u in session.query(Users).filter(Users.id.in_(user_ids)).all()}
+            projects_map = {p.id: p for p in session.query(Projects).filter(Projects.id.in_(project_ids)).all()}
+            sites_map = {site.id: site for site in
+                         session.query(Sites).filter(Sites.id.in_(site_ids)).all()} if site_ids else {}
+            hosts_map = {host.id: host for host in
+                         session.query(Hosts).filter(Hosts.id.in_(host_ids)).all()} if host_ids else {}
+            slices_map = {slice.id: slice for slice in session.query(Slices).filter(Slices.id.in_(slice_ids)).all()}
 
             result = []
             for s in slivers:
-                user = session.query(Users).filter_by(id=s.user_id).first()
-                project = session.query(Projects).filter_by(id=s.project_id).first()
-                site = session.query(Sites).filter_by(id=s.site_id).first()
-                host = session.query(Hosts).filter_by(id=s.host_id).first()
-                slice = session.query(Slices).filter_by(id=s.slice_id).first()
+                user = users_map.get(s.user_id)
+                project = projects_map.get(s.project_id)
+                site_name = sites_map.get(s.site_id).name if s.site_id and sites_map.get(s.site_id) else None
+                host_name = hosts_map.get(s.host_id).name if s.host_id and hosts_map.get(s.host_id) else None
+                slice_guid = slices_map.get(s.slice_id).slice_guid if slices_map.get(s.slice_id) else None
 
-                site_name = site.name if site else None
-                host_name = host.name if host else None
-
-                sliver = DatabaseManager.sliver_to_dict(sliver=s, user=user, project=project, site=site_name,
-                                                        host=host_name, slice_id=slice.slice_guid)
-                result.append(sliver)
-
+                sliver = DatabaseManager.sliver_to_dict(sliver=s, user=user, project=project,
+                                                        site=site_name, host=host_name, slice_id=slice_guid)
                 if sliver_id or slice_id:
-                    components = session.query(Components).filter_by(sliver_id=s.id).all()
-                    interfaces = session.query(Interfaces).filter_by(sliver_id=s.id).all()
+                    components = session.query(Components).filter(Components.sliver_id == s.id).all()
+                    interfaces = session.query(Interfaces).filter(Interfaces.sliver_id == s.id).all()
                     sliver["components"] = {
                         "total": len(components),
                         "data": [DatabaseManager.component_to_dict(c) for c in components]
@@ -986,23 +1189,27 @@ class DatabaseManager:
                         "data": [DatabaseManager.interface_to_dict(i) for i in interfaces]
                     }
                 else:
-                    component_count = session.query(func.count()).select_from(Components).filter_by(
-                        sliver_id=s.id).scalar()
-                    interface_count = session.query(func.count()).select_from(Interfaces).filter_by(
-                        sliver_id=s.id).scalar()
+                    component_count = session.query(func.count()).select_from(Components).filter(
+                        Components.sliver_id == s.id).scalar()
+                    interface_count = session.query(func.count()).select_from(Interfaces).filter(
+                        Interfaces.sliver_id == s.id).scalar()
                     sliver["components"] = {
                         "total": component_count
                     }
                     sliver["interfaces"] = {
                         "total": interface_count
                     }
+                result.append(sliver)
+
+            self.logger.info(f"Query Slivers (dict building) = {time.time() - parse_ts:.2f}s")
+
             return {
                 "total": total_slivers,
                 "slivers": result
             }
 
         finally:
-            session.rollback()
+            session.close()
 
     def get_slices(self, start_time: datetime = None, end_time: datetime = None, user_email: list[str] = None,
                    user_id: list[str] = None, project_id: list[str] = None, component_type: list[str] = None,
@@ -1071,124 +1278,186 @@ class DatabaseManager:
         :return: A dictionary containing the list of slices and metadata like pagination.
         :rtype: dict
         """
-
         session = self.get_session()
         try:
-            rows = session.query(Slices).distinct() \
-                .join(Users, Slices.user_id == Users.id) \
-                .join(Projects, Slices.project_id == Projects.id) \
-                .join(Slivers, Slices.id == Slivers.slice_id) \
-                .outerjoin(Hosts, Slivers.host_id == Hosts.id) \
-                .outerjoin(Sites, Slivers.site_id == Sites.id) \
-                .outerjoin(Components, Slivers.id == Components.sliver_id) \
-                .outerjoin(Interfaces, Slivers.id == Interfaces.sliver_id)
+            start_ts = time.time()
+
+            now = datetime.utcnow()
+
+            # Force default time range if no time provided
+            '''
+            if not start_time and not end_time:
+                end_time = now
+                start_time = now - timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS)
+                self.logger.warning(
+                    f"Forcing default time window: {start_time.date()} to {end_time.date()} for slices query"
+                )
+            '''
+            if start_time and not end_time:
+                end_time = start_time + timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS)
+                self.logger.info(f"Only start_time given. Setting end_time to 30 days from start_time: {end_time.isoformat()}")
+            elif end_time and not start_time:
+                start_time = end_time - timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS)
+                self.logger.info(f"Only end_time given. Setting start_time to {start_time.isoformat()}")
+
+            query = session.query(Slices).distinct()
+
+            # Always join user and project
+            query = query.join(Users, Slices.user_id == Users.id)
+            query = query.join(Projects, Slices.project_id == Projects.id)
+
+            # Join slivers only if needed
+            join_slivers = any([
+                sliver_id, sliver_type, sliver_state, ip_subnet,
+                site, host, component_type, component_model, bdf, vlan, facility
+            ])
+
+            if join_slivers:
+                query = query.join(Slivers, Slices.id == Slivers.slice_id)
+                if host or site:
+                    query = query.outerjoin(Hosts, Slivers.host_id == Hosts.id).outerjoin(Sites, Slivers.site_id == Sites.id)
+                if component_type or component_model:
+                    query = query.outerjoin(Components, Slivers.id == Components.sliver_id)
+                if bdf or vlan or facility:
+                    query = query.outerjoin(Interfaces, Slivers.id == Interfaces.sliver_id)
 
             filters = []
 
-            # Time range filter
+            # Time filter (on Slices)
             if start_time or end_time:
                 time_filter = self.__build_time_filter(Slices, start_time, end_time)
                 if time_filter is not None:
                     filters.append(time_filter)
 
-            # User filter
+            # Filters
             if user_email:
                 filters.append(Users.user_email.in_(user_email))
             if user_id:
                 filters.append(Users.user_uuid.in_(user_id))
 
-            # Project filter
             if project_id:
                 filters.append(Projects.project_uuid.in_(project_id))
 
-            # Slice filter
             if slice_id:
                 filters.append(Slices.slice_guid.in_(slice_id))
             if slice_state:
                 filters.append(Slices.state.in_(slice_state))
 
-            # Sliver attributes
             if sliver_id:
                 filters.append(Slivers.sliver_guid.in_(sliver_id))
             if sliver_type:
                 filters.append(Slivers.sliver_type.in_([t.lower() for t in sliver_type]))
             if sliver_state:
-                filters.append(Slivers.state.in_(sliver_state))  # assuming state is stored as int
+                filters.append(Slivers.state.in_(sliver_state))
             if ip_subnet:
                 filters.append(Slivers.ip_subnet.in_(ip_subnet))
 
-            # Component filters
             if component_type:
                 filters.append(Components.type.in_([t.lower() for t in component_type]))
             if component_model:
                 filters.append(Components.model.in_([t.lower() for t in component_model]))
 
-            # Interface filters
             if bdf:
                 filters.append(Interfaces.bdf.in_(bdf))
             if vlan:
                 filters.append(Interfaces.vlan.in_(vlan))
+            if facility:
+                filters.append(or_(*[Interfaces.name.like(f"%{f}%") for f in facility]))
 
-            # Host/Site filters
             if site:
                 filters.append(Sites.name.in_(site))
             if host:
                 filters.append(Hosts.name.in_(host))
-            if facility:
-                filters.append(or_(*[Interfaces.name.like(f"%{f}%") for f in facility]))
 
+            # Exclusions
             if exclude_project_id:
                 filters.append(Projects.project_uuid.notin_(exclude_project_id))
             if exclude_user_id:
                 filters.append(Users.user_uuid.notin_(exclude_user_id))
             if exclude_user_email:
-                filters.append(Users.user_uuid.notin_(exclude_user_email))
+                filters.append(Users.user_email.notin_(exclude_user_email))
             if exclude_site:
                 filters.append(Sites.name.notin_(exclude_site))
             if exclude_host:
                 filters.append(Hosts.name.notin_(exclude_host))
 
-            # Apply all filters
             if filters:
-                rows = rows.filter(and_(*filters))
+                query = query.filter(and_(*filters))
 
-            total_slices = rows.count()
+            self.logger.info(f"Query Slices (build query) = {time.time() - start_ts:.2f}s")
+            count_ts = time.time()
 
-            # Pagination
-            rows = rows.offset(page * per_page).limit(per_page)
+            # Count distinct slices
+            count_query = session.query(func.count(distinct(Slices.id)))
+            count_query = count_query.join(Users, Slices.user_id == Users.id).join(Projects, Slices.project_id == Projects.id)
 
-            slices = rows.all()
-            # Manually build the nested result
+            if filters:
+                count_query = count_query.filter(and_(*filters))
+
+            if join_slivers:
+                count_query = count_query.join(Slivers, Slices.id == Slivers.slice_id)
+
+                if host or site:
+                    count_query = count_query.outerjoin(Hosts, Slivers.host_id == Hosts.id).outerjoin(Sites, Slivers.site_id == Sites.id)
+                if component_type or component_model:
+                    count_query = count_query.outerjoin(Components, Slivers.id == Components.sliver_id)
+                if bdf or vlan or facility:
+                    count_query = count_query.outerjoin(Interfaces, Slivers.id == Interfaces.sliver_id)
+
+            if filters:
+                count_query = count_query.filter(and_(*filters))
+
+            total_slices = count_query.scalar()
+
+            self.logger.info(f"Query Slices (count) = {time.time() - count_ts:.2f}s")
+            fetch_ts = time.time()
+
+            slices = query.offset(page * per_page).limit(per_page).all()
+
+            self.logger.info(f"Query Slices (fetch rows) = {time.time() - fetch_ts:.2f}s")
+            parse_ts = time.time()
+
+            # Preload Users and Projects to avoid per-slice query
+            user_ids = {s.user_id for s in slices}
+            project_ids = {s.project_id for s in slices}
+
+            users_map = {u.id: u for u in session.query(Users).filter(Users.id.in_(user_ids)).all()}
+            projects_map = {p.id: p for p in session.query(Projects).filter(Projects.id.in_(project_ids)).all()}
+
             result = []
             for s in slices:
-                user = session.query(Users).filter_by(id=s.user_id).first()
-                project = session.query(Projects).filter_by(id=s.project_id).first()
+                user = users_map.get(s.user_id)
+                project = projects_map.get(s.project_id)
+
                 slice_obj = DatabaseManager.slice_to_dict(slice=s, user=user, project=project)
 
                 if slice_id:
-                    slivers = self.get_slivers(start_time=start_time, end_time=end_time, user_email=user_email,
-                                               user_id=user_id, vlan=vlan,
-                                               sliver_id=sliver_id, sliver_type=sliver_type, slice_id=slice_id, bdf=bdf,
-                                               sliver_state=sliver_state,site=site, host=host,
-                                               project_id=project_id, component_model=component_model,
-                                               component_type=component_type, ip_subnet=ip_subnet, page=page,
-                                               per_page=per_page)
+                    slivers = self.get_slivers(
+                        start_time=start_time, end_time=end_time, user_email=user_email,
+                        user_id=user_id, vlan=vlan, sliver_id=sliver_id, sliver_type=sliver_type, slice_id=[s.slice_guid],
+                        bdf=bdf, sliver_state=sliver_state, site=site, host=host, project_id=project_id,
+                        component_model=component_model, component_type=component_type, ip_subnet=ip_subnet
+                    )
                     slice_obj["slivers"] = {
                         "total": slivers.get("total"),
                         "data": slivers.get("slivers")
                     }
                 else:
                     slice_obj["slivers"] = {
-                        "total": session.query(func.count(Slivers.id)).filter_by(slice_id=s.id).scalar()
+                        "total": session.query(func.count(Slivers.id)).filter(Slivers.slice_id == s.id).scalar()
                     }
 
                 result.append(slice_obj)
+
+            self.logger.info(f"Query Slices (dict building) = {time.time() - parse_ts:.2f}s")
+
             return {
                 "total": total_slices,
                 "slices": result
             }
+
         finally:
-            session.rollback()
+            session.close()
 
     @staticmethod
     def interface_to_dict(interface: Interfaces):

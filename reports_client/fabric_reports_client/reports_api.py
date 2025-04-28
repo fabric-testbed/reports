@@ -48,7 +48,7 @@ class ReportsApi:
                      ip_subnet: list[str] = None, site: list[str] = None, host: list[str] = None,
                      exclude_user_id: list[str] = None, exclude_user_email: list[str] = None,
                      exclude_project_id: list[str] = None, exclude_site: list[str] = None, facility: list[str] = None,
-                     exclude_host: list[str] = None, page=0, per_page=100, fetch_all=True):
+                     exclude_host: list[str] = None, page=0, per_page=1000, fetch_all=True):
         """
         Fetch slices with optional filters. Supports fetching all pages or just one.
 
@@ -172,7 +172,7 @@ class ReportsApi:
                       ip_subnet: list[str] = None, site: list[str] = None, host: list[str] = None,
                       exclude_user_id: list[str] = None, exclude_user_email: list[str] = None,
                       exclude_project_id: list[str] = None, exclude_site: list[str] = None, facility: list[str] = None,
-                      exclude_host: list[str] = None, page=0, per_page=100, fetch_all=True):
+                      exclude_host: list[str] = None, page=0, per_page=1000, fetch_all=True):
         """
         Fetch slivers with optional filters. Supports fetching all pages or just one.
 
@@ -297,7 +297,7 @@ class ReportsApi:
                     ip_subnet: list[str] = None, site: list[str] = None, host: list[str] = None,
                     exclude_user_id: list[str] = None, exclude_user_email: list[str] = None,
                     exclude_project_id: list[str] = None, exclude_site: list[str] = None, facility: list[str] = None,
-                    exclude_host: list[str] = None, page=0, per_page=100, fetch_all=True):
+                    exclude_host: list[str] = None, page=0, per_page=1000, fetch_all=True):
         """
         Fetch users with optional filters. Supports fetching all pages or just one.
 
@@ -422,7 +422,7 @@ class ReportsApi:
                        ip_subnet: list[str] = None, site: list[str] = None, host: list[str] = None,
                        exclude_user_id: list[str] = None, exclude_user_email: list[str] = None,
                        exclude_project_id: list[str] = None, exclude_site: list[str] = None, facility: list[str] = None,
-                       exclude_host: list[str] = None, page=0, per_page=100, fetch_all=True):
+                       exclude_host: list[str] = None, page=0, per_page=1000, fetch_all=True):
         """
         Fetch projects with optional filters. Supports fetching all pages or just one.
 

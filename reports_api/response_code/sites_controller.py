@@ -67,7 +67,8 @@ def sites_get():  # noqa: E501
         db_mgr = DatabaseManager(user=global_obj.config.database_config.get("db-user"),
                                  password=global_obj.config.database_config.get("db-password"),
                                  database=global_obj.config.database_config.get("db-name"),
-                                 db_host=global_obj.config.database_config.get("db-host"))
+                                 db_host=global_obj.config.database_config.get("db-host"),
+                                 logger=logger)
 
         response = Sites()
         response.data = []
