@@ -1024,13 +1024,15 @@ class DatabaseManager:
             now = datetime.utcnow()
 
             # Always force time filter if missing (because Slivers is big!)
+            '''
             if not start_time and not end_time:
                 end_time = now
                 start_time = now - timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS)
                 self.logger.warning(
                     f"Forcing default time window: {start_time.date()} to {end_time.date()} for sliver query"
                 )
-            elif start_time and not end_time:
+            '''
+            if start_time and not end_time:
                 end_time = start_time + timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS)
                 self.logger.info(f"Only start_time given. Setting end_time to 30 days from start_time: {end_time.isoformat()}")
             elif end_time and not start_time:
@@ -1283,13 +1285,15 @@ class DatabaseManager:
             now = datetime.utcnow()
 
             # Force default time range if no time provided
+            '''
             if not start_time and not end_time:
                 end_time = now
                 start_time = now - timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS)
                 self.logger.warning(
                     f"Forcing default time window: {start_time.date()} to {end_time.date()} for slices query"
                 )
-            elif start_time and not end_time:
+            '''
+            if start_time and not end_time:
                 end_time = start_time + timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS)
                 self.logger.info(f"Only start_time given. Setting end_time to 30 days from start_time: {end_time.isoformat()}")
             elif end_time and not start_time:
