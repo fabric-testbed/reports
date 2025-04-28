@@ -150,7 +150,7 @@ class ImportScript:
             u_id = db_mgr.add_or_update_user(user_uuid=body.user_id, user_email=body.user_email)
 
             db_mgr.add_or_update_slice(project_id=p_id, user_id=u_id, slice_guid=body.slice_id,
-                                       slice_name=body.slice_name, state=SliceState.translate(body.state).value,
+                                       slice_name=body.slice_name, state=SliceState.translate(body.state),
                                        lease_start=body.lease_start, lease_end=body.lease_end)
 
             logger.debug("Processed - slices_slice_id_post")
