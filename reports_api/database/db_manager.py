@@ -1206,6 +1206,17 @@ class DatabaseManager:
 
                 sliver = DatabaseManager.sliver_to_dict(sliver=s, user=user, project=project,
                                                         site=site_name, host=host_name, slice_id=slice_guid)
+                components = session.query(Components).filter(Components.sliver_id == s.id).all()
+                interfaces = session.query(Interfaces).filter(Interfaces.sliver_id == s.id).all()
+                sliver["components"] = {
+                    "total": len(components),
+                    "data": [DatabaseManager.component_to_dict(c) for c in components]
+                }
+                sliver["interfaces"] = {
+                    "total": len(interfaces),
+                    "data": [DatabaseManager.interface_to_dict(i) for i in interfaces]
+                }
+                '''
                 if sliver_id or slice_id:
                     components = session.query(Components).filter(Components.sliver_id == s.id).all()
                     interfaces = session.query(Interfaces).filter(Interfaces.sliver_id == s.id).all()
@@ -1228,6 +1239,7 @@ class DatabaseManager:
                     sliver["interfaces"] = {
                         "total": interface_count
                     }
+                '''
                 result.append(sliver)
 
             self.logger.info(f"Query Slivers (dict building) = {time.time() - parse_ts:.2f}s")
