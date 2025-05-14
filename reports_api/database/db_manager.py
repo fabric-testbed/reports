@@ -1600,3 +1600,26 @@ class DatabaseManager:
             return user_count
         finally:
             session.rollback()
+
+    def get_slice_by_slice_id(self, slice_id: str) -> bool:
+        """
+        Retrieve a slice by its ID.
+
+        :param slice_id: The ID of the slice to retrieve.
+        :type slice_id: str
+
+        :return: A dictionary containing the slice details.
+        :rtype: dict
+        """
+        session = self.get_session()
+        try:
+            slice_obj = session.query(Slices).filter(Slices.slice_guid == slice_id).first()
+            if not slice_obj:
+                return False
+
+            user = session.query(Users).filter(Users.id == slice_obj.user_id).first()
+            project = session.query(Projects).filter(Projects.id == slice_obj.project_id).first()
+
+            return True
+        finally:
+            session.close()

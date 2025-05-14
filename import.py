@@ -27,6 +27,7 @@ import json
 import logging
 import os
 import traceback
+from datetime import datetime, timedelta
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
@@ -74,13 +75,20 @@ class ImportScript:
                         slice_data = json.load(f)
                         slice_guid = slice_data.get("slice_id")
                         slivers = slice_data.get("slivers")
-                        if not slice_data.get("lease_end") or not slice_data.get("lease_start") or not slivers:
-                            ignored_slices += 1
-                            #self.logger.info(f"Ignoring slice: {slice_guid}")
+
+                        lease_start_str = slice_data.get("lease_start", None)
+                        lease_end_str = slice_data.get("lease_end", None)
+
+                        has_no_lease_end = lease_end_str is None
+                        has_no_lease_start = lease_start_str is None
+                        if has_no_lease_start or has_no_lease_end:
                             continue
 
-                        self.logger.info(f"Importing Index: {start_index} slice: {slice_guid}")
+                        if not slivers:
+                            continue
+
                         state = SliceState(slice_data.get("state")).name
+
                         slice_payload = {
                             "project_id": slice_data.get("project_id"),
                             "project_name": slice_data.get("project_name"),
@@ -89,20 +97,33 @@ class ImportScript:
                             "slice_id": slice_guid,
                             "slice_name": slice_data.get("slice_name"),
                             "state": state,
-                            "lease_start": slice_data.get("lease_start"),
-                            "lease_end": slice_data.get("lease_end")
+                            "lease_start": lease_start_str,
+                            "lease_end": lease_end_str
                         }
 
                         cleaned_slice_dict = {k: v for k, v in slice_payload.items() if v is not None}
                         body = Slice.from_dict(cleaned_slice_dict)
 
-                        self.slices_slice_id_post(slice_id=slice_guid, body=body)
+                        status = self.slices_slice_id_post(slice_id=slice_guid, body=body)
+                        if not status:
+                            ignored_slices += 1
+                            self.logger.info(f"Slice {slice_guid} already exists. Skipping import.")
+                            continue
+
+                        self.logger.info(f"Importing Index: {start_index} slice: {slice_guid}")
 
                         for sliver in slice_data.get("slivers", []):
-                            sliver["lease_end"] = slice_data.get("lease_end")
+                            sliver["lease_end"] = lease_end_str
+                            sliver["lease_start"] = lease_start_str
                             sliver["sliver_type"] = sliver["type"]
                             sliver.pop("type")
                             if "components" in sliver:
+                                for c in sliver["components"]:
+                                    c["component_id"] = c["component_guid"]
+                                    c.pop("component_guid")
+                                    c["sliver_id"] = c["sliver_guid"]
+                                    c.pop("sliver_guid")
+                                    
                                 sliver["components"] = {
                                     "total": len(sliver["components"]),
                                     "data": sliver["components"]
@@ -115,6 +136,7 @@ class ImportScript:
                         imported_slices += 1
                 except Exception as e:
                     self.logger.error(f"Failed to index: {i} import: {slice_file} error: {e}")
+                    traceback.print_exc()
 
                 self.logger.info(f"Total slices ignored: {ignored_slices}")
                 self.logger.info(f"Total slices imported: {imported_slices}")
@@ -123,7 +145,7 @@ class ImportScript:
             self.logger.error(f"Exception occurred during import: {e}")
             traceback.print_exc()
 
-    def slices_slice_id_post(self, slice_id, body: Slice):  # noqa: E501
+    def slices_slice_id_post(self, slice_id, body: Slice) -> bool:  # noqa: E501
         """Create/Update a slice
 
         Create a Slice # noqa: E501
@@ -145,6 +167,12 @@ class ImportScript:
                                      database=global_obj.config.database_config.get("db-name"),
                                      db_host=global_obj.config.database_config.get("db-host"),
                                      logger=logger)
+            
+            exists = db_mgr.get_slice_by_slice_id(slice_id=body.slice_id)
+            # Check if slice already exists
+            if exists:
+                logger.debug(f"Slice {body.slice_id} already exists. Skipping import.")
+                return False
 
             p_id = db_mgr.add_or_update_project(project_uuid=body.project_id, project_name=body.project_name)
             u_id = db_mgr.add_or_update_user(user_uuid=body.user_id, user_email=body.user_email)
@@ -154,10 +182,12 @@ class ImportScript:
                                        lease_start=body.lease_start, lease_end=body.lease_end)
 
             logger.debug("Processed - slices_slice_id_post")
+            return True
         except Exception as exc:
             details = 'Oops! something went wrong with slices_slice_id_post(): {0}'.format(exc)
             logger.error(details)
             logger.error(traceback.format_exc())
+            return False
 
     def slivers_slice_id_sliver_id_post(self, body: Sliver, slice_id: str, sliver_id: str):  # noqa: E501
         """Create/Update Sliver
