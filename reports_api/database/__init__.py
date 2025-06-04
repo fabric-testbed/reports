@@ -1,5 +1,5 @@
-from sqlalchemy import ForeignKey, TIMESTAMP, Index, JSON
-from sqlalchemy.orm import declarative_base
+from sqlalchemy import ForeignKey, TIMESTAMP, Index, JSON, Boolean, UniqueConstraint
+from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy import Column, String, Integer, Sequence
 
 Base = declarative_base()
@@ -25,7 +25,15 @@ class Projects(Base):
     __tablename__ = 'projects'
     id = Column(Integer, Sequence('projects.id', start=1, increment=1), autoincrement=True, primary_key=True, index=True)
     project_uuid = Column(String, nullable=False, index=True)
-    project_name = Column(String, nullable=True, index=True)
+    project_name = Column(String, index=True)
+    project_type = Column(String, index=True)
+    active = Column(Boolean)
+    created_date = Column(TIMESTAMP(timezone=True), index=True)
+    expires_on = Column(TIMESTAMP(timezone=True), index=True)
+    retired_date = Column(TIMESTAMP(timezone=True), index=True)
+    last_updated = Column(TIMESTAMP(timezone=True), index=True)
+
+    #memberships = relationship("Membership", back_populates="project", cascade="all, delete-orphan")
     __table_args__ = (
         Index('idx_projects_uuid_name', 'project_uuid', 'project_name'),
     )
@@ -36,8 +44,38 @@ class Users(Base):
     id = Column(Integer, Sequence('users.id', start=1, increment=1), autoincrement=True, primary_key=True, index=True)
     user_uuid = Column(String, nullable=False, index=True)
     user_email = Column(String, nullable=False, index=True)
+    active = Column(Boolean)
+    name = Column(String, index=True)
+    affiliation = Column(String, index=True)
+    registered_on = Column(TIMESTAMP(timezone=True), index=True)
+    last_updated = Column(TIMESTAMP(timezone=True), index=True)
+    google_scholar = Column(String)
+    scopus = Column(String)
+
+    #memberships = relationship("Membership", back_populates="user", cascade="all, delete-orphan")
     __table_args__ = (
         Index('idx_users_uuid_email', 'user_uuid', 'user_email'),
+    )
+
+
+class Membership(Base):
+    __tablename__ = 'membership'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    project_id = Column(Integer, ForeignKey('projects.id', ondelete='CASCADE'), nullable=False, index=True)
+
+    start_time = Column(TIMESTAMP(timezone=True), nullable=True)
+    end_time = Column(TIMESTAMP(timezone=True), nullable=True)
+    membership_type = Column(String)
+    active = Column(Boolean, default=True, nullable=False)
+
+    #user = relationship("Users", back_populates="memberships")
+    #project = relationship("Projects", back_populates="memberships")
+
+    __table_args__ = (
+        # Optional: enforce uniqueness of membership period if needed
+        UniqueConstraint('user_id', 'project_id', 'start_time'),
     )
 
 

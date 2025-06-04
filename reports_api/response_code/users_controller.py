@@ -25,6 +25,7 @@
 # Author: Komal Thareja (kthare10@renci.org)
 import traceback
 from datetime import datetime
+from typing import Optional
 
 from flask import Response
 
@@ -159,3 +160,83 @@ def users_get(start_time=None, end_time=None, user_id=None, user_email=None, pro
         logger.error(details)
         logger.error(traceback.format_exc())
         return cors_500(details=details)
+
+
+def users_post(user_uuid: str,
+               user_email: Optional[str] = None,
+               active: Optional[bool] = None,
+               name: Optional[str] = None,
+               affiliation: Optional[str] = None,
+               registered_on: Optional[str] = None,
+               last_updated: Optional[str] = None,
+               google_scholar: Optional[str] = None,
+               scopus: Optional[str] = None):  # noqa: E501
+    """
+    Create or update a user in the system. # noqa: E501
+
+    :param user_uuid: Unique identifier for the user.
+    :type user_uuid: str
+    :param user_email: Email address of the user.
+    :type user_email: Optional[str]
+    :param active: Whether the user is currently active.
+    :type active: Optional[bool]
+    :param name: Full name of the user.
+    :type name: Optional[str]
+    :param affiliation: Affiliation or organization of the user.
+    :type affiliation: Optional[str]
+    :param registered_on: ISO-formatted registration date and time.
+    :type registered_on: Optional[str]
+    :param last_updated: ISO-formatted last update timestamp.
+    :type last_updated: Optional[str]
+    :param google_scholar: Google Scholar profile link or ID.
+    :type google_scholar: Optional[str]
+    :param scopus: Scopus profile link or ID.
+    :type scopus: Optional[str]
+
+    :rtype: int
+    """
+    logger = GlobalsSingleton.get().log
+    try:
+        logger.debug("Processing - users_post")
+        '''
+        ret_val = authorize()
+
+        if isinstance(ret_val, Response):
+            return ret_val
+        elif isinstance(ret_val, dict):
+            logger.debug("Authorized via bearer token")
+        elif isinstance(ret_val, FabricToken):
+            logger.debug("Authorized via Fabric token")
+        '''
+
+        # Parse datetime strings
+        reg_time = datetime.fromisoformat(registered_on) if registered_on else None
+        update_time = datetime.fromisoformat(last_updated) if last_updated else None
+
+        global_obj = GlobalsSingleton.get()
+        db_mgr = DatabaseManager(user=global_obj.config.database_config.get("db-user"),
+                                 password=global_obj.config.database_config.get("db-password"),
+                                 database=global_obj.config.database_config.get("db-name"),
+                                 db_host=global_obj.config.database_config.get("db-host"),
+                                 logger=logger)
+
+        user_id = db_mgr.add_or_update_user(
+            user_uuid=user_uuid,
+            user_email=user_email,
+            active=active,
+            name=name,
+            affiliation=affiliation,
+            registered_on=reg_time,
+            last_updated=update_time,
+            google_scholar=google_scholar,
+            scopus=scopus
+        )
+
+        logger.debug(f"User record added/updated: {user_id}")
+        #return cors_success_response({"id": user_id})
+        return user_id
+    except Exception as exc:
+        details = f'Oops! something went wrong with users_post(): {exc}'
+        logger.error(details)
+        logger.error(traceback.format_exc())
+        #return cors_500(details=details)

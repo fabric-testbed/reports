@@ -25,6 +25,7 @@
 # Author: Komal Thareja (kthare10@renci.org)
 import traceback
 from datetime import datetime
+from typing import Optional
 
 from flask import Response
 
@@ -160,3 +161,81 @@ def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, 
         logger.error(details)
         logger.error(traceback.format_exc())
         return cors_500(details=details)
+
+
+def projects_post(project_uuid: str,
+                  project_name: Optional[str] = None,
+                  project_type: Optional[str] = None,
+                  active: Optional[bool] = None,
+                  created_date: Optional[str] = None,
+                  expires_on: Optional[str] = None,
+                  retired_date: Optional[str] = None,
+                  last_updated: Optional[str] = None):  # noqa: E501
+    """
+    Create or update a project in the system. # noqa: E501
+
+    :param project_uuid: Unique identifier for the project.
+    :type project_uuid: str
+    :param project_name: Name of the project.
+    :type project_name: Optional[str]
+    :param project_type: Type or category of the project.
+    :type project_type: Optional[str]
+    :param active: Whether the project is currently active.
+    :type active: Optional[bool]
+    :param created_date: ISO-formatted creation date and time.
+    :type created_date: Optional[str]
+    :param expires_on: ISO-formatted expiration date and time.
+    :type expires_on: Optional[str]
+    :param retired_date: ISO-formatted retirement date and time.
+    :type retired_date: Optional[str]
+    :param last_updated: ISO-formatted last update timestamp.
+    :type last_updated: Optional[str]
+
+    :rtype: int
+    """
+    logger = GlobalsSingleton.get().log
+    try:
+        logger.debug("Processing - projects_post")
+        '''
+        ret_val = authorize()
+
+        if isinstance(ret_val, Response):
+            return ret_val
+        elif isinstance(ret_val, dict):
+            logger.debug("Authorized via bearer token")
+        elif isinstance(ret_val, FabricToken):
+            logger.debug("Authorized via Fabric token")
+        '''
+
+        # Parse datetime strings
+        created_ts = datetime.fromisoformat(created_date) if created_date else None
+        expires_ts = datetime.fromisoformat(expires_on) if expires_on else None
+        retired_ts = datetime.fromisoformat(retired_date) if retired_date else None
+        updated_ts = datetime.fromisoformat(last_updated) if last_updated else None
+
+        global_obj = GlobalsSingleton.get()
+        db_mgr = DatabaseManager(user=global_obj.config.database_config.get("db-user"),
+                                 password=global_obj.config.database_config.get("db-password"),
+                                 database=global_obj.config.database_config.get("db-name"),
+                                 db_host=global_obj.config.database_config.get("db-host"),
+                                 logger=logger)
+
+        project_id = db_mgr.add_or_update_project(
+            project_uuid=project_uuid,
+            project_name=project_name,
+            project_type=project_type,
+            active=active,
+            created_date=created_ts,
+            expires_on=expires_ts,
+            retired_date=retired_ts,
+            last_updated=updated_ts
+        )
+
+        logger.debug(f"Project record added/updated: {project_id}")
+        #return cors_success_response({"id": project_id})
+        return project_id
+    except Exception as exc:
+        details = f'Oops! something went wrong with projects_post(): {exc}'
+        logger.error(details)
+        logger.error(traceback.format_exc())
+        #return cors_500(details=details)

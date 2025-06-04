@@ -62,3 +62,48 @@ CREATE INDEX IF NOT EXISTS idx_projects_uuid_name ON projects (project_uuid, pro
 
 -- Hosts
 CREATE INDEX IF NOT EXISTS idx_hosts_name_site ON hosts (name, site_id);
+
+ALTER TABLE projects ADD COLUMN project_type VARCHAR;
+ALTER TABLE projects ADD COLUMN active BOOLEAN;
+ALTER TABLE projects ADD COLUMN created_date TIMESTAMP WITH TIME ZONE;
+ALTER TABLE projects ADD COLUMN expires_on TIMESTAMP WITH TIME ZONE;
+ALTER TABLE projects ADD COLUMN retired_date TIMESTAMP WITH TIME ZONE;
+ALTER TABLE projects ADD COLUMN last_updated TIMESTAMP WITH TIME ZONE;
+
+-- Indexes for new columns
+CREATE INDEX idx_projects_project_type ON projects (project_type);
+CREATE INDEX idx_projects_active ON projects (active);
+CREATE INDEX idx_projects_created_date ON projects (created_date);
+CREATE INDEX idx_projects_expires_on ON projects (expires_on);
+CREATE INDEX idx_projects_retired_date ON projects (retired_date);
+CREATE INDEX idx_projects_last_updated ON projects (last_updated);
+
+ALTER TABLE users ADD COLUMN active BOOLEAN;
+ALTER TABLE users ADD COLUMN name VARCHAR;
+ALTER TABLE users ADD COLUMN affiliation VARCHAR;
+ALTER TABLE users ADD COLUMN registered_on TIMESTAMP WITH TIME ZONE;
+ALTER TABLE users ADD COLUMN last_updated TIMESTAMP WITH TIME ZONE;
+ALTER TABLE users ADD COLUMN google_scholar VARCHAR;
+ALTER TABLE users ADD COLUMN scopus VARCHAR;
+
+-- Indexes for new columns
+CREATE INDEX idx_users_active ON users (active);
+CREATE INDEX idx_users_name ON users (name);
+CREATE INDEX idx_users_affiliation ON users (affiliation);
+CREATE INDEX idx_users_registered_on ON users (registered_on);
+CREATE INDEX idx_users_last_updated ON users (last_updated);
+
+CREATE TABLE membership (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    project_id INTEGER NOT NULL,
+    start_time TIMESTAMPTZ,
+    end_time TIMESTAMPTZ,
+    membership_type VARCHAR,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_membership_user_id ON membership (user_id);
+CREATE INDEX idx_membership_project_id ON membership (project_id);

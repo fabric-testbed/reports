@@ -35,7 +35,8 @@ from sqlalchemy import create_engine, and_, or_, func, distinct
 from sqlalchemy.orm import sessionmaker, scoped_session
 from datetime import datetime, timedelta
 
-from reports_api.database import Slices, Slivers, Hosts, Sites, Users, Projects, Components, Interfaces, Base
+from reports_api.database import Slices, Slivers, Hosts, Sites, Users, Projects, Components, Interfaces, Base, \
+    Membership
 from reports_api.response_code.slice_sliver_states import SliceState, SliverStates
 
 
@@ -113,18 +114,60 @@ class DatabaseManager:
             session.rollback()
 
     # -------------------- ADD OR UPDATE DATA --------------------
-    def add_or_update_project(self, project_uuid: str, project_name: Optional[str] = None) -> int:
+    def add_or_update_project(
+            self,
+            project_uuid: str,
+            project_name: Optional[str] = None,
+            project_type: Optional[str] = None,
+            active: Optional[bool] = None,
+            created_date: Optional[datetime] = None,
+            expires_on: Optional[datetime] = None,
+            retired_date: Optional[datetime] = None,
+            last_updated: Optional[datetime] = None,
+    ) -> int:
         """
-        Adds a project if it doesn't exist, otherwise updates the name.
+        Adds a project if it doesn't exist, otherwise updates its fields.
+
+        :param project_uuid: Unique identifier for the project.
+        :param project_name: Name of the project.
+        :param project_type: Type or category of the project.
+        :param active: Boolean flag indicating whether the project is active.
+        :param created_date: Datetime when the project was created.
+        :param expires_on: Datetime when the project is set to expire.
+        :param retired_date: Datetime when the project was retired.
+        :param last_updated: Datetime of the last update. Defaults to current UTC time if not provided.
+        :return: ID of the created or updated project.
+        :rtype: int
         """
+
         session = self.get_session()
         try:
             project = session.query(Projects).filter(Projects.project_uuid == project_uuid).first()
             if project:
-                if project_name:
+                if project_name is not None:
                     project.project_name = project_name
+                if project_type is not None:
+                    project.project_type = project_type
+                if active is not None:
+                    project.active = active
+                if created_date is not None:
+                    project.created_date = created_date
+                if expires_on is not None:
+                    project.expires_on = expires_on
+                if retired_date is not None:
+                    project.retired_date = retired_date
+                project.last_updated = last_updated or datetime.utcnow()
             else:
-                project = Projects(project_uuid=project_uuid, project_name=project_name)
+                project = Projects(
+                    project_uuid=project_uuid,
+                    project_name=project_name,
+                    project_type=project_type,
+                    active=active,
+                    created_date=created_date or datetime.utcnow(),
+                    expires_on=expires_on,
+                    retired_date=retired_date,
+                    last_updated=last_updated or datetime.utcnow(),
+                )
                 session.add(project)
 
             session.commit()
@@ -132,24 +175,119 @@ class DatabaseManager:
         finally:
             session.rollback()
 
-    def add_or_update_user(self, user_uuid: str, user_email: Optional[str] = None) -> int:
+    def add_or_update_user(
+            self,
+            user_uuid: str,
+            user_email: Optional[str] = None,
+            active: Optional[bool] = None,
+            name: Optional[str] = None,
+            affiliation: Optional[str] = None,
+            registered_on: Optional[datetime] = None,
+            last_updated: Optional[datetime] = None,
+            google_scholar: Optional[str] = None,
+            scopus: Optional[str] = None,
+    ) -> int:
         """
-        Adds a user if it doesn't exist, otherwise updates the email.
+        Adds a user if it doesn't exist, otherwise updates its fields.
+
+        :param user_uuid: Unique identifier for the user.
+        :param user_email: Email address of the user.
+        :param active: Boolean flag indicating whether the user is active.
+        :param name: Full name of the user.
+        :param affiliation: Institutional or organizational affiliation of the user.
+        :param registered_on: Datetime when the user registered.
+        :param last_updated: Datetime of the last update. Defaults to current UTC time if not provided.
+        :param google_scholar: URL or identifier for the user's Google Scholar profile.
+        :param scopus: URL or identifier for the user's Scopus profile.
+        :return: ID of the created or updated user.
+        :rtype: int
         """
         session = self.get_session()
         try:
             user = session.query(Users).filter(Users.user_uuid == user_uuid).first()
             if user:
-                if user_email:
+                if user_email is not None:
                     user.user_email = user_email
+                if active is not None:
+                    user.active = active
+                if name is not None:
+                    user.name = name
+                if affiliation is not None:
+                    user.affiliation = affiliation
+                if registered_on is not None:
+                    user.registered_on = registered_on
+                user.last_updated = last_updated or datetime.utcnow()
+                if google_scholar is not None:
+                    user.google_scholar = google_scholar
+                if scopus is not None:
+                    user.scopus = scopus
             else:
-                user = Users(user_uuid=user_uuid, user_email=user_email)
+                user = Users(
+                    user_uuid=user_uuid,
+                    user_email=user_email,
+                    active=active,
+                    name=name,
+                    affiliation=affiliation,
+                    registered_on=registered_on or datetime.utcnow(),
+                    last_updated=last_updated or datetime.utcnow(),
+                    google_scholar=google_scholar,
+                    scopus=scopus,
+                )
                 session.add(user)
 
             session.commit()
             return user.id
         finally:
             session.rollback()
+
+    def add_or_update_membership(self, user_id, project_id, start_time, end_time, membership_type, active):
+        """
+        Add or update a user membership in a project.
+
+        If a membership record with the same user, project, start time, and type exists, it will be updated.
+        Otherwise, a new membership record is inserted.
+
+        :param user_id: ID of the user (foreign key to Users table)
+        :type user_id: int
+        :param project_id: ID of the project (foreign key to Projects table)
+        :type project_id: int
+        :param start_time: When the user was added to the project
+        :type start_time: datetime.datetime or None
+        :param end_time: When the user was removed from the project, if applicable
+        :type end_time: datetime.datetime or None
+        :param membership_type: Role or type of membership (e.g., member, owner, creator, tokenholder)
+        :type membership_type: str
+        :param active: Whether the membership is currently active (i.e., not removed)
+        :type active: bool
+
+        :return: None
+        """
+        session = self.get_session()
+        try:
+            existing = session.query(Membership).filter_by(
+                user_id=user_id,
+                project_id=project_id,
+                start_time=start_time,
+                membership_type=membership_type
+            ).first()
+
+            if existing:
+                existing.end_time = end_time
+                existing.active = active
+            else:
+                membership = Membership(
+                    user_id=user_id,
+                    project_id=project_id,
+                    start_time=start_time,
+                    end_time=end_time,
+                    membership_type=membership_type,
+                    active=active
+                )
+                session.add(membership)
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
 
     # -------------------- ADD OR UPDATE SLICE --------------------
     def add_or_update_slice(
