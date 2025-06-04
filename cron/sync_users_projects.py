@@ -26,6 +26,9 @@
 import argparse
 import logging
 import traceback
+import yaml
+from pathlib import Path
+
 from logging.handlers import RotatingFileHandler
 
 import requests
@@ -36,14 +39,22 @@ from reports_api.database.db_manager import DatabaseManager
 
 
 class UserSyncScript:
-    def __init__(self, endpoint: str, logger: logging.Logger):
-        self.endpoint = endpoint.rstrip("/")
+    def __init__(self, endpoint: str, token: str, logger: logging.Logger):
+        self.endpoint = endpoint
+        self.token = token
         self.logger = logger
+
+    @property
+    def headers(self):
+        return {
+            "accept": "application/json",
+            "Authorization": f"Bearer {self.token}"
+        }
 
     def fetch_user_list(self):
         try:
             url = f"{self.endpoint}/people"
-            resp = requests.get(url, headers={"accept": "application/json"}, timeout=15)
+            resp = requests.get(url, headers=self.headers, timeout=15)
             resp.raise_for_status()
             return resp.json().get("results", [])
         except Exception as e:
@@ -54,7 +65,7 @@ class UserSyncScript:
     def fetch_user_detail(self, uuid):
         try:
             url = f"{self.endpoint}/people-details/{uuid}"
-            resp = requests.get(url, headers={"accept": "application/json"}, timeout=15)
+            resp = requests.get(url, headers=self.headers, timeout=15)
             resp.raise_for_status()
             return resp.json().get("results", [])[0]
         except Exception as e:
@@ -65,7 +76,7 @@ class UserSyncScript:
     def fetch_memberships_for_user(self, uuid: str):
         try:
             url = f"{self.endpoint}/events/people-membership/{uuid}"
-            resp = requests.get(url, headers={"accept": "application/json"}, timeout=15)
+            resp = requests.get(url, headers=self.headers, timeout=15)
             resp.raise_for_status()
             return resp.json().get("results", [])
         except Exception as e:
@@ -126,14 +137,22 @@ class UserSyncScript:
 
 
 class ProjectSyncScript:
-    def __init__(self, endpoint: str, logger: logging.Logger):
-        self.endpoint = endpoint.rstrip("/")
+    def __init__(self, endpoint: str, token: str, logger: logging.Logger):
+        self.endpoint = endpoint
+        self.token = token
         self.logger = logger
+
+    @property
+    def headers(self):
+        return {
+            "accept": "application/json",
+            "Authorization": f"Bearer {self.token}"
+        }
 
     def fetch_project_list(self):
         try:
             url = f"{self.endpoint}/projects"
-            resp = requests.get(url, headers={"accept": "application/json"}, timeout=15)
+            resp = requests.get(url, headers=self.headers, timeout=15)
             resp.raise_for_status()
             return resp.json().get("results", [])
         except Exception as e:
@@ -144,7 +163,7 @@ class ProjectSyncScript:
     def fetch_project_detail(self, uuid):
         try:
             url = f"{self.endpoint}/projects-details/{uuid}"
-            resp = requests.get(url, headers={"accept": "application/json"}, timeout=15)
+            resp = requests.get(url, headers=self.headers, timeout=15)
             resp.raise_for_status()
             return resp.json().get("results", [])[0]
         except Exception as e:
@@ -187,10 +206,26 @@ class ProjectSyncScript:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Sync users and projects from FABRIC Core API to Reports DB")
-    parser.add_argument("--endpoint", required=True,
-                        help="FABRIC core API base endpoint, e.g., https://alpha-6.fabric-testbed.net/core-api-metrics")
+    parser.add_argument("--config", required=True, help="Path to YAML config file with core_api.host and token")
 
     args = parser.parse_args()
+    config_path = Path(args.config)
+
+    if not config_path.exists():
+        raise FileNotFoundError(f"Config file not found: {config_path}")
+
+    with open(config_path, 'r') as f:
+        config = yaml.safe_load(f)
+
+    core_api_cfg = config.get("core_api", {})
+    if not core_api_cfg.get("enable", False):
+        print("core_api.enable is False. Skipping sync.")
+        exit(0)
+
+    endpoint = core_api_cfg.get("host", "").rstrip("/")
+    token = core_api_cfg.get("token")
+    if not endpoint or not token:
+        raise ValueError("core_api.host and core_api.token must be set in config file.")
 
     logger = logging.getLogger("sync_all")
     file_handler = RotatingFileHandler('./sync_all.log', backupCount=5, maxBytes=1_000_000)
@@ -210,6 +245,6 @@ if __name__ == "__main__":
     )
 
     logger.info("Starting sync for users and projects...")
-    UserSyncScript(args.endpoint, logger).sync_users(db_mgr)
-    ProjectSyncScript(args.endpoint, logger).sync_projects(db_mgr)
+    UserSyncScript(endpoint, token, logger).sync_users(db_mgr)
+    ProjectSyncScript(endpoint, token, logger).sync_projects(db_mgr)
     logger.info("Completed sync.")
