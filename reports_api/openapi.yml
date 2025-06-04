@@ -20,10 +20,10 @@ tags:
   - name: sites
     description: Sites in FABRIC
   - name: hosts
-    description: Hosts in FABRIC
+    description: Hosts in FABRIC    
   - name: default
-    description: Default information
-
+    description: Default information 
+    
 paths:
   /version:
     get:
@@ -51,6 +51,7 @@ paths:
         - users
       summary: Get users
       description: Retrieve a list of users with optional filters.
+      operationId: users_get
       security:
         - bearerAuth: []
       parameters:
@@ -79,8 +80,11 @@ paths:
         - $ref: '#/components/parameters/excludeHost'
         - $ref: '#/components/parameters/excludeSliceState'
         - $ref: '#/components/parameters/excludeSliverState'
-        - $ref: '#/components/parameters/page'
-        - $ref: '#/components/parameters/perPage'
+        - $ref: '#/components/parameters/projectType'
+        - $ref: '#/components/parameters/excludeProjectType'
+        - $ref: '#/components/parameters/active'
+        - $ref: '#/components/parameters/page'     
+        - $ref: '#/components/parameters/perPage'     
       responses:
         "200":
           description: OK
@@ -117,13 +121,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/status_500_internal_server_error'
+                $ref: '#/components/schemas/status_500_internal_server_error'          
   /sites:
     get:
       tags:
         - sites
       summary: Get sites
       description: Retrieve a list of sites.
+      operationId: sites_get
       security:
         - bearerAuth: []
       responses:
@@ -162,17 +167,18 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/status_500_internal_server_error'
-
+                $ref: '#/components/schemas/status_500_internal_server_error'     
+          
   /hosts:
     get:
       tags:
         - hosts
       summary: Get hosts
       description: Retrieve a list of hosts.
+      operationId: hosts_get
       security:
         - bearerAuth: []
-      parameters:
+      parameters: 
         - $ref: '#/components/parameters/site'
         - $ref: '#/components/parameters/excludeSite'
       responses:
@@ -211,13 +217,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/status_500_internal_server_error'
+                $ref: '#/components/schemas/status_500_internal_server_error'           
   /slivers:
     get:
       tags:
         - slivers
       summary: Get slivers
       description: Retrieve a list of slivers with optional filters.
+      operationId: slivers_get
       security:
         - bearerAuth: []
       parameters:
@@ -245,9 +252,9 @@ paths:
         - $ref: '#/components/parameters/excludeSite'
         - $ref: '#/components/parameters/excludeHost'
         - $ref: '#/components/parameters/excludeSliceState'
-        - $ref: '#/components/parameters/excludeSliverState'
-        - $ref: '#/components/parameters/page'
-        - $ref: '#/components/parameters/perPage'
+        - $ref: '#/components/parameters/excludeSliverState'        
+        - $ref: '#/components/parameters/page'     
+        - $ref: '#/components/parameters/perPage'    
       responses:
         "200":
           description: OK
@@ -285,32 +292,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/status_500_internal_server_error'
-
+                
   /slivers/{slice_id}/{sliver_id}:
     post:
       tags:
         - slivers
       summary: Create/Update Sliver
       description: Create/Update Sliver.
+      operationId: slivers_post
       security:
         - bearerAuth: []
       parameters:
         - name: slice_id
           in: path
-          required: true
+          required: true  
           schema:
             type: string
             format: uuid
             example: "a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f"
         - name: sliver_id
           in: path
-          required: true
+          required: true  
           schema:
             type: string
             format: uuid
-            example: "a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f"
+            example: "a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f"          
       requestBody:
-        $ref: '#/components/requestBodies/payload_sliver'
+        $ref: '#/components/requestBodies/payload_sliver'        
       responses:
         "200":
           description: OK
@@ -347,16 +355,17 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/status_500_internal_server_error'
-
+                $ref: '#/components/schemas/status_500_internal_server_error'                
+  
   /projects:
     get:
       tags:
       - projects
       summary: "Retrieve a list of projects"
       description: "Returns a paginated list of projects with their UUIDs."
+      operationId: projects_get
       security:
-        - bearerAuth: []
+        - bearerAuth: []       
       parameters:
         - $ref: '#/components/parameters/startTime'
         - $ref: '#/components/parameters/endTime'
@@ -382,9 +391,12 @@ paths:
         - $ref: '#/components/parameters/excludeSite'
         - $ref: '#/components/parameters/excludeHost'
         - $ref: '#/components/parameters/excludeSliceState'
-        - $ref: '#/components/parameters/excludeSliverState'
-        - $ref: '#/components/parameters/page'
-        - $ref: '#/components/parameters/perPage'
+        - $ref: '#/components/parameters/excludeSliverState'        
+        - $ref: '#/components/parameters/projectType'
+        - $ref: '#/components/parameters/excludeProjectType'
+        - $ref: '#/components/parameters/active'
+        - $ref: '#/components/parameters/page'     
+        - $ref: '#/components/parameters/perPage'      
       responses:
         "200":
           description: OK
@@ -428,6 +440,7 @@ paths:
         - slices
       summary: Get slices
       description: Retrieve a list of slices with optional filters.
+      operationId: slices_get
       security:
         - bearerAuth: []
       parameters:
@@ -448,16 +461,16 @@ paths:
         - $ref: '#/components/parameters/ipSubnet'
         - $ref: '#/components/parameters/facility'
         - $ref: '#/components/parameters/site'
-        - $ref: '#/components/parameters/host'
+        - $ref: '#/components/parameters/host'     
         - $ref: '#/components/parameters/excludeUserId'
         - $ref: '#/components/parameters/excludeUserEmail'
         - $ref: '#/components/parameters/excludeProjectId'
         - $ref: '#/components/parameters/excludeSite'
         - $ref: '#/components/parameters/excludeHost'
         - $ref: '#/components/parameters/excludeSliceState'
-        - $ref: '#/components/parameters/excludeSliverState'
-        - $ref: '#/components/parameters/page'
-        - $ref: '#/components/parameters/perPage'
+        - $ref: '#/components/parameters/excludeSliverState'        
+        - $ref: '#/components/parameters/page'     
+        - $ref: '#/components/parameters/perPage'    
       responses:
         "200":
           description: OK
@@ -502,12 +515,13 @@ paths:
         - slices
       summary: Create/Update a slice
       description: Create a Slice
+      operationId: slices_post
       security:
         - bearerAuth: []
       parameters:
         - name: slice_id
           in: path
-          required: true
+          required: true  
           schema:
             type: string
             format: uuid
@@ -554,11 +568,11 @@ paths:
 
 components:
   securitySchemes:
-    bearerAuth:
+    bearerAuth:     
       type: http
       scheme: bearer
-      bearerFormat: JWT
-
+      bearerFormat: JWT  
+      
   parameters:
     startTime:
       name: start_time
@@ -695,7 +709,7 @@ components:
           type: string
           enum: [VM, Switch, Facility, L2STS, L2PTP, L2Bridge, FABNetv4, FABNetv6, PortMirror, L3VPN, FABNetv4Ext, FABNetv6Ext]
       description: Filter by sliver type; allowed values VM, Switch, Facility, L2STS, L2PTP, L2Bridge, FABNetv4, FABNetv6, PortMirror, L3VPN, FABNetv4Ext, FABNetv6Ext
-
+      
     sliverState:
       name: sliver_state
       in: query
@@ -706,6 +720,36 @@ components:
           type: string
           enum: [Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail]
       description: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
+    
+    projectType:
+      name: project_type
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+          enum: [research, education, maintenance, tutorial]
+      description: Filter by project type; allowed values research, education, maintenance, tutorial
+      
+    excludeProjectType:
+      name: exclude_project_type
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+          enum: [research, education, maintenance, tutorial]
+      description: Exclude by project type; allowed values research, education, maintenance, tutorial
+      
+    active:
+      name: active
+      in: query
+      required: false
+      schema:
+        type: boolean
+        description: Filter by active state of user or project
 
     excludeSliverState:
       name: exclude_sliver_state
@@ -716,8 +760,8 @@ components:
         items:
           type: string
           enum: [Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail]
-      description: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
-
+      description: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail      
+      
     sliceState:
       name: slice_state
       in: query
@@ -739,7 +783,7 @@ components:
           type: string
           enum: [Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK]
       description: Filter by slice state; allowed values Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK
-
+      
     site:
       name: site
       in: query
@@ -749,7 +793,7 @@ components:
         items:
           type: string
       description: Filter by site
-
+      
     facility:
       name: facility
       in: query
@@ -759,7 +803,7 @@ components:
         items:
           type: string
       description: Filter by facility
-
+      
     excludeSite:
       name: exclude_site
       in: query
@@ -799,7 +843,7 @@ components:
         items:
           type: string
       description: Filter by specified IP subnet
-
+      
     bdf:
       name: bdf
       in: query
@@ -809,7 +853,7 @@ components:
         items:
           type: string
       description: Filter by specified BDF (Bus:Device.Function) of interfaces/components
-
+    
     vlan:
       name: vlan
       in: query
@@ -819,7 +863,7 @@ components:
         items:
           type: string
       description: Filter by VLAN associated with their sliver interfaces.
-
+      
     page:
       name: page
       in: query
@@ -828,7 +872,7 @@ components:
         type: integer
         default: 0
       description: "Page number for pagination. Default is 0."
-
+      
     perPage:
       name: per_page
       in: query
@@ -836,7 +880,7 @@ components:
       schema:
         type: integer
         default: 200
-      description: "Number of records per page. Default is 200."
+      description: "Number of records per page. Default is 200." 
 
   schemas:
     sites:
@@ -848,20 +892,20 @@ components:
           data:
             type: array
             items:
-              $ref: '#/components/schemas/site'
+              $ref: '#/components/schemas/site' 
 
     site:
-      type: object
+      type: object    
       properties:
         name:
           type: string
         hosts:
           type: array
           items:
-            $ref: '#/components/schemas/host'
+            $ref: '#/components/schemas/host' 
 
     host:
-      type: object
+      type: object    
       properties:
         name:
           type: string
@@ -874,22 +918,46 @@ components:
           data:
             type: array
             items:
-              $ref: '#/components/schemas/project'
+              $ref: '#/components/schemas/project' 
 
     project:
-      type: object
+      type: object    
       properties:
         project_id:
           type: string
         project_name:
           type: string
+        project_type:
+          type: string
+          example: research
+          description: Type of the project (e.g., research, education, etc.)
+        active:
+          type: boolean
+          example: true
+          description: Indicates if the project is currently active
+        created_date:
+          type: string
+          format: date-time
+          description: Timestamp when the project was created
+        expires_on:
+          type: string
+          format: date-time
+          description: Timestamp when the project is set to expire
+        retired_date:
+          type: string
+          format: date-time
+          description: Timestamp when the project was retired, if applicable
+        last_updated:
+          type: string
+          format: date-time
+          description: Timestamp of the last update to the project record          
         users:
           type: object
           properties:
             total:
               type: integer
             data:
-              type: array
+              type: array        
               items:
                 $ref: '#/components/schemas/user'
 
@@ -902,14 +970,42 @@ components:
           data:
             type: array
             items:
-              $ref: '#/components/schemas/user'
+              $ref: '#/components/schemas/user' 
     user:
-      type: object
+      type: object    
       properties:
         user_id:
           type: string
         user_email:
           type: string
+        active:
+          type: boolean
+          example: true
+          description: Indicates if the user is currently active
+        user_name:
+          type: string
+          example: "Jane Doe"
+          description: Full name of the user
+        affiliation:
+          type: string
+          example: "NC State University"
+          description: Institutional or organizational affiliation
+        registered_on:
+          type: string
+          format: date-time
+          description: Timestamp when the user registered
+        last_updated:
+          type: string
+          format: date-time
+          description: Timestamp of the last update to the user record
+        google_scholar:
+          type: string
+          example: "https://scholar.google.com/citations?user=XYZ123"
+          description: URL to the user's Google Scholar profile
+        scopus:
+          type: string
+          example: "https://www.scopus.com/authid/detail.uri?authorId=9876543210"
+          description: URL to the user's Scopus profile          
         slices:
           type: object
           properties:
@@ -928,18 +1024,18 @@ components:
           data:
             type: array
             items:
-              $ref: '#/components/schemas/slice'
+              $ref: '#/components/schemas/slice' 
     slice:
       type: object
       properties:
         project_id:
           type: string
         project_name:
-          type: string
+          type: string             
         user_id:
           type: string
         user_email:
-          type: string
+          type: string          
         slice_id:
           type: string
         slice_name:
@@ -970,22 +1066,22 @@ components:
           data:
             type: array
             items:
-              $ref: '#/components/schemas/sliver'
+              $ref: '#/components/schemas/sliver' 
     sliver:
       type: object
       properties:
         project_id:
           type: string
         project_name:
-          type: string
+          type: string          
         slice_id:
           type: string
         slice_name:
-          type: string
+          type: string          
         user_id:
           type: string
         user_email:
-          type: string
+          type: string          
         host:
           type: string
         site:
@@ -993,7 +1089,7 @@ components:
         sliver_id:
           type: string
         node_id:
-          type: string
+          type: string          
         state:
           type: string
         sliver_type:
@@ -1035,7 +1131,7 @@ components:
             data:
               type: array
               items:
-                $ref: '#/components/schemas/interface'
+                $ref: '#/components/schemas/interface'            
     component:
       type: object
       properties:
@@ -1044,7 +1140,7 @@ components:
         node_id:
           type: string
         component_node_id:
-          type: string
+          type: string          
         type:
           type: string
         model:
@@ -1059,18 +1155,18 @@ components:
         interface_id:
           type: string
         site:
-          type: string
+          type: string          
         vlan:
           type: string
         bdf:
-          type: string
+          type: string    
         local_name:
           type: string
         device_name:
           type: string
         name:
           type: string
-
+          
     status_200_ok_paginated:
       type: object
       properties:
@@ -1217,7 +1313,7 @@ components:
           type: string
       example:
         details: details
-        message: No Content
+        message: No Content                 
     status_200_ok_no_content:
       type: object
       properties:
@@ -1233,7 +1329,7 @@ components:
           default: 1
         status:
           type: integer
-          default: 200
+          default: 200            
     status_200_ok_single:
       type: object
       properties:
@@ -1244,7 +1340,7 @@ components:
           type: integer
           default: 200
         type:
-          type: string
+          type: string            
     version:
       type: object
       allOf:

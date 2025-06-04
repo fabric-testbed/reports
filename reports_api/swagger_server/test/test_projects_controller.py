@@ -47,6 +47,9 @@ class TestProjectsController(BaseTestCase):
                         ('exclude_host', 'exclude_host_example'),
                         ('exclude_slice_state', 'exclude_slice_state_example'),
                         ('exclude_sliver_state', 'exclude_sliver_state_example'),
+                        ('project_type', 'project_type_example'),
+                        ('exclude_project_type', 'exclude_project_type_example'),
+                        ('active', true),
                         ('page', 0),
                         ('per_page', 200)]
         response = self.client.open(

@@ -15,29 +15,59 @@ class Project(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, project_id: str=None, project_name: str=None, users: ProjectUsers=None):  # noqa: E501
+    def __init__(self, project_id: str=None, project_name: str=None, project_type: str=None, active: bool=None, created_date: datetime=None, expires_on: datetime=None, retired_date: datetime=None, last_updated: datetime=None, users: ProjectUsers=None):  # noqa: E501
         """Project - a model defined in Swagger
 
         :param project_id: The project_id of this Project.  # noqa: E501
         :type project_id: str
         :param project_name: The project_name of this Project.  # noqa: E501
         :type project_name: str
+        :param project_type: The project_type of this Project.  # noqa: E501
+        :type project_type: str
+        :param active: The active of this Project.  # noqa: E501
+        :type active: bool
+        :param created_date: The created_date of this Project.  # noqa: E501
+        :type created_date: datetime
+        :param expires_on: The expires_on of this Project.  # noqa: E501
+        :type expires_on: datetime
+        :param retired_date: The retired_date of this Project.  # noqa: E501
+        :type retired_date: datetime
+        :param last_updated: The last_updated of this Project.  # noqa: E501
+        :type last_updated: datetime
         :param users: The users of this Project.  # noqa: E501
         :type users: ProjectUsers
         """
         self.swagger_types = {
             'project_id': str,
             'project_name': str,
+            'project_type': str,
+            'active': bool,
+            'created_date': datetime,
+            'expires_on': datetime,
+            'retired_date': datetime,
+            'last_updated': datetime,
             'users': ProjectUsers
         }
 
         self.attribute_map = {
             'project_id': 'project_id',
             'project_name': 'project_name',
+            'project_type': 'project_type',
+            'active': 'active',
+            'created_date': 'created_date',
+            'expires_on': 'expires_on',
+            'retired_date': 'retired_date',
+            'last_updated': 'last_updated',
             'users': 'users'
         }
         self._project_id = project_id
         self._project_name = project_name
+        self._project_type = project_type
+        self._active = active
+        self._created_date = created_date
+        self._expires_on = expires_on
+        self._retired_date = retired_date
+        self._last_updated = last_updated
         self._users = users
 
     @classmethod
@@ -92,6 +122,144 @@ class Project(Model):
         """
 
         self._project_name = project_name
+
+    @property
+    def project_type(self) -> str:
+        """Gets the project_type of this Project.
+
+        Type of the project (e.g., research, education, etc.)  # noqa: E501
+
+        :return: The project_type of this Project.
+        :rtype: str
+        """
+        return self._project_type
+
+    @project_type.setter
+    def project_type(self, project_type: str):
+        """Sets the project_type of this Project.
+
+        Type of the project (e.g., research, education, etc.)  # noqa: E501
+
+        :param project_type: The project_type of this Project.
+        :type project_type: str
+        """
+
+        self._project_type = project_type
+
+    @property
+    def active(self) -> bool:
+        """Gets the active of this Project.
+
+        Indicates if the project is currently active  # noqa: E501
+
+        :return: The active of this Project.
+        :rtype: bool
+        """
+        return self._active
+
+    @active.setter
+    def active(self, active: bool):
+        """Sets the active of this Project.
+
+        Indicates if the project is currently active  # noqa: E501
+
+        :param active: The active of this Project.
+        :type active: bool
+        """
+
+        self._active = active
+
+    @property
+    def created_date(self) -> datetime:
+        """Gets the created_date of this Project.
+
+        Timestamp when the project was created  # noqa: E501
+
+        :return: The created_date of this Project.
+        :rtype: datetime
+        """
+        return self._created_date
+
+    @created_date.setter
+    def created_date(self, created_date: datetime):
+        """Sets the created_date of this Project.
+
+        Timestamp when the project was created  # noqa: E501
+
+        :param created_date: The created_date of this Project.
+        :type created_date: datetime
+        """
+
+        self._created_date = created_date
+
+    @property
+    def expires_on(self) -> datetime:
+        """Gets the expires_on of this Project.
+
+        Timestamp when the project is set to expire  # noqa: E501
+
+        :return: The expires_on of this Project.
+        :rtype: datetime
+        """
+        return self._expires_on
+
+    @expires_on.setter
+    def expires_on(self, expires_on: datetime):
+        """Sets the expires_on of this Project.
+
+        Timestamp when the project is set to expire  # noqa: E501
+
+        :param expires_on: The expires_on of this Project.
+        :type expires_on: datetime
+        """
+
+        self._expires_on = expires_on
+
+    @property
+    def retired_date(self) -> datetime:
+        """Gets the retired_date of this Project.
+
+        Timestamp when the project was retired, if applicable  # noqa: E501
+
+        :return: The retired_date of this Project.
+        :rtype: datetime
+        """
+        return self._retired_date
+
+    @retired_date.setter
+    def retired_date(self, retired_date: datetime):
+        """Sets the retired_date of this Project.
+
+        Timestamp when the project was retired, if applicable  # noqa: E501
+
+        :param retired_date: The retired_date of this Project.
+        :type retired_date: datetime
+        """
+
+        self._retired_date = retired_date
+
+    @property
+    def last_updated(self) -> datetime:
+        """Gets the last_updated of this Project.
+
+        Timestamp of the last update to the project record  # noqa: E501
+
+        :return: The last_updated of this Project.
+        :rtype: datetime
+        """
+        return self._last_updated
+
+    @last_updated.setter
+    def last_updated(self, last_updated: datetime):
+        """Sets the last_updated of this Project.
+
+        Timestamp of the last update to the project record  # noqa: E501
+
+        :param last_updated: The last_updated of this Project.
+        :type last_updated: datetime
+        """
+
+        self._last_updated = last_updated
 
     @property
     def users(self) -> ProjectUsers:

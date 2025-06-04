@@ -245,6 +245,6 @@ if __name__ == "__main__":
     )
 
     logger.info("Starting sync for users and projects...")
-    UserSyncScript(endpoint, token, logger).sync_users(db_mgr)
     ProjectSyncScript(endpoint, token, logger).sync_projects(db_mgr)
+    UserSyncScript(endpoint, token, logger).sync_users(db_mgr)
     logger.info("Completed sync.")

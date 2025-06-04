@@ -44,7 +44,8 @@ def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, 
                  component_model=None, bdf=None, vlan=None, ip_subnet=None, site=None, host=None,
                  exclude_user_id=None, exclude_user_email=None, exclude_project_id=None, exclude_site=None,
                  exclude_host=None, exclude_slice_state=None, exclude_sliver_state=None,
-                 facility=None, page=0, per_page=100):  # noqa: E501
+                 facility=None, project_type=None, exclude_project_type=None, active=None,
+                 page=0, per_page=100):  # noqa: E501
     """Retrieve a list of projects
 
     Returns a paginated list of projects with their UUIDs. # noqa: E501
@@ -99,6 +100,12 @@ def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, 
     :type exclude_sliver_state: List[str]
     :param facility: Filter by facility
     :type facility: List[str]
+    :param project_type: Filter by project type; allowed values research, education, maintenance, tutorial
+    :type project_type: List[str]
+    :param exclude_project_type: Exclude by project type; allowed values research, education, maintenance, tutorial
+    :type exclude_project_type: List[str]
+    :param active:
+    :type active: bool
     :param page: Page number for pagination. Default is 1.
     :type page: int
     :param per_page: Number of records per page. Default is 10.
@@ -148,7 +155,9 @@ def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, 
                                        exclude_user_id=exclude_user_id, exclude_user_email=exclude_user_email,
                                        exclude_project_id=exclude_project_id, exclude_site=exclude_site,
                                        exclude_host=exclude_host, exclude_sliver_state=exclude_sliver_states,
-                                       exclude_slice_state=exclude_slice_states)
+                                       exclude_slice_state=exclude_slice_states,
+                                       project_type=project_type, exclude_project_type=exclude_project_type,
+                                       active=active)
         for s in projects.get("projects"):
             response.data.append(Project.from_dict(s))
         response.size = len(response.data)

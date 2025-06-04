@@ -43,7 +43,8 @@ def users_get(start_time=None, end_time=None, user_id=None, user_email=None, pro
               slice_state=None, sliver_id=None, sliver_type=None, sliver_state=None, component_type=None,
               component_model=None, bdf=None, vlan=None, ip_subnet=None, site=None, host=None, exclude_user_id=None,
               exclude_user_email=None, exclude_project_id=None, exclude_site=None, exclude_host=None, facility=None,
-              exclude_slice_state=None, exclude_sliver_state=None, page=None, per_page=None):  # noqa: E501
+              exclude_slice_state=None, exclude_sliver_state=None, project_type=None, exclude_project_type=None, active=None,
+              page=None, per_page=None):  # noqa: E501
     """Get users
 
     Retrieve a list of users with optional filters. # noqa: E501
@@ -98,6 +99,12 @@ def users_get(start_time=None, end_time=None, user_id=None, user_email=None, pro
     :type exclude_slice_state: List[str]
     :param exclude_sliver_state: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
     :type exclude_sliver_state: List[str]
+    :param project_type: Filter by project type; allowed values research, education, maintenance, tutorial
+    :type project_type: List[str]
+    :param exclude_project_type: Exclude by project type; allowed values research, education, maintenance, tutorial
+    :type exclude_project_type: List[str]
+    :param active:
+    :type active: bool
     :param page: Page number for pagination. Default is 1.
     :type page: int
     :param per_page: Number of records per page. Default is 10.
@@ -147,7 +154,9 @@ def users_get(start_time=None, end_time=None, user_id=None, user_email=None, pro
                                  exclude_user_id=exclude_user_id, exclude_user_email=exclude_user_email,
                                  exclude_project_id=exclude_project_id, exclude_site=exclude_site,
                                  exclude_host=exclude_host, exclude_sliver_state=exclude_sliver_states,
-                                 exclude_slice_state=exclude_slice_states)
+                                 exclude_slice_state=exclude_slice_states,
+                                 project_type=project_type, exclude_project_type=exclude_project_type,
+                                 active=active)
         for u in users.get("users"):
             response.data.append(User.from_dict(u))
         response.size = len(response.data)

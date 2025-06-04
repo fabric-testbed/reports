@@ -383,6 +383,46 @@ paths:
             - Failed
             - Unknown
             - CloseFail
+      - name: project_type
+        in: query
+        description: "Filter by project type; allowed values research, education,\
+          \ maintenance, tutorial"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - research
+            - education
+            - maintenance
+            - tutorial
+      - name: exclude_project_type
+        in: query
+        description: "Exclude by project type; allowed values research, education,\
+          \ maintenance, tutorial"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - research
+            - education
+            - maintenance
+            - tutorial
+      - name: active
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+          description: Filter by active state of user or project
       - name: page
         in: query
         description: Page number for pagination. Default is 0.
@@ -961,7 +1001,7 @@ paths:
       - slivers
       summary: Create/Update Sliver
       description: Create/Update Sliver.
-      operationId: slivers_slice_id_sliver_id_post
+      operationId: slivers_post
       parameters:
       - name: slice_id
         in: path
@@ -1364,6 +1404,46 @@ paths:
             - Failed
             - Unknown
             - CloseFail
+      - name: project_type
+        in: query
+        description: "Filter by project type; allowed values research, education,\
+          \ maintenance, tutorial"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - research
+            - education
+            - maintenance
+            - tutorial
+      - name: exclude_project_type
+        in: query
+        description: "Exclude by project type; allowed values research, education,\
+          \ maintenance, tutorial"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - research
+            - education
+            - maintenance
+            - tutorial
+      - name: active
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+          description: Filter by active state of user or project
       - name: page
         in: query
         description: Page number for pagination. Default is 0.
@@ -1827,7 +1907,7 @@ paths:
       - slices
       summary: Create/Update a slice
       description: Create a Slice
-      operationId: slices_slice_id_post
+      operationId: slices_post
       parameters:
       - name: slice_id
         in: path
@@ -1923,6 +2003,30 @@ components:
           type: string
         project_name:
           type: string
+        project_type:
+          type: string
+          description: "Type of the project (e.g., research, education, etc.)"
+          example: research
+        active:
+          type: boolean
+          description: Indicates if the project is currently active
+          example: true
+        created_date:
+          type: string
+          description: Timestamp when the project was created
+          format: date-time
+        expires_on:
+          type: string
+          description: Timestamp when the project is set to expire
+          format: date-time
+        retired_date:
+          type: string
+          description: "Timestamp when the project was retired, if applicable"
+          format: date-time
+        last_updated:
+          type: string
+          description: Timestamp of the last update to the project record
+          format: date-time
         users:
           $ref: '#/components/schemas/project_users'
     users:
@@ -1942,6 +2046,34 @@ components:
           type: string
         user_email:
           type: string
+        active:
+          type: boolean
+          description: Indicates if the user is currently active
+          example: true
+        user_name:
+          type: string
+          description: Full name of the user
+          example: Jane Doe
+        affiliation:
+          type: string
+          description: Institutional or organizational affiliation
+          example: NC State University
+        registered_on:
+          type: string
+          description: Timestamp when the user registered
+          format: date-time
+        last_updated:
+          type: string
+          description: Timestamp of the last update to the user record
+          format: date-time
+        google_scholar:
+          type: string
+          description: URL to the user's Google Scholar profile
+          example: https://scholar.google.com/citations?user=XYZ123
+        scopus:
+          type: string
+          description: URL to the user's Scopus profile
+          example: https://www.scopus.com/authid/detail.uri?authorId=9876543210
         slices:
           $ref: '#/components/schemas/user_slices'
     slices:
@@ -2521,6 +2653,49 @@ components:
           - Failed
           - Unknown
           - CloseFail
+    projectType:
+      name: project_type
+      in: query
+      description: "Filter by project type; allowed values research, education, maintenance,\
+        \ tutorial"
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: array
+        items:
+          type: string
+          enum:
+          - research
+          - education
+          - maintenance
+          - tutorial
+    excludeProjectType:
+      name: exclude_project_type
+      in: query
+      description: "Exclude by project type; allowed values research, education, maintenance,\
+        \ tutorial"
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: array
+        items:
+          type: string
+          enum:
+          - research
+          - education
+          - maintenance
+          - tutorial
+    active:
+      name: active
+      in: query
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: boolean
+        description: Filter by active state of user or project
     excludeSliverState:
       name: exclude_sliver_state
       in: query

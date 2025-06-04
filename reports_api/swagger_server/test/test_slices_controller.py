@@ -56,8 +56,8 @@ class TestSlicesController(BaseTestCase):
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
-    def test_slices_slice_id_post(self):
-        """Test case for slices_slice_id_post
+    def test_slices_post(self):
+        """Test case for slices_post
 
         Create/Update a slice
         """

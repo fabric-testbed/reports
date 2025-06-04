@@ -591,6 +591,7 @@ class DatabaseManager:
                      exclude_user_email: list[str] = None, exclude_project_id: list[str] = None,
                      exclude_site: list[str] = None, exclude_host: list[str] = None, facility: list[str] = None,
                      exclude_slice_state: list[int] = None, exclude_sliver_state: list[int] = None,
+                     project_type: list[str] = None, exclude_project_type: list[str] = None, active: bool = None,
                      page: int = 0, per_page: int = 100) -> dict:
         """
         Retrieve a list of projects filtered by related slices, slivers, users, components, interface attributes, and time range.
@@ -645,6 +646,12 @@ class DatabaseManager:
         :type exclude_slice_state: List[int]
         :param exclude_sliver_state: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
         :type exclude_sliver_state: List[int]
+        :param project_type: Filter by project type; allowed values research, education, maintenance, tutorial
+        :type project_type: List[str]
+        :param exclude_project_type: Exclude by project type; allowed values research, education, maintenance, tutorial
+        :type exclude_project_type: List[str]
+        :param active:
+        :type active: bool
 
         :param page: Page number for paginated results (0-based index).
         :type page: int, optional
@@ -654,6 +661,13 @@ class DatabaseManager:
         :return: A dictionary containing the list of projects and associated metadata.
         :rtype: dict
         """
+        # Detect if any fields that require Slice JOIN are used
+        requires_slice = any([
+            slice_id, slice_state, user_email, user_id,
+            exclude_user_id, exclude_user_email,
+            exclude_slice_state
+        ])
+
         # Detect if any fields that require Sliver JOIN are used
         requires_sliver = any([
             sliver_id, sliver_type, sliver_state, ip_subnet,
@@ -688,16 +702,16 @@ class DatabaseManager:
             start_ts = time.time()
 
             # Base query for Projects
-            query = session.query(Projects).distinct() \
-                .join(Slices, Slices.project_id == Projects.id) \
-                .join(Users, Slices.user_id == Users.id)
+            query = session.query(Projects).distinct()
+
+            if requires_slice or requires_sliver:
+                query = query.join(Slices, Slices.project_id == Projects.id)\
+                    .join(Users, Slices.user_id == Users.id)
 
             filters = []
 
             # Only join Slivers if any Sliver-related filter is used
-            if any([sliver_id, sliver_type, sliver_state, ip_subnet,
-                    host, site, component_type, component_model, bdf, vlan, facility, exclude_site,
-                    exclude_host, exclude_sliver_state]):
+            if requires_sliver:
                 query = query.join(Slivers, Slivers.project_id == Projects.id)
 
                 if host or site or exclude_host or exclude_site:
@@ -710,12 +724,19 @@ class DatabaseManager:
 
             # Build filters
             if start_time or end_time:
-                time_filter = self.__build_time_filter(Slices, start_time, end_time)
-                if time_filter is not None:
-                    filters.append(time_filter)
+                if requires_slice or requires_sliver:
+                    time_filter = self.__build_time_filter(Slices, start_time, end_time)
+                    if time_filter is not None:
+                        filters.append(time_filter)
 
             if project_id:
                 filters.append(Projects.project_uuid.in_(project_id))
+
+            if active:
+                filters.append(Projects.active == active)
+
+            if project_type:
+                filters.append(Projects.project_type.in_(project_type))
 
             if slice_id:
                 filters.append(Slices.slice_guid.in_(slice_id))
@@ -755,6 +776,8 @@ class DatabaseManager:
 
             if exclude_project_id:
                 filters.append(Projects.project_uuid.notin_(exclude_project_id))
+            if exclude_project_type:
+                filters.append(Projects.project_type.notin_(exclude_project_type))
             if exclude_user_id:
                 filters.append(Users.user_uuid.notin_(exclude_user_id))
             if exclude_user_email:
@@ -775,16 +798,16 @@ class DatabaseManager:
             query_ts = time.time()
 
             # Separate lightweight count query
-            count_query = session.query(func.count(distinct(Projects.id))) \
-                .join(Slices, Slices.project_id == Projects.id) \
-                .join(Users, Slices.user_id == Users.id)
+            count_query = session.query(func.count(distinct(Projects.id)))
+
+            if requires_slice or requires_sliver:
+                count_query = count_query.join(Slices, Slices.project_id == Projects.id) \
+                    .join(Users, Slices.user_id == Users.id)
 
             if filters:
                 count_query = count_query.filter(and_(*filters))
 
-            if any([sliver_id, sliver_type, sliver_state, ip_subnet,
-                    host, site, component_type, component_model, bdf, vlan, facility, exclude_site,
-                    exclude_host, exclude_sliver_state]):
+            if requires_sliver:
                 count_query = count_query.join(Slivers, Slivers.project_id == Projects.id)
 
                 if host or site or exclude_host or exclude_site:
@@ -854,6 +877,7 @@ class DatabaseManager:
                   exclude_user_email: list[str] = None, exclude_project_id: list[str] = None,
                   exclude_site: list[str] = None, exclude_host: list[str] = None, facility: list[str] = None,
                   exclude_slice_state: list[int] = None, exclude_sliver_state: list[int] = None,
+                  project_type: list[str] = None, exclude_project_type: list[str] = None, active: bool = None,
                   page: int = 0, per_page: int = 100) -> dict:
         """
         Retrieve a list of users filtered by associated slices, slivers, components, network interfaces, and time range.
@@ -909,7 +933,12 @@ class DatabaseManager:
         :type exclude_slice_state: List[int]
         :param exclude_sliver_state: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
         :type exclude_sliver_state: List[int]
-
+        :param project_type: Filter by project type; allowed values research, education, maintenance, tutorial
+        :type project_type: List[str]
+        :param exclude_project_type: Exclude by project type; allowed values research, education, maintenance, tutorial
+        :type exclude_project_type: List[str]
+        :param active:
+        :type active: bool
         :param page: Page number for paginated results (0-based index).
         :type page: int, optional
         :param per_page: Number of users to return per page.
@@ -921,6 +950,12 @@ class DatabaseManager:
         session = self.get_session()
         try:
             start_ts = time.time()
+
+            requires_slice = any([
+                slice_id, slice_state, user_email, user_id,
+                exclude_user_id, exclude_user_email,
+                exclude_slice_state
+            ])
 
             # Detect if sliver-related fields are involved
             requires_sliver = any([
@@ -947,11 +982,15 @@ class DatabaseManager:
                     self.logger.info(f"Only end_time given. Setting start_time to {start_time.isoformat()}")
 
             # Base query for Users
-            query = session.query(Users).distinct() \
-                .join(Slices, Users.id == Slices.user_id)
+            query = session.query(Users).distinct()
 
+            if requires_slice or requires_sliver:
+                query = query.join(Slices, Users.id == Slices.user_id)
+
+            # Determine whether to use Slices or Membership for joining Projects
             if project_id:
-                query = query.join(Projects, Slices.project_id == Projects.id)
+                if requires_slice or requires_sliver:
+                    query = query.join(Projects, Slices.project_id == Projects.id)
 
             # Only join Slivers if needed
             if requires_sliver:
@@ -970,7 +1009,7 @@ class DatabaseManager:
             filters = []
 
             # Time range filter
-            if start_time or end_time:
+            if (requires_slice or requires_sliver) and (start_time or end_time):
                 time_filter = self.__build_time_filter(Slices, start_time, end_time)
                 if time_filter is not None:
                     filters.append(time_filter)
@@ -984,6 +1023,12 @@ class DatabaseManager:
             # Project filters
             if project_id:
                 filters.append(Projects.project_uuid.in_(project_id))
+
+            if project_type:
+                filters.append(Projects.project_type.in_(project_type))
+
+            if active:
+                filters.append(Projects.active == active)
 
             # Slice filters
             if slice_id:
@@ -1022,6 +1067,8 @@ class DatabaseManager:
             # Exclusions
             if exclude_project_id:
                 filters.append(Projects.project_uuid.notin_(exclude_project_id))
+            if exclude_project_type:
+                filters.append(Projects.project_type.notin_(exclude_project_type))
             if exclude_user_id:
                 filters.append(Users.user_uuid.notin_(exclude_user_id))
             if exclude_user_email:
@@ -1045,10 +1092,12 @@ class DatabaseManager:
             # Use DISTINCT COUNT
             count_query = session.query(func.count(distinct(Users.id)))
 
-            count_query = count_query.join(Slices, Users.id == Slices.user_id)
+            if requires_slice or requires_sliver:
+                count_query = count_query.join(Slices, Users.id == Slices.user_id)
 
             if project_id:
-                count_query = count_query.join(Projects, Slices.project_id == Projects.id)
+                if requires_slice or requires_sliver:
+                    count_query = count_query.join(Projects, Slices.project_id == Projects.id)
 
             if filters:
                 count_query = count_query.filter(and_(*filters))
@@ -1707,6 +1756,13 @@ class DatabaseManager:
         return {
             "user_id": user.user_uuid,
             "user_email": user.user_email,
+            "active": user.active,
+            "user_name": user.name,
+            "affiliation": user.affiliation,
+            "registered_on": user.registered_on.isoformat() if user.registered_on else None,
+            "last_updated": user.last_updated.isoformat() if user.last_updated else None,
+            "google_scholar": user.google_scholar,
+            "scopus": user.scopus,
         }
 
     @staticmethod
@@ -1714,27 +1770,41 @@ class DatabaseManager:
         return {
             "project_id": project.project_uuid,
             "project_name": project.project_name,
+            "project_type": project.project_type,
+            "active": project.active,
+            "created_date": project.created_date.isoformat() if project.created_date else None,
+            "expires_on": project.expires_on.isoformat() if project.expires_on else None,
+            "retired_date": project.retired_date.isoformat() if project.retired_date else None,
+            "last_updated": project.last_updated.isoformat() if project.last_updated else None
         }
 
     def __get_projects_for_user(self, user_uuid: str):
         session = self.get_session()
         try:
-            projects = session.query(Projects).distinct() \
-                .join(Slices, Slices.project_id == Projects.id) \
-                .join(Users, Slices.user_id == Users.id) \
-                .filter(Users.user_uuid == user_uuid) \
-                .all()
+            projects = (
+                session.query(Projects)
+                    .distinct()
+                    .join(Membership, Membership.project_id == Projects.id)
+                    .join(Users, Membership.user_id == Users.id)
+                    .filter(
+                    Users.user_uuid == user_uuid,
+                    Membership.active.is_(True)
+                )
+                    .all()
+            )
             return projects
         finally:
             session.rollback()
 
-    def __get_user_count_for_project(self, project_id: str):
+    def __get_user_count_for_project(self, project_id: int):
         session = self.get_session()
         try:
-            user_count = session.query(func.count(func.distinct(Slices.user_id))) \
-                .join(Projects, Slices.project_id == Projects.id) \
-                .filter(Projects.id == project_id) \
-                .scalar()
+            user_count = session.query(func.count(distinct(Membership.user_id))) \
+                .filter(
+                Membership.project_id == project_id,
+                Membership.active.is_(True)
+            ).scalar()
+            self.logger.info(f"KOMAL --- User count for {project_id} {user_count}")
             return user_count
         finally:
             session.rollback()
