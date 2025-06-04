@@ -1001,7 +1001,7 @@ paths:
       - slivers
       summary: Create/Update Sliver
       description: Create/Update Sliver.
-      operationId: slivers_post
+      operationId: slivers_slice_id_sliver_id_post
       parameters:
       - name: slice_id
         in: path
@@ -1907,7 +1907,7 @@ paths:
       - slices
       summary: Create/Update a slice
       description: Create a Slice
-      operationId: slices_post
+      operationId: slices_slice_id_post
       parameters:
       - name: slice_id
         in: path

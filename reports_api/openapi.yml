@@ -51,7 +51,6 @@ paths:
         - users
       summary: Get users
       description: Retrieve a list of users with optional filters.
-      operationId: users_get
       security:
         - bearerAuth: []
       parameters:
@@ -128,7 +127,6 @@ paths:
         - sites
       summary: Get sites
       description: Retrieve a list of sites.
-      operationId: sites_get
       security:
         - bearerAuth: []
       responses:
@@ -175,7 +173,6 @@ paths:
         - hosts
       summary: Get hosts
       description: Retrieve a list of hosts.
-      operationId: hosts_get
       security:
         - bearerAuth: []
       parameters: 
@@ -224,7 +221,6 @@ paths:
         - slivers
       summary: Get slivers
       description: Retrieve a list of slivers with optional filters.
-      operationId: slivers_get
       security:
         - bearerAuth: []
       parameters:
@@ -299,7 +295,6 @@ paths:
         - slivers
       summary: Create/Update Sliver
       description: Create/Update Sliver.
-      operationId: slivers_post
       security:
         - bearerAuth: []
       parameters:
@@ -363,7 +358,6 @@ paths:
       - projects
       summary: "Retrieve a list of projects"
       description: "Returns a paginated list of projects with their UUIDs."
-      operationId: projects_get
       security:
         - bearerAuth: []       
       parameters:
@@ -440,7 +434,6 @@ paths:
         - slices
       summary: Get slices
       description: Retrieve a list of slices with optional filters.
-      operationId: slices_get
       security:
         - bearerAuth: []
       parameters:
@@ -515,7 +508,6 @@ paths:
         - slices
       summary: Create/Update a slice
       description: Create a Slice
-      operationId: slices_post
       security:
         - bearerAuth: []
       parameters:

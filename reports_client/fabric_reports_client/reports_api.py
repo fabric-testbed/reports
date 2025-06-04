@@ -446,7 +446,7 @@ class ReportsApi:
                        exclude_user_id: list[str] = None, exclude_user_email: list[str] = None,
                        exclude_project_id: list[str] = None, exclude_site: list[str] = None, facility: list[str] = None,
                        exclude_host: list[str] = None, exclude_slice_state: list[str] = None,
-                     exclude_sliver_state: list[str] = None, page=0, per_page=1000, fetch_all=True):
+                        exclude_sliver_state: list[str] = None, page=0, per_page=1000, fetch_all=True):
         """
         Fetch projects with optional filters. Supports fetching all pages or just one.
 
