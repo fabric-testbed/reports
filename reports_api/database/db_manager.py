@@ -728,7 +728,22 @@ class DatabaseManager:
                     time_filter = self.__build_time_filter(Slices, start_time, end_time)
                     if time_filter is not None:
                         filters.append(time_filter)
-
+                # Time filter directly on Projects (when no slices/slivers involved)
+                if start_time and end_time:
+                    filters.append(or_(
+                        and_(Projects.created_date is not None, Projects.created_date.between(start_time, end_time)),
+                        and_(Projects.expires_on is not None, Projects.expires_on.between(start_time, end_time))
+                    ))
+                elif start_time:
+                    filters.append(or_(
+                        and_(Projects.created_date is not None, Projects.created_date >= start_time),
+                        and_(Projects.expires_on is not None, Projects.expires_on >= start_time)
+                    ))
+                elif end_time:
+                    filters.append(or_(
+                        and_(Projects.created_date is not None, Projects.created_date <= end_time),
+                        and_(Projects.expires_on is not None, Projects.expires_on <= end_time)
+                    ))
             if project_id:
                 filters.append(Projects.project_uuid.in_(project_id))
 
@@ -991,6 +1006,9 @@ class DatabaseManager:
             if project_id:
                 if requires_slice or requires_sliver:
                     query = query.join(Projects, Slices.project_id == Projects.id)
+                else:
+                    query = query.join(Membership, Membership.user_id == Users.id) \
+                        .join(Projects, Projects.id == Membership.project_id)
 
             # Only join Slivers if needed
             if requires_sliver:
@@ -1009,11 +1027,21 @@ class DatabaseManager:
             filters = []
 
             # Time range filter
-            if (requires_slice or requires_sliver) and (start_time or end_time):
-                time_filter = self.__build_time_filter(Slices, start_time, end_time)
-                if time_filter is not None:
-                    filters.append(time_filter)
+            if start_time or end_time:
+                if requires_slice or requires_sliver:
+                    time_filter = self.__build_time_filter(Slices, start_time, end_time)
+                    if time_filter is not None:
+                        filters.append(time_filter)
 
+                # Apply time-based filter on Membership if time window is specified
+                st = start_time or (end_time - timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS))
+                et = end_time or (start_time + timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS))
+                filters.append(
+                    or_(
+                        and_(Membership.start_time <= et, Membership.end_time >= st),  # overlapping window
+                        and_(Membership.start_time <= et, Membership.end_time.is_(None))  # still active
+                    )
+                )
             # User filters
             if user_email:
                 filters.append(Users.user_email.in_(user_email))
