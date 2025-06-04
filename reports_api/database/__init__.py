@@ -75,7 +75,7 @@ class Membership(Base):
 
     __table_args__ = (
         # Optional: enforce uniqueness of membership period if needed
-        UniqueConstraint('user_id', 'project_id', 'start_time'),
+        UniqueConstraint('user_id', 'project_id', 'membership_type', 'start_time',),
     )
 
 

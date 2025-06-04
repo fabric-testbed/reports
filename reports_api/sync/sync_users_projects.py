@@ -53,7 +53,7 @@ class UserSyncScript:
 
     def fetch_user_list(self):
         try:
-            url = f"{self.endpoint}/people"
+            url = f"{self.endpoint}/core-api-metrics/people"
             resp = requests.get(url, headers=self.headers, timeout=15)
             resp.raise_for_status()
             return resp.json().get("results", [])
@@ -64,7 +64,7 @@ class UserSyncScript:
 
     def fetch_user_detail(self, uuid):
         try:
-            url = f"{self.endpoint}/people-details/{uuid}"
+            url = f"{self.endpoint}/core-api-metrics/people-details/{uuid}"
             resp = requests.get(url, headers=self.headers, timeout=15)
             resp.raise_for_status()
             return resp.json().get("results", [])[0]
@@ -75,7 +75,7 @@ class UserSyncScript:
 
     def fetch_memberships_for_user(self, uuid: str):
         try:
-            url = f"{self.endpoint}/events/people-membership/{uuid}"
+            url = f"{self.endpoint}/core-api-metrics/events/people-membership/{uuid}"
             resp = requests.get(url, headers=self.headers, timeout=15)
             resp.raise_for_status()
             return resp.json().get("results", [])
@@ -151,7 +151,7 @@ class ProjectSyncScript:
 
     def fetch_project_list(self):
         try:
-            url = f"{self.endpoint}/projects"
+            url = f"{self.endpoint}/core-api-metrics/projects"
             resp = requests.get(url, headers=self.headers, timeout=15)
             resp.raise_for_status()
             return resp.json().get("results", [])
@@ -162,7 +162,7 @@ class ProjectSyncScript:
 
     def fetch_project_detail(self, uuid):
         try:
-            url = f"{self.endpoint}/projects-details/{uuid}"
+            url = f"{self.endpoint}/core-api-metrics/projects-details/{uuid}"
             resp = requests.get(url, headers=self.headers, timeout=15)
             resp.raise_for_status()
             return resp.json().get("results", [])[0]
