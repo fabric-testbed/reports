@@ -8,7 +8,7 @@ from typing import List, Dict  # noqa: F401
 from reports_api.swagger_server.models.base_model_ import Model
 from reports_api.swagger_server.models.user_projects import UserProjects  # noqa: F401,E501
 from reports_api.swagger_server.models.user_slices import UserSlices  # noqa: F401,E501
-from swagger_server import util
+from reports_api.swagger_server import util
 
 
 class User(Model):

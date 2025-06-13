@@ -6,8 +6,11 @@ from datetime import date, datetime  # noqa: F401
 from typing import List, Dict  # noqa: F401
 
 from reports_api.swagger_server.models.base_model_ import Model
-from reports_api.swagger_server.models.project import Project  # noqa: F401,E501
 from reports_api.swagger_server import util
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from reports_api.swagger_server.models.project import Project
 
 
 class UserProjects(Model):
@@ -15,7 +18,7 @@ class UserProjects(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, total: int=None, data: List[Project]=None):  # noqa: E501
+    def __init__(self, total: int=None, data: List['Project']=None):  # noqa: E501
         """UserProjects - a model defined in Swagger
 
         :param total: The total of this UserProjects.  # noqa: E501
@@ -25,7 +28,7 @@ class UserProjects(Model):
         """
         self.swagger_types = {
             'total': int,
-            'data': List[Project]
+            'data': List['Project']
         }
 
         self.attribute_map = {
@@ -68,7 +71,7 @@ class UserProjects(Model):
         self._total = total
 
     @property
-    def data(self) -> List[Project]:
+    def data(self) -> List['Project']:
         """Gets the data of this UserProjects.
 
 
@@ -78,7 +81,7 @@ class UserProjects(Model):
         return self._data
 
     @data.setter
-    def data(self, data: List[Project]):
+    def data(self, data: List['Project']):
         """Sets the data of this UserProjects.
 
 
