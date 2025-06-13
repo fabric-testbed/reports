@@ -480,7 +480,7 @@ paths:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       security:
       - bearerAuth: []
-      x-openapi-router-controller: swagger_server.controllers.users_controller
+      x-openapi-router-controller: reports_api.swagger_server.controllers.users_controller
   /users/{uuid}:
     get:
       tags:
@@ -536,7 +536,7 @@ paths:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       security:
       - bearerAuth: []
-      x-openapi-router-controller: swagger_server.controllers.users_controller
+      x-openapi-router-controller: reports_api.swagger_server.controllers.users_controller
   /users/memberships:
     get:
       tags:
@@ -704,7 +704,7 @@ paths:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       security:
       - bearerAuth: []
-      x-openapi-router-controller: swagger_server.controllers.users_controller
+      x-openapi-router-controller: reports_api.swagger_server.controllers.users_controller
   /sites:
     get:
       tags:
@@ -1725,7 +1725,7 @@ paths:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       security:
       - bearerAuth: []
-      x-openapi-router-controller: swagger_server.controllers.projects_controller
+      x-openapi-router-controller: reports_api.swagger_server.controllers.projects_controller
   /projects/{uuid}:
     get:
       tags:
@@ -1781,7 +1781,7 @@ paths:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       security:
       - bearerAuth: []
-      x-openapi-router-controller: swagger_server.controllers.projects_controller
+      x-openapi-router-controller: reports_api.swagger_server.controllers.projects_controller
   /projects/memberships:
     get:
       tags:
@@ -1889,7 +1889,7 @@ paths:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       security:
       - bearerAuth: []
-      x-openapi-router-controller: swagger_server.controllers.projects_controller
+      x-openapi-router-controller: reports_api.swagger_server.controllers.projects_controller
   /slices:
     get:
       tags:
