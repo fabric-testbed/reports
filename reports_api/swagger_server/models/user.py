@@ -6,8 +6,9 @@ from datetime import date, datetime  # noqa: F401
 from typing import List, Dict  # noqa: F401
 
 from reports_api.swagger_server.models.base_model_ import Model
+from reports_api.swagger_server.models.user_projects import UserProjects  # noqa: F401,E501
 from reports_api.swagger_server.models.user_slices import UserSlices  # noqa: F401,E501
-from reports_api.swagger_server import util
+from swagger_server import util
 
 
 class User(Model):
@@ -15,7 +16,7 @@ class User(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, user_id: str=None, user_email: str=None, active: bool=None, user_name: str=None, affiliation: str=None, registered_on: datetime=None, last_updated: datetime=None, google_scholar: str=None, scopus: str=None, slices: UserSlices=None):  # noqa: E501
+    def __init__(self, user_id: str=None, user_email: str=None, active: bool=None, user_name: str=None, affiliation: str=None, registered_on: datetime=None, last_updated: datetime=None, google_scholar: str=None, scopus: str=None, projects: UserProjects=None, slices: UserSlices=None):  # noqa: E501
         """User - a model defined in Swagger
 
         :param user_id: The user_id of this User.  # noqa: E501
@@ -36,6 +37,8 @@ class User(Model):
         :type google_scholar: str
         :param scopus: The scopus of this User.  # noqa: E501
         :type scopus: str
+        :param projects: The projects of this User.  # noqa: E501
+        :type projects: UserProjects
         :param slices: The slices of this User.  # noqa: E501
         :type slices: UserSlices
         """
@@ -49,6 +52,7 @@ class User(Model):
             'last_updated': datetime,
             'google_scholar': str,
             'scopus': str,
+            'projects': UserProjects,
             'slices': UserSlices
         }
 
@@ -62,6 +66,7 @@ class User(Model):
             'last_updated': 'last_updated',
             'google_scholar': 'google_scholar',
             'scopus': 'scopus',
+            'projects': 'projects',
             'slices': 'slices'
         }
         self._user_id = user_id
@@ -73,6 +78,7 @@ class User(Model):
         self._last_updated = last_updated
         self._google_scholar = google_scholar
         self._scopus = scopus
+        self._projects = projects
         self._slices = slices
 
     @classmethod
@@ -288,6 +294,27 @@ class User(Model):
         """
 
         self._scopus = scopus
+
+    @property
+    def projects(self) -> UserProjects:
+        """Gets the projects of this User.
+
+
+        :return: The projects of this User.
+        :rtype: UserProjects
+        """
+        return self._projects
+
+    @projects.setter
+    def projects(self, projects: UserProjects):
+        """Sets the projects of this User.
+
+
+        :param projects: The projects of this User.
+        :type projects: UserProjects
+        """
+
+        self._projects = projects
 
     @property
     def slices(self) -> UserSlices:

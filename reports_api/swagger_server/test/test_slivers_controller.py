@@ -56,8 +56,8 @@ class TestSliversController(BaseTestCase):
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
-    def test_slivers_post(self):
-        """Test case for slivers_post
+    def test_slivers_slice_id_sliver_id_post(self):
+        """Test case for slivers_slice_id_sliver_id_post
 
         Create/Update Sliver
         """

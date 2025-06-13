@@ -80,3 +80,49 @@ def users_get(start_time=None, end_time=None, user_id=None, user_email=None, pro
                         exclude_slice_state=exclude_slice_state, exclude_sliver_state=exclude_sliver_state,
                         project_type=project_type, active=active, exclude_project_type=exclude_project_type)
 
+def users_memberships_get(start_time=None, end_time=None, user_id=None, user_email=None, exclude_user_id=None, exclude_user_email=None, project_type=None, exclude_project_type=None, active=None, page=None, per_page=None):  # noqa: E501
+    """Get users
+
+    Retrieve a list of users with optional filters. # noqa: E501
+
+    :param start_time: Filter by start time (inclusive)
+    :type start_time: str
+    :param end_time: Filter by end time (inclusive)
+    :type end_time: str
+    :param user_id: Filter by user uuid
+    :type user_id: List[str]
+    :param user_email: Filter by user email
+    :type user_email: List[str]
+    :param exclude_user_id: Exclude Users by IDs
+    :type exclude_user_id: List[str]
+    :param exclude_user_email: Exclude Users by emails
+    :type exclude_user_email: List[str]
+    :param project_type: Filter by project type; allowed values research, education, maintenance, tutorial
+    :type project_type: List[str]
+    :param exclude_project_type: Exclude by project type; allowed values research, education, maintenance, tutorial
+    :type exclude_project_type: List[str]
+    :param active: 
+    :type active: bool
+    :param page: Page number for pagination. Default is 0.
+    :type page: int
+    :param per_page: Number of records per page. Default is 200.
+    :type per_page: int
+
+    :rtype: Users
+    """
+    start_time = util.deserialize_datetime(start_time)
+    end_time = util.deserialize_datetime(end_time)
+    return 'do some magic!'
+
+
+def users_uuid_get(uuid):  # noqa: E501
+    """Get specific user
+
+    Returns a user identified by uuid. # noqa: E501
+
+    :param uuid: User identified by universally unique identifier
+    :type uuid: str
+
+    :rtype: Users
+    """
+    return 'do some magic!'

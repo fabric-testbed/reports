@@ -59,6 +59,40 @@ class TestUsersController(BaseTestCase):
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
+    def test_users_memberships_get(self):
+        """Test case for users_memberships_get
+
+        Get users
+        """
+        query_string = [('start_time', '2013-10-20T19:20:30+01:00'),
+                        ('end_time', '2013-10-20T19:20:30+01:00'),
+                        ('user_id', 'user_id_example'),
+                        ('user_email', 'user_email_example'),
+                        ('exclude_user_id', 'exclude_user_id_example'),
+                        ('exclude_user_email', 'exclude_user_email_example'),
+                        ('project_type', 'project_type_example'),
+                        ('exclude_project_type', 'exclude_project_type_example'),
+                        ('active', true),
+                        ('page', 0),
+                        ('per_page', 200)]
+        response = self.client.open(
+            '/RENCI3/analytics/1.0.0/users/memberships',
+            method='GET',
+            query_string=query_string)
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
+    def test_users_uuid_get(self):
+        """Test case for users_uuid_get
+
+        Get specific user
+        """
+        response = self.client.open(
+            '/RENCI3/analytics/1.0.0/users/{uuid}'.format(uuid='uuid_example'),
+            method='GET')
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
 
 if __name__ == '__main__':
     import unittest

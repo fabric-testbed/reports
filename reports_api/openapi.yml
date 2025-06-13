@@ -20,10 +20,10 @@ tags:
   - name: sites
     description: Sites in FABRIC
   - name: hosts
-    description: Hosts in FABRIC    
+    description: Hosts in FABRIC
   - name: default
-    description: Default information 
-    
+    description: Default information
+
 paths:
   /version:
     get:
@@ -82,8 +82,8 @@ paths:
         - $ref: '#/components/parameters/projectType'
         - $ref: '#/components/parameters/excludeProjectType'
         - $ref: '#/components/parameters/active'
-        - $ref: '#/components/parameters/page'     
-        - $ref: '#/components/parameters/perPage'     
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/perPage'
       responses:
         "200":
           description: OK
@@ -120,7 +120,116 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/status_500_internal_server_error'          
+                $ref: '#/components/schemas/status_500_internal_server_error'
+  /users/{uuid}:
+    get:
+      tags:
+        - users
+      summary: Get specific user
+      description: Returns a user identified by uuid.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: uuid
+          in: path
+          description: User identified by universally unique identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/users"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+  /users/memberships:
+    get:
+      tags:
+        - users
+      summary: Get users
+      description: Retrieve a list of users with optional filters.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/startTime'
+        - $ref: '#/components/parameters/endTime'
+        - $ref: '#/components/parameters/userId'
+        - $ref: '#/components/parameters/userEmail'
+        - $ref: '#/components/parameters/excludeUserId'
+        - $ref: '#/components/parameters/excludeUserEmail'
+        - $ref: '#/components/parameters/projectType'
+        - $ref: '#/components/parameters/excludeProjectType'
+        - $ref: '#/components/parameters/active'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/perPage'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/users"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
   /sites:
     get:
       tags:
@@ -165,8 +274,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/status_500_internal_server_error'     
-          
+                $ref: '#/components/schemas/status_500_internal_server_error'
+
   /hosts:
     get:
       tags:
@@ -175,7 +284,7 @@ paths:
       description: Retrieve a list of hosts.
       security:
         - bearerAuth: []
-      parameters: 
+      parameters:
         - $ref: '#/components/parameters/site'
         - $ref: '#/components/parameters/excludeSite'
       responses:
@@ -214,7 +323,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/status_500_internal_server_error'           
+                $ref: '#/components/schemas/status_500_internal_server_error'
   /slivers:
     get:
       tags:
@@ -248,9 +357,9 @@ paths:
         - $ref: '#/components/parameters/excludeSite'
         - $ref: '#/components/parameters/excludeHost'
         - $ref: '#/components/parameters/excludeSliceState'
-        - $ref: '#/components/parameters/excludeSliverState'        
-        - $ref: '#/components/parameters/page'     
-        - $ref: '#/components/parameters/perPage'    
+        - $ref: '#/components/parameters/excludeSliverState'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/perPage'
       responses:
         "200":
           description: OK
@@ -288,7 +397,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/status_500_internal_server_error'
-                
+
   /slivers/{slice_id}/{sliver_id}:
     post:
       tags:
@@ -300,20 +409,20 @@ paths:
       parameters:
         - name: slice_id
           in: path
-          required: true  
+          required: true
           schema:
             type: string
             format: uuid
             example: "a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f"
         - name: sliver_id
           in: path
-          required: true  
+          required: true
           schema:
             type: string
             format: uuid
-            example: "a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f"          
+            example: "a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f"
       requestBody:
-        $ref: '#/components/requestBodies/payload_sliver'        
+        $ref: '#/components/requestBodies/payload_sliver'
       responses:
         "200":
           description: OK
@@ -350,8 +459,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/status_500_internal_server_error'                
-  
+                $ref: '#/components/schemas/status_500_internal_server_error'
+
   /projects:
     get:
       tags:
@@ -359,7 +468,7 @@ paths:
       summary: "Retrieve a list of projects"
       description: "Returns a paginated list of projects with their UUIDs."
       security:
-        - bearerAuth: []       
+        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/startTime'
         - $ref: '#/components/parameters/endTime'
@@ -385,12 +494,118 @@ paths:
         - $ref: '#/components/parameters/excludeSite'
         - $ref: '#/components/parameters/excludeHost'
         - $ref: '#/components/parameters/excludeSliceState'
-        - $ref: '#/components/parameters/excludeSliverState'        
+        - $ref: '#/components/parameters/excludeSliverState'
         - $ref: '#/components/parameters/projectType'
         - $ref: '#/components/parameters/excludeProjectType'
         - $ref: '#/components/parameters/active'
-        - $ref: '#/components/parameters/page'     
-        - $ref: '#/components/parameters/perPage'      
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/perPage'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/projects"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+
+  /projects/{uuid}:
+    get:
+      tags:
+      - projects
+      summary: "Retrieve a project"
+      description: "Returns a project identified by uuid."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: uuid
+          in: path
+          description: Project identified by universally unique identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/projects"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+
+  /projects/memberships:
+    get:
+      tags:
+      - projects
+      summary: "Retrieve project membership"
+      description: "Returns a paginated list of projects including the users."
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/startTime'
+        - $ref: '#/components/parameters/endTime'
+        - $ref: '#/components/parameters/projectId'
+        - $ref: '#/components/parameters/excludeProjectId'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/perPage'
       responses:
         "200":
           description: OK
@@ -454,16 +669,16 @@ paths:
         - $ref: '#/components/parameters/ipSubnet'
         - $ref: '#/components/parameters/facility'
         - $ref: '#/components/parameters/site'
-        - $ref: '#/components/parameters/host'     
+        - $ref: '#/components/parameters/host'
         - $ref: '#/components/parameters/excludeUserId'
         - $ref: '#/components/parameters/excludeUserEmail'
         - $ref: '#/components/parameters/excludeProjectId'
         - $ref: '#/components/parameters/excludeSite'
         - $ref: '#/components/parameters/excludeHost'
         - $ref: '#/components/parameters/excludeSliceState'
-        - $ref: '#/components/parameters/excludeSliverState'        
-        - $ref: '#/components/parameters/page'     
-        - $ref: '#/components/parameters/perPage'    
+        - $ref: '#/components/parameters/excludeSliverState'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/perPage'
       responses:
         "200":
           description: OK
@@ -513,7 +728,7 @@ paths:
       parameters:
         - name: slice_id
           in: path
-          required: true  
+          required: true
           schema:
             type: string
             format: uuid
@@ -560,11 +775,11 @@ paths:
 
 components:
   securitySchemes:
-    bearerAuth:     
+    bearerAuth:
       type: http
       scheme: bearer
-      bearerFormat: JWT  
-      
+      bearerFormat: JWT
+
   parameters:
     startTime:
       name: start_time
@@ -701,7 +916,7 @@ components:
           type: string
           enum: [VM, Switch, Facility, L2STS, L2PTP, L2Bridge, FABNetv4, FABNetv6, PortMirror, L3VPN, FABNetv4Ext, FABNetv6Ext]
       description: Filter by sliver type; allowed values VM, Switch, Facility, L2STS, L2PTP, L2Bridge, FABNetv4, FABNetv6, PortMirror, L3VPN, FABNetv4Ext, FABNetv6Ext
-      
+
     sliverState:
       name: sliver_state
       in: query
@@ -712,7 +927,7 @@ components:
           type: string
           enum: [Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail]
       description: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
-    
+
     projectType:
       name: project_type
       in: query
@@ -723,7 +938,7 @@ components:
           type: string
           enum: [research, education, maintenance, tutorial]
       description: Filter by project type; allowed values research, education, maintenance, tutorial
-      
+
     excludeProjectType:
       name: exclude_project_type
       in: query
@@ -734,7 +949,7 @@ components:
           type: string
           enum: [research, education, maintenance, tutorial]
       description: Exclude by project type; allowed values research, education, maintenance, tutorial
-      
+
     active:
       name: active
       in: query
@@ -752,8 +967,8 @@ components:
         items:
           type: string
           enum: [Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail]
-      description: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail      
-      
+      description: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
+
     sliceState:
       name: slice_state
       in: query
@@ -775,7 +990,7 @@ components:
           type: string
           enum: [Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK]
       description: Filter by slice state; allowed values Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK
-      
+
     site:
       name: site
       in: query
@@ -785,7 +1000,7 @@ components:
         items:
           type: string
       description: Filter by site
-      
+
     facility:
       name: facility
       in: query
@@ -795,7 +1010,7 @@ components:
         items:
           type: string
       description: Filter by facility
-      
+
     excludeSite:
       name: exclude_site
       in: query
@@ -835,7 +1050,7 @@ components:
         items:
           type: string
       description: Filter by specified IP subnet
-      
+
     bdf:
       name: bdf
       in: query
@@ -845,7 +1060,7 @@ components:
         items:
           type: string
       description: Filter by specified BDF (Bus:Device.Function) of interfaces/components
-    
+
     vlan:
       name: vlan
       in: query
@@ -855,7 +1070,7 @@ components:
         items:
           type: string
       description: Filter by VLAN associated with their sliver interfaces.
-      
+
     page:
       name: page
       in: query
@@ -864,7 +1079,7 @@ components:
         type: integer
         default: 0
       description: "Page number for pagination. Default is 0."
-      
+
     perPage:
       name: per_page
       in: query
@@ -872,7 +1087,7 @@ components:
       schema:
         type: integer
         default: 200
-      description: "Number of records per page. Default is 200." 
+      description: "Number of records per page. Default is 200."
 
   schemas:
     sites:
@@ -884,20 +1099,20 @@ components:
           data:
             type: array
             items:
-              $ref: '#/components/schemas/site' 
+              $ref: '#/components/schemas/site'
 
     site:
-      type: object    
+      type: object
       properties:
         name:
           type: string
         hosts:
           type: array
           items:
-            $ref: '#/components/schemas/host' 
+            $ref: '#/components/schemas/host'
 
     host:
-      type: object    
+      type: object
       properties:
         name:
           type: string
@@ -910,10 +1125,10 @@ components:
           data:
             type: array
             items:
-              $ref: '#/components/schemas/project' 
+              $ref: '#/components/schemas/project'
 
     project:
-      type: object    
+      type: object
       properties:
         project_id:
           type: string
@@ -942,14 +1157,14 @@ components:
         last_updated:
           type: string
           format: date-time
-          description: Timestamp of the last update to the project record          
+          description: Timestamp of the last update to the project record
         users:
           type: object
           properties:
             total:
               type: integer
             data:
-              type: array        
+              type: array
               items:
                 $ref: '#/components/schemas/user'
 
@@ -962,9 +1177,9 @@ components:
           data:
             type: array
             items:
-              $ref: '#/components/schemas/user' 
+              $ref: '#/components/schemas/user'
     user:
-      type: object    
+      type: object
       properties:
         user_id:
           type: string
@@ -997,7 +1212,16 @@ components:
         scopus:
           type: string
           example: "https://www.scopus.com/authid/detail.uri?authorId=9876543210"
-          description: URL to the user's Scopus profile          
+          description: URL to the user's Scopus profile
+        projects:
+          type: object
+          properties:
+            total:
+              type: integer
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/project'
         slices:
           type: object
           properties:
@@ -1016,18 +1240,18 @@ components:
           data:
             type: array
             items:
-              $ref: '#/components/schemas/slice' 
+              $ref: '#/components/schemas/slice'
     slice:
       type: object
       properties:
         project_id:
           type: string
         project_name:
-          type: string             
+          type: string
         user_id:
           type: string
         user_email:
-          type: string          
+          type: string
         slice_id:
           type: string
         slice_name:
@@ -1058,22 +1282,22 @@ components:
           data:
             type: array
             items:
-              $ref: '#/components/schemas/sliver' 
+              $ref: '#/components/schemas/sliver'
     sliver:
       type: object
       properties:
         project_id:
           type: string
         project_name:
-          type: string          
+          type: string
         slice_id:
           type: string
         slice_name:
-          type: string          
+          type: string
         user_id:
           type: string
         user_email:
-          type: string          
+          type: string
         host:
           type: string
         site:
@@ -1081,7 +1305,7 @@ components:
         sliver_id:
           type: string
         node_id:
-          type: string          
+          type: string
         state:
           type: string
         sliver_type:
@@ -1123,7 +1347,7 @@ components:
             data:
               type: array
               items:
-                $ref: '#/components/schemas/interface'            
+                $ref: '#/components/schemas/interface'
     component:
       type: object
       properties:
@@ -1132,7 +1356,7 @@ components:
         node_id:
           type: string
         component_node_id:
-          type: string          
+          type: string
         type:
           type: string
         model:
@@ -1147,18 +1371,18 @@ components:
         interface_id:
           type: string
         site:
-          type: string          
+          type: string
         vlan:
           type: string
         bdf:
-          type: string    
+          type: string
         local_name:
           type: string
         device_name:
           type: string
         name:
           type: string
-          
+
     status_200_ok_paginated:
       type: object
       properties:
@@ -1305,7 +1529,7 @@ components:
           type: string
       example:
         details: details
-        message: No Content                 
+        message: No Content
     status_200_ok_no_content:
       type: object
       properties:
@@ -1321,7 +1545,7 @@ components:
           default: 1
         status:
           type: integer
-          default: 200            
+          default: 200
     status_200_ok_single:
       type: object
       properties:
@@ -1332,7 +1556,7 @@ components:
           type: integer
           default: 200
         type:
-          type: string            
+          type: string
     version:
       type: object
       allOf:

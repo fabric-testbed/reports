@@ -33,6 +33,7 @@ from reports_api.swagger_server.models.status404_not_found_errors import Status4
 from reports_api.swagger_server.models.status500_internal_server_error import Status500InternalServerError
 from reports_api.swagger_server.models.status500_internal_server_error_errors import Status500InternalServerErrorErrors
 from reports_api.swagger_server.models.user import User
+from reports_api.swagger_server.models.user_projects import UserProjects
 from reports_api.swagger_server.models.user_slices import UserSlices
 from reports_api.swagger_server.models.users import Users
 from reports_api.swagger_server.models.version import Version

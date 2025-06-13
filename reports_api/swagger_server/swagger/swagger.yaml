@@ -480,7 +480,231 @@ paths:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       security:
       - bearerAuth: []
-      x-openapi-router-controller: reports_api.swagger_server.controllers.users_controller
+      x-openapi-router-controller: swagger_server.controllers.users_controller
+  /users/{uuid}:
+    get:
+      tags:
+      - users
+      summary: Get specific user
+      description: Returns a user identified by uuid.
+      operationId: users_uuid_get
+      parameters:
+      - name: uuid
+        in: path
+        description: User identified by universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/users'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      security:
+      - bearerAuth: []
+      x-openapi-router-controller: swagger_server.controllers.users_controller
+  /users/memberships:
+    get:
+      tags:
+      - users
+      summary: Get users
+      description: Retrieve a list of users with optional filters.
+      operationId: users_memberships_get
+      parameters:
+      - name: start_time
+        in: query
+        description: Filter by start time (inclusive)
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+      - name: end_time
+        in: query
+        description: Filter by end time (inclusive)
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+      - name: user_id
+        in: query
+        description: Filter by user uuid
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
+      - name: user_email
+        in: query
+        description: Filter by user email
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: exclude_user_id
+        in: query
+        description: Exclude Users by IDs
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
+      - name: exclude_user_email
+        in: query
+        description: Exclude Users by emails
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: project_type
+        in: query
+        description: "Filter by project type; allowed values research, education,\
+          \ maintenance, tutorial"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - research
+            - education
+            - maintenance
+            - tutorial
+      - name: exclude_project_type
+        in: query
+        description: "Exclude by project type; allowed values research, education,\
+          \ maintenance, tutorial"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - research
+            - education
+            - maintenance
+            - tutorial
+      - name: active
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+          description: Filter by active state of user or project
+      - name: page
+        in: query
+        description: Page number for pagination. Default is 0.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 0
+      - name: per_page
+        in: query
+        description: Number of records per page. Default is 200.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 200
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/users'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      security:
+      - bearerAuth: []
+      x-openapi-router-controller: swagger_server.controllers.users_controller
   /sites:
     get:
       tags:
@@ -1501,7 +1725,171 @@ paths:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       security:
       - bearerAuth: []
-      x-openapi-router-controller: reports_api.swagger_server.controllers.projects_controller
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/{uuid}:
+    get:
+      tags:
+      - projects
+      summary: Retrieve a project
+      description: Returns a project identified by uuid.
+      operationId: projects_uuid_get
+      parameters:
+      - name: uuid
+        in: path
+        description: Project identified by universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/projects'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      security:
+      - bearerAuth: []
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/memberships:
+    get:
+      tags:
+      - projects
+      summary: Retrieve project membership
+      description: Returns a paginated list of projects including the users.
+      operationId: projects_memberships_get
+      parameters:
+      - name: start_time
+        in: query
+        description: Filter by start time (inclusive)
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+      - name: end_time
+        in: query
+        description: Filter by end time (inclusive)
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+      - name: project_id
+        in: query
+        description: Filter by project uuid
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
+      - name: exclude_project_id
+        in: query
+        description: Exclude projects
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
+      - name: page
+        in: query
+        description: Page number for pagination. Default is 0.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 0
+      - name: per_page
+        in: query
+        description: Number of records per page. Default is 200.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 200
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/projects'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      security:
+      - bearerAuth: []
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
   /slices:
     get:
       tags:
@@ -2074,6 +2462,8 @@ components:
           type: string
           description: URL to the user's Scopus profile
           example: https://www.scopus.com/authid/detail.uri?authorId=9876543210
+        projects:
+          $ref: '#/components/schemas/user_projects'
         slices:
           $ref: '#/components/schemas/user_slices'
     slices:
@@ -2419,6 +2809,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/user'
+    user_projects:
+      type: object
+      properties:
+        total:
+          type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/project'
     user_slices:
       type: object
       properties:

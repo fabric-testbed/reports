@@ -728,22 +728,23 @@ class DatabaseManager:
                     time_filter = self.__build_time_filter(Slices, start_time, end_time)
                     if time_filter is not None:
                         filters.append(time_filter)
-                # Time filter directly on Projects (when no slices/slivers involved)
-                if start_time and end_time:
-                    filters.append(or_(
-                        and_(Projects.created_date is not None, Projects.created_date.between(start_time, end_time)),
-                        and_(Projects.expires_on is not None, Projects.expires_on.between(start_time, end_time))
-                    ))
-                elif start_time:
-                    filters.append(or_(
-                        and_(Projects.created_date is not None, Projects.created_date >= start_time),
-                        and_(Projects.expires_on is not None, Projects.expires_on >= start_time)
-                    ))
-                elif end_time:
-                    filters.append(or_(
-                        and_(Projects.created_date is not None, Projects.created_date <= end_time),
-                        and_(Projects.expires_on is not None, Projects.expires_on <= end_time)
-                    ))
+                else:
+                    # Time filter directly on Projects (when no slices/slivers involved)
+                    if start_time and end_time:
+                        filters.append(or_(
+                            and_(Projects.created_date is not None, Projects.created_date.between(start_time, end_time)),
+                            and_(Projects.expires_on is not None, Projects.expires_on.between(start_time, end_time))
+                        ))
+                    elif start_time:
+                        filters.append(or_(
+                            and_(Projects.created_date is not None, Projects.created_date >= start_time),
+                            and_(Projects.expires_on is not None, Projects.expires_on >= start_time)
+                        ))
+                    elif end_time:
+                        filters.append(or_(
+                            and_(Projects.created_date is not None, Projects.created_date <= end_time),
+                            and_(Projects.expires_on is not None, Projects.expires_on <= end_time)
+                        ))
             if project_id:
                 filters.append(Projects.project_uuid.in_(project_id))
 
@@ -1032,16 +1033,16 @@ class DatabaseManager:
                     time_filter = self.__build_time_filter(Slices, start_time, end_time)
                     if time_filter is not None:
                         filters.append(time_filter)
-
-                # Apply time-based filter on Membership if time window is specified
-                st = start_time or (end_time - timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS))
-                et = end_time or (start_time + timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS))
-                filters.append(
-                    or_(
-                        and_(Membership.start_time <= et, Membership.end_time >= st),  # overlapping window
-                        and_(Membership.start_time <= et, Membership.end_time.is_(None))  # still active
+                else:
+                    # Apply time-based filter on Membership if time window is specified
+                    st = start_time or (end_time - timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS))
+                    et = end_time or (start_time + timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS))
+                    filters.append(
+                        or_(
+                            and_(Membership.start_time <= et, Membership.end_time >= st),  # overlapping window
+                            and_(Membership.start_time <= et, Membership.end_time.is_(None))  # still active
+                        )
                     )
-                )
             # User filters
             if user_email:
                 filters.append(Users.user_email.in_(user_email))
@@ -1110,6 +1111,7 @@ class DatabaseManager:
             if exclude_sliver_state:
                 filters.append(Slivers.state.notin_(exclude_sliver_state))
 
+            self.logger.info(f"KOMAL --- {query}")
             # Apply filters
             if filters:
                 query = query.filter(and_(*filters))
