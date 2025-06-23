@@ -1862,7 +1862,7 @@ class DatabaseManager:
         finally:
             session.close()
 
-    def get_user_memberships(self, start: datetime, end: datetime, user_id: list[str], user_email: list[str],
+    def get_user_memberships(self, start_time: datetime, end_time: datetime, user_id: list[str], user_email: list[str],
                              exclude_user_id: list[str], exclude_user_email: list[str], project_type: list[str],
                              exclude_project_type: list[str], active: bool, page: int = 0, per_page: int = 100):
         session = self.get_session()
@@ -1876,17 +1876,17 @@ class DatabaseManager:
             filters = []
 
             # Membership time overlap
-            if start and end:
+            if start_time and end_time:
                 filters.append(
                     or_(
-                        Membership.start_time == None,  # still active
-                        Membership.start_time <= end
+                        Membership.start_time is None,  # still active
+                        Membership.start_time <= end_time
                     )
                 )
                 filters.append(
                     or_(
-                        Membership.end_time == None,  # ongoing
-                        Membership.end_time >= start
+                        Membership.end_time is None,  # ongoing
+                        Membership.end_time >= start_time
                     )
                 )
 

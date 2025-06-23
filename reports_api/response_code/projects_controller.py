@@ -299,7 +299,7 @@ def projects_memberships_get(start_time=None, end_time=None, project_id=None, ex
         start = datetime.fromisoformat(start_time) if start_time else None
         end = datetime.fromisoformat(end_time) if end_time else None
 
-        projects = db_mgr.get_project_membership(start=start, end=end, project_id=project_id,
+        projects = db_mgr.get_project_membership(start_time=start, end_time=end, project_id=project_id,
                                                  exclude_project_id=exclude_project_id, page=page,
                                                  per_page=per_page)
         for s in projects.get("projects"):
