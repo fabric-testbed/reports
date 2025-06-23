@@ -248,3 +248,121 @@ def projects_post(project_uuid: str,
         logger.error(details)
         logger.error(traceback.format_exc())
         #return cors_500(details=details)
+
+
+def projects_memberships_get(start_time=None, end_time=None, project_id=None, exclude_project_id=None, page=None, per_page=None):  # noqa: E501
+    """Retrieve project membership
+
+    Returns a paginated list of projects including the users. # noqa: E501
+
+    :param start_time: Filter by start time (inclusive)
+    :type start_time: str
+    :param end_time: Filter by end time (inclusive)
+    :type end_time: str
+    :param project_id: Filter by project uuid
+    :type project_id: List[str]
+    :param exclude_project_id: Exclude projects
+    :type exclude_project_id: List[str]
+    :param page: Page number for pagination. Default is 0.
+    :type page: int
+    :param per_page: Number of records per page. Default is 200.
+    :type per_page: int
+
+    :rtype: Projects
+    """
+    logger = GlobalsSingleton.get().log
+    try:
+        logger.debug("Processing - projects_memberships_get")
+        ret_val = authorize()
+
+        if isinstance(ret_val, Response):
+            # This is a 401 Unauthorized response, already constructed
+            return ret_val
+
+        elif isinstance(ret_val, dict):
+            # This was authorized via static bearer token (returns empty dict)
+            logger.debug("Authorized via bearer token")
+
+        elif isinstance(ret_val, FabricToken):
+            # This was authorized via
+            logger.debug("Authorized via Fabric token")
+
+        global_obj = GlobalsSingleton.get()
+        db_mgr = DatabaseManager(user=global_obj.config.database_config.get("db-user"),
+                                 password=global_obj.config.database_config.get("db-password"),
+                                 database=global_obj.config.database_config.get("db-name"),
+                                 db_host=global_obj.config.database_config.get("db-host"),
+                                 logger=logger)
+
+        response = Projects()
+        response.data = []
+        start = datetime.fromisoformat(start_time) if start_time else None
+        end = datetime.fromisoformat(end_time) if end_time else None
+
+        projects = db_mgr.get_project_membership(start=start, end=end, project_id=project_id,
+                                                 exclude_project_id=exclude_project_id, page=page,
+                                                 per_page=per_page)
+        for s in projects.get("projects"):
+            response.data.append(Project.from_dict(s))
+        response.size = len(response.data)
+        response.type = "projects"
+        response.total = projects.get("total")
+        logger.debug("Processed - projects_get")
+        return cors_success_response(response_body=response)
+    except Exception as exc:
+        details = 'Oops! something went wrong with projects_memberships_get(): {0}'.format(exc)
+        logger.error(details)
+        logger.error(traceback.format_exc())
+        return cors_500(details=details)
+
+
+def projects_uuid_get(uuid):  # noqa: E501
+    """Retrieve a project
+
+    Returns a project identified by uuid. # noqa: E501
+
+    :param uuid: Project identified by universally unique identifier
+    :type uuid: str
+
+    :rtype: Projects
+    """
+    logger = GlobalsSingleton.get().log
+    try:
+        logger.debug("Processing - projects_uuid_get")
+        ret_val = authorize()
+
+        if isinstance(ret_val, Response):
+            # This is a 401 Unauthorized response, already constructed
+            return ret_val
+
+        elif isinstance(ret_val, dict):
+            # This was authorized via static bearer token (returns empty dict)
+            logger.debug("Authorized via bearer token")
+
+        elif isinstance(ret_val, FabricToken):
+            # This was authorized via
+            logger.debug("Authorized via Fabric token")
+
+        global_obj = GlobalsSingleton.get()
+        db_mgr = DatabaseManager(user=global_obj.config.database_config.get("db-user"),
+                                 password=global_obj.config.database_config.get("db-password"),
+                                 database=global_obj.config.database_config.get("db-name"),
+                                 db_host=global_obj.config.database_config.get("db-host"),
+                                 logger=logger)
+
+        response = Projects()
+        response.data = []
+
+        projects = db_mgr.get_projects(project_id=[uuid])
+        for s in projects.get("projects"):
+            response.data.append(Project.from_dict(s))
+        response.size = len(response.data)
+        response.type = "projects"
+        response.total = projects.get("total")
+        logger.debug("Processed - projects_get")
+        return cors_success_response(response_body=response)
+    except Exception as exc:
+        details = 'Oops! something went wrong with projects_uuid_get(): {0}'.format(exc)
+        logger.error(details)
+        logger.error(traceback.format_exc())
+        return cors_500(details=details)

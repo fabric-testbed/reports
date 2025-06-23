@@ -31,7 +31,7 @@ from collections import defaultdict
 from contextlib import contextmanager
 from typing import List, Optional, Union
 
-from sqlalchemy import create_engine, and_, or_, func, distinct
+from sqlalchemy import create_engine, and_, or_, func, distinct, not_
 from sqlalchemy.orm import sessionmaker, scoped_session
 from datetime import datetime, timedelta
 
@@ -1859,5 +1859,113 @@ class DatabaseManager:
             project = session.query(Projects).filter(Projects.id == slice_obj.project_id).first()
 
             return True
+        finally:
+            session.close()
+
+    def get_user_memberships(self, start: datetime, end: datetime, user_id: list[str], user_email: list[str],
+                             exclude_user_id: list[str], exclude_user_email: list[str], project_type: list[str],
+                             exclude_project_type: list[str], active: bool, page: int = 0, per_page: int = 100):
+        session = self.get_session()
+        try:
+            query = session.query(Membership, Users, Projects).join(
+                Users, Membership.user_id == Users.id
+            ).join(
+                Projects, Membership.project_id == Projects.id
+            )
+
+            filters = []
+
+            # Membership time overlap
+            if start and end:
+                filters.append(
+                    or_(
+                        Membership.start_time == None,  # still active
+                        Membership.start_time <= end
+                    )
+                )
+                filters.append(
+                    or_(
+                        Membership.end_time == None,  # ongoing
+                        Membership.end_time >= start
+                    )
+                )
+
+            # Include filters
+            if user_id:
+                filters.append(Users.user_uuid.in_(user_id))
+            if user_email:
+                filters.append(Users.user_email.in_(user_email))
+            if project_type:
+                filters.append(Projects.project_type.in_(project_type))
+
+            # Exclude filters
+            if exclude_user_id:
+                filters.append(not_(Users.user_uuid.in_(exclude_user_id)))
+            if exclude_user_email:
+                filters.append(not_(Users.user_email.in_(exclude_user_email)))
+            if exclude_project_type:
+                filters.append(not_(Projects.project_type.in_(exclude_project_type)))
+
+            if active is not None:
+                filters.append(Membership.active == active)
+
+            query = query.filter(and_(*filters))
+            query = query.order_by(Membership.start_time.desc())
+            query = query.offset(page * per_page).limit(per_page)
+
+            result = []
+            for u in query.all():
+                user = DatabaseManager.user_to_dict(u)
+                result.append(user)
+            return result
+        finally:
+            session.close()
+
+    def get_project_membership(self, start_time: datetime, end_time: datetime,
+                               project_id: list[str], exclude_project_id: list[str],
+                               page: int = 0, per_page: int = 100):
+        session = self.get_session()
+        try:
+            query = session.query(Membership, Users, Projects).join(
+                Users, Membership.user_id == Users.id
+            ).join(
+                Projects, Membership.project_id == Projects.id
+            )
+
+            filters = []
+
+            # Filter by time overlap
+            if start_time and end_time:
+                filters.append(
+                    or_(
+                        Membership.start_time == None,
+                        Membership.start_time <= end_time
+                    )
+                )
+                filters.append(
+                    or_(
+                        Membership.end_time == None,
+                        Membership.end_time >= start_time
+                    )
+                )
+
+            # Include project filter
+            if project_id:
+                filters.append(Projects.project_uuid.in_(project_id))
+
+            # Exclude project filter
+            if exclude_project_id:
+                filters.append(not_(Projects.project_uuid.in_(exclude_project_id)))
+
+            query = query.filter(and_(*filters))
+            query = query.order_by(Membership.start_time.desc())
+            query = query.offset(page * per_page).limit(per_page)
+
+            result = []
+            for row in query.all():
+                record = DatabaseManager.project_to_dict(row)
+                result.append(record)
+            return result
+
         finally:
             session.close()

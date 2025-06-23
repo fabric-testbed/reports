@@ -80,6 +80,7 @@ def users_get(start_time=None, end_time=None, user_id=None, user_email=None, pro
                         exclude_slice_state=exclude_slice_state, exclude_sliver_state=exclude_sliver_state,
                         project_type=project_type, active=active, exclude_project_type=exclude_project_type)
 
+
 def users_memberships_get(start_time=None, end_time=None, user_id=None, user_email=None, exclude_user_id=None, exclude_user_email=None, project_type=None, exclude_project_type=None, active=None, page=None, per_page=None):  # noqa: E501
     """Get users
 
@@ -110,9 +111,11 @@ def users_memberships_get(start_time=None, end_time=None, user_id=None, user_ema
 
     :rtype: Users
     """
-    start_time = util.deserialize_datetime(start_time)
-    end_time = util.deserialize_datetime(end_time)
-    return 'do some magic!'
+    return rc.users_memberships_get(start_time=start_time, end_time=end_time, user_id=user_id,
+                                    exclude_user_id=exclude_user_id, user_email=user_email,
+                                    exclude_user_email=exclude_user_email,
+                                    project_type=project_type, exclude_project_type=exclude_project_type,
+                                    active=active, page=page, per_page=per_page)
 
 
 def users_uuid_get(uuid):  # noqa: E501
@@ -125,4 +128,4 @@ def users_uuid_get(uuid):  # noqa: E501
 
     :rtype: Users
     """
-    return 'do some magic!'
+    return rc.users_uuid_get(uuid=uuid)

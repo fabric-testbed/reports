@@ -80,6 +80,7 @@ def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, 
                            exclude_slice_state=exclude_slice_state, exclude_sliver_state=exclude_sliver_state,
                            project_type=project_type, active=active, exclude_project_type=exclude_project_type)
 
+
 def projects_memberships_get(start_time=None, end_time=None, project_id=None, exclude_project_id=None, page=None, per_page=None):  # noqa: E501
     """Retrieve project membership
 
@@ -100,9 +101,8 @@ def projects_memberships_get(start_time=None, end_time=None, project_id=None, ex
 
     :rtype: Projects
     """
-    start_time = util.deserialize_datetime(start_time)
-    end_time = util.deserialize_datetime(end_time)
-    return 'do some magic!'
+    return rc.projects_memberships_get(start_time=start_time, end_time=end_time, project_id=project_id,
+                                       exclude_project_id=exclude_project_id, page=page, per_page=per_page)
 
 
 def projects_uuid_get(uuid):  # noqa: E501
@@ -115,4 +115,4 @@ def projects_uuid_get(uuid):  # noqa: E501
 
     :rtype: Projects
     """
-    return 'do some magic!'
+    return rc.projects_uuid_get(uuid=uuid)
