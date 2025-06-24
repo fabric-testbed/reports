@@ -1862,9 +1862,23 @@ class DatabaseManager:
         finally:
             session.close()
 
-    def get_user_memberships(self, start_time: datetime, end_time: datetime, user_id: list[str], user_email: list[str],
-                             exclude_user_id: list[str], exclude_user_email: list[str], project_type: list[str],
-                             exclude_project_type: list[str], active: bool, page: int = 0, per_page: int = 100):
+    def get_user_memberships(
+            self,
+            start_time: datetime,
+            end_time: datetime,
+            user_id: list[str],
+            user_email: list[str],
+            exclude_user_id: list[str],
+            exclude_user_email: list[str],
+            project_type: list[str] = None,
+            exclude_project_type: list[str] = None,
+            project_active: bool = None,
+            project_expired: bool = None,
+            project_retired: bool = None,
+            active: bool = None,
+            page: int = 0,
+            per_page: int = 100
+    ):
         session = self.get_session()
         try:
             query = session.query(Membership, Users, Projects).join(
@@ -1879,51 +1893,103 @@ class DatabaseManager:
             if start_time and end_time:
                 filters.append(
                     or_(
-                        Membership.start_time is None,  # still active
+                        Membership.start_time is None,
                         Membership.start_time <= end_time
                     )
                 )
                 filters.append(
                     or_(
-                        Membership.end_time is None,  # ongoing
+                        Membership.end_time is None,
                         Membership.end_time >= start_time
                     )
                 )
 
-            # Include filters
+            # User filters
             if user_id:
                 filters.append(Users.user_uuid.in_(user_id))
             if user_email:
                 filters.append(Users.user_email.in_(user_email))
-            if project_type:
-                filters.append(Projects.project_type.in_(project_type))
-
-            # Exclude filters
             if exclude_user_id:
                 filters.append(not_(Users.user_uuid.in_(exclude_user_id)))
             if exclude_user_email:
                 filters.append(not_(Users.user_email.in_(exclude_user_email)))
+
+            # Project filters
+            if project_type:
+                filters.append(Projects.project_type.in_(project_type))
             if exclude_project_type:
                 filters.append(not_(Projects.project_type.in_(exclude_project_type)))
+            if project_active is not None:
+                filters.append(Projects.active == project_active)
+            if project_expired is True:
+                filters.append(Projects.expires_on is not None)
+                filters.append(Projects.expires_on < datetime.utcnow())
+            if project_retired is True:
+                filters.append(Projects.retired_date is not None)
+            elif project_retired is False:
+                filters.append(Projects.retired_date is None)
 
+            # Membership active filter
             if active is not None:
                 filters.append(Membership.active == active)
 
-            query = query.filter(and_(*filters))
+            if filters:
+                query = query.filter(and_(*filters))
+
             query = query.order_by(Membership.start_time.desc())
             query = query.offset(page * per_page).limit(per_page)
 
-            result = []
-            for u in query.all():
-                user = DatabaseManager.user_to_dict(u)
-                result.append(user)
+            result = {}
+            priority_order = {"owner": 1, "creator": 2, "tokenholder": 3, "member": 4}
+
+            for membership, user, project in query.all():
+                r_user_id = str(user.user_uuid)
+
+                user_dict = DatabaseManager.user_to_dict(user)
+                project_dict = DatabaseManager.project_to_dict(project)
+                project_dict["membership_type"] = membership.membership_type
+                project_dict["start_time"] = membership.start_time.isoformat() if membership.start_time else None
+                project_dict["end_time"] = membership.end_time.isoformat() if membership.end_time else None
+                project_dict["active"] = membership.active
+
+                if r_user_id not in result:
+                    user_dict["projects"] = {}
+                    result[r_user_id] = user_dict
+
+                project_key = f"{membership.project_id}_{membership.start_time}_{membership.end_time}"
+                existing_entry = result[r_user_id]["projects"].get(project_key)
+
+                current_priority = priority_order.get(membership.membership_type, 99)
+                existing_priority = priority_order.get(
+                    existing_entry["membership_type"], 99
+                ) if existing_entry else 999
+
+                if not existing_entry or current_priority < existing_priority:
+                    result[r_user_id]["projects"][project_key] = project_dict
+
+            # Convert projects to list
+            for user_data in result.values():
+                user_data["projects"] = list(user_data["projects"].values())
+
             return result
+
         finally:
             session.close()
 
-    def get_project_membership(self, start_time: datetime, end_time: datetime,
-                               project_id: list[str], exclude_project_id: list[str],
-                               page: int = 0, per_page: int = 100):
+    def get_project_membership(
+        self,
+        start_time: datetime,
+        end_time: datetime,
+        project_id: list[str],
+        exclude_project_id: list[str],
+        project_type: list[str] = None,
+        project_active: bool = None,
+        project_expired: bool = None,
+        project_retired: bool = None,
+        user_active: bool = None,
+        page: int = 0,
+        per_page: int = 100
+    ):
         session = self.get_session()
         try:
             query = session.query(Membership, Users, Projects).join(
@@ -1934,38 +2000,96 @@ class DatabaseManager:
 
             filters = []
 
-            # Filter by time overlap
+            # Membership time overlap
             if start_time and end_time:
                 filters.append(
                     or_(
-                        Membership.start_time == None,
+                        Membership.start_time is None,
                         Membership.start_time <= end_time
                     )
                 )
                 filters.append(
                     or_(
-                        Membership.end_time == None,
+                        Membership.end_time is None,
                         Membership.end_time >= start_time
                     )
                 )
 
-            # Include project filter
+            # Project filters
             if project_id:
                 filters.append(Projects.project_uuid.in_(project_id))
-
-            # Exclude project filter
             if exclude_project_id:
                 filters.append(not_(Projects.project_uuid.in_(exclude_project_id)))
+            if project_type:
+                filters.append(Projects.project_type.in_(project_type))
+            if project_active is not None:
+                filters.append(Projects.active == project_active)
+            if project_expired is True:
+                filters.append(Projects.expires_on is not None)
+                filters.append(Projects.expires_on < datetime.utcnow())
+            if project_retired is True:
+                filters.append(Projects.retired_date is not None)
+            elif project_retired is False:
+                filters.append(Projects.retired_date is None)
 
-            query = query.filter(and_(*filters))
+            # User active status
+            if user_active is not None:
+                filters.append(Users.active == user_active)
+
+            if filters:
+                query = query.filter(and_(*filters))
+
             query = query.order_by(Membership.start_time.desc())
             query = query.offset(page * per_page).limit(per_page)
 
-            result = []
-            for row in query.all():
-                record = DatabaseManager.project_to_dict(row)
-                result.append(record)
-            return result
+            result = {}
+            priority_order = {"owner": 1, "creator": 2, "tokenholder": 3, "member": 4}
+
+            for membership, user, project in query.all():
+                r_project_id = str(project.project_uuid)
+
+                project_dict = DatabaseManager.project_to_dict(project)
+                user_dict = DatabaseManager.user_to_dict(user)
+                user_dict["membership_type"] = membership.membership_type
+                user_dict["start_time"] = membership.start_time.isoformat() if membership.start_time else None
+                user_dict["end_time"] = membership.end_time.isoformat() if membership.end_time else None
+                user_dict["active"] = membership.active
+
+                if r_project_id not in result:
+                    project_dict["members"] = {}
+                    result[r_project_id] = project_dict
+
+                user_key = f"{membership.user_id}_{membership.start_time}_{membership.end_time}"
+                existing_entry = result[r_project_id]["members"].get(user_key)
+
+                current_priority = priority_order.get(membership.membership_type, 99)
+                existing_priority = priority_order.get(
+                    existing_entry["membership_type"], 99
+                ) if existing_entry else 999
+
+                if not existing_entry or current_priority < existing_priority:
+                    result[r_project_id]["members"][user_key] = user_dict
+
+            # Finalize project members into list
+            for project_data in result.values():
+                project_data["members"] = list(project_data["members"].values())
+
+            return list(result.values())
 
         finally:
             session.close()
+
+
+if __name__ == '__main__':
+    logger = logging.getLogger("test")
+    db_mgr = DatabaseManager(user="fabric",
+                             password="fabric",
+                             database="analytics",
+                             db_host="alpha-5.fabric-testbed.net:5432",
+                             logger=logger)
+    users = db_mgr.get_user_memberships(start_time=None, end_time=None, user_id=None, user_email=["mjstealey@gmail.com"], project_type=None,
+                                        exclude_project_type=None, exclude_user_id=None, exclude_user_email=None, active=None)
+
+    print(json.dumps(users, indent=4))
+
+    #db_mgr.get_project_membership(start_time=None, end_time=None, project_id=None, exclude_project_id=None)
