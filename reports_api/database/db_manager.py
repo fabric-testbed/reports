@@ -2083,6 +2083,52 @@ class DatabaseManager:
         finally:
             session.close()
 
+    def get_user_id_by_uuid(self, user_uuid: str) -> int | None:
+        """
+        Resolve internal user ID from user UUID.
+
+        :param user_uuid: UUID of the user
+        :return: user.id if found, else None
+        """
+        session = self.get_session()
+        try:
+            user = session.query(Users).filter_by(user_uuid=user_uuid).first()
+            return user.id if user else None
+        finally:
+            session.close()
+
+    def get_project_id_by_uuid(self, project_uuid: str) -> int | None:
+        """
+        Resolve internal project ID from project UUID.
+
+        :param project_uuid: UUID of the project
+        :return: project.id if found, else None
+        """
+        session = self.get_session()
+        try:
+            project = session.query(Projects).filter_by(project_uuid=project_uuid).first()
+            return project.id if project else None
+        finally:
+            session.close()
+
+    def get_active_membership(self, user_id: int, project_id: int) -> Membership | None:
+        """
+        Retrieve the active membership for a given user and project.
+
+        :param user_id: ID of the user
+        :param project_id: ID of the project
+        :return: Membership object if an active membership exists, else None
+        """
+        session = self.get_session()
+        try:
+            return session.query(Membership).filter_by(
+                user_id=user_id,
+                project_id=project_id,
+                active=True
+            ).first()
+        finally:
+            session.close()
+
 
 if __name__ == '__main__':
     logger = logging.getLogger("test")
