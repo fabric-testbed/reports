@@ -313,7 +313,8 @@ class ReportsApi:
                     exclude_user_id: list[str] = None, exclude_user_email: list[str] = None,
                     exclude_project_id: list[str] = None, exclude_site: list[str] = None, facility: list[str] = None,
                     exclude_host: list[str] = None, exclude_slice_state: list[str] = None,
-                     exclude_sliver_state: list[str] = None, page=0, per_page=1000, fetch_all=True):
+                    exclude_sliver_state: list[str] = None, user_active: bool = None, project_type: list[str] = None,
+                    exclude_project_type: list[str] = None, page=0, per_page=1000, fetch_all=True):
         """
         Fetch users with optional filters. Supports fetching all pages or just one.
 
@@ -367,7 +368,10 @@ class ReportsApi:
         :type exclude_slice_state: List[str]
         :param exclude_sliver_state: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
         :type exclude_sliver_state: List[str]
-
+        :param user_active: Filter by whether the user is active
+        :type user_active: bool
+        :param project_type: List of project types to include (research, education, maintenance, tutorial)
+        :param exclude_project_type: List of project types to exclude
         :param page: Page number for pagination. Default is 1.
         :type page: int
         :param per_page: Number of records per page. Default is 10.
@@ -399,6 +403,8 @@ class ReportsApi:
             "site": site,
             "host": host,
             "facility": facility,
+            "project_type": project_type,
+            "user_active": user_active,
             "exclude_user_id": exclude_user_id,
             "exclude_user_email": exclude_user_email,
             "exclude_project_id": exclude_project_id,
@@ -406,6 +412,7 @@ class ReportsApi:
             "exclude_host": exclude_host,
             "exclude_slice_state": exclude_slice_state,
             "exclude_sliver_state": exclude_sliver_state,
+            "exclude_project_type": exclude_project_type,
             "per_page": per_page  # page will be added per iteration
         }
 
@@ -446,7 +453,8 @@ class ReportsApi:
                        exclude_user_id: list[str] = None, exclude_user_email: list[str] = None,
                        exclude_project_id: list[str] = None, exclude_site: list[str] = None, facility: list[str] = None,
                        exclude_host: list[str] = None, exclude_slice_state: list[str] = None,
-                        exclude_sliver_state: list[str] = None, page=0, per_page=1000, fetch_all=True):
+                       exclude_sliver_state: list[str] = None, project_active: bool = None, project_type: list[str] = None,
+                       exclude_project_type: list[str] = None, page=0, per_page=1000, fetch_all=True):
         """
         Fetch projects with optional filters. Supports fetching all pages or just one.
 
@@ -500,6 +508,10 @@ class ReportsApi:
         :type exclude_slice_state: List[str]
         :param exclude_sliver_state: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
         :type exclude_sliver_state: List[str]
+        :param project_active: Filter by whether the project is active
+        :type project_active: bool
+        :param project_type: List of project types to include (research, education, maintenance, tutorial)
+        :param exclude_project_type: List of project types to exclude
 
         :param page: Page number for pagination. Default is 1.
         :type page: int
@@ -532,6 +544,8 @@ class ReportsApi:
             "site": site,
             "host": host,
             "facility": facility,
+            "project_type": project_type,
+            "project_active": project_active,
             "exclude_user_id": exclude_user_id,
             "exclude_user_email": exclude_user_email,
             "exclude_project_id": exclude_project_id,
@@ -539,6 +553,7 @@ class ReportsApi:
             "exclude_host": exclude_host,
             "exclude_slice_state": exclude_slice_state,
             "exclude_sliver_state": exclude_sliver_state,
+            "exclude_project_type": exclude_project_type,
             "per_page": per_page  # page will be added per iteration
         }
 
