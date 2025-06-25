@@ -5,7 +5,9 @@ from __future__ import absolute_import
 from flask import json
 from six import BytesIO
 
+from reports_api.swagger_server.models.sliver import Sliver  # noqa: E501
 from reports_api.swagger_server.models.slivers import Slivers  # noqa: E501
+from reports_api.swagger_server.models.status200_ok_no_content import Status200OkNoContent  # noqa: E501
 from reports_api.swagger_server.models.status400_bad_request import Status400BadRequest  # noqa: E501
 from reports_api.swagger_server.models.status401_unauthorized import Status401Unauthorized  # noqa: E501
 from reports_api.swagger_server.models.status403_forbidden import Status403Forbidden  # noqa: E501
@@ -50,7 +52,7 @@ class TestSliversController(BaseTestCase):
                         ('page', 0),
                         ('per_page', 200)]
         response = self.client.open(
-            '/RENCI3/analytics/1.0.0/slivers',
+            '/reports/slivers',
             method='GET',
             query_string=query_string)
         self.assert200(response,
@@ -63,7 +65,7 @@ class TestSliversController(BaseTestCase):
         """
         body = Sliver()
         response = self.client.open(
-            '/RENCI3/analytics/1.0.0/slivers/{slice_id}/{sliver_id}'.format(slice_id='38400000-8cf0-11bd-b23e-10b96e4ef00d', sliver_id='38400000-8cf0-11bd-b23e-10b96e4ef00d'),
+            '/reports/slivers/{slice_id}/{sliver_id}'.format(slice_id='38400000-8cf0-11bd-b23e-10b96e4ef00d', sliver_id='38400000-8cf0-11bd-b23e-10b96e4ef00d'),
             method='POST',
             data=json.dumps(body),
             content_type='text/plain')

@@ -7,6 +7,9 @@ from reports_api.swagger_server.models.component import Component
 from reports_api.swagger_server.models.host import Host
 from reports_api.swagger_server.models.interface import Interface
 from reports_api.swagger_server.models.project import Project
+from reports_api.swagger_server.models.project_member import ProjectMember
+from reports_api.swagger_server.models.project_membership import ProjectMembership
+from reports_api.swagger_server.models.project_memberships import ProjectMemberships
 from reports_api.swagger_server.models.project_users import ProjectUsers
 from reports_api.swagger_server.models.projects import Projects
 from reports_api.swagger_server.models.site import Site
@@ -33,7 +36,9 @@ from reports_api.swagger_server.models.status404_not_found_errors import Status4
 from reports_api.swagger_server.models.status500_internal_server_error import Status500InternalServerError
 from reports_api.swagger_server.models.status500_internal_server_error_errors import Status500InternalServerErrorErrors
 from reports_api.swagger_server.models.user import User
-from reports_api.swagger_server.models.user_projects import UserProjects
+from reports_api.swagger_server.models.user_membership import UserMembership
+from reports_api.swagger_server.models.user_membership_projects import UserMembershipProjects
+from reports_api.swagger_server.models.user_memberships import UserMemberships
 from reports_api.swagger_server.models.user_slices import UserSlices
 from reports_api.swagger_server.models.users import Users
 from reports_api.swagger_server.models.version import Version

@@ -1,17 +1,13 @@
 #!/bin/bash
-# Swagger generate server stub based on specification, them merge it into the project.
+# Swagger generate server stub based on specification, then merge it into the project.
 # Use carefully! Commit always before using this script!
-# The following structure is assumed:
-# .
-# +-- my_server
-# |   +-- swagger_server
-# User is expected to replace swagger_server with my_server/swagger_server after executing this script
 
-# variables
+# Variables
 STUB_DIR=python-flask-server-generated
 WORKING_DIR=swagger_server
 ARCHIVE_DIR=swagger_server_archive
 SCRIPTS_DIR=$(pwd)
+
 FILES_TO_COPY=(
   __init__.py
   __main__.py
@@ -21,64 +17,72 @@ DIRS_TO_COPY=(
   response
 )
 
-swagger-codegen generate -i openapi.yml -l python-flask -o ${STUB_DIR}
-find ${STUB_DIR}/swagger_server \( -type d -name .git -prune \) -o -type f -print0 | xargs -0 sed -i '' 'sliver/swagger_server/reports_api.swagger_server/g'
+# Generate server stub
+swagger-codegen generate -i openapi.yml -l python-flask -o "${STUB_DIR}"
 
-
-# check for STUB_DIR directory
-if [ ! -d "$STUB_DIR" ]; then
-    echo "[ERROR] Unable to find ${STUB_DIR}"
+# Ensure stub was created
+if [ ! -d "$STUB_DIR/swagger_server" ]; then
+    echo "[ERROR] Unable to find ${STUB_DIR}/swagger_server"
     exit 1
 fi
 
-# remove ARCHIVE_DIR and create new ARCHIVE_DIR from current WORKING_DIR
+# Replace imports in all generated .py files
+find "${STUB_DIR}/swagger_server" -type f -name "*.py" -print0 | \
+xargs -0 sed -i '' \
+    -e 's/from swagger_server\./from reports_api.swagger_server./g' \
+    -e 's/from swagger_server /from reports_api.swagger_server /g' \
+    -e 's/import swagger_server\./import reports_api.swagger_server./g' \
+    -e 's/import swagger_server/import reports_api.swagger_server/g'
+
+# Archive the old working directory
 if [ -d "$ARCHIVE_DIR" ]; then
-    rm -rf $ARCHIVE_DIR
+    rm -rf "$ARCHIVE_DIR"
 fi
 echo "[INFO] full copy of '${WORKING_DIR}' archived as '${ARCHIVE_DIR}'"
-cp -r $WORKING_DIR $ARCHIVE_DIR
+cp -r "$WORKING_DIR" "$ARCHIVE_DIR"
 
-# create new WORKING_DIR
-if [ -d "$WORKING_DIR" ]; then
-    rm -rf $WORKING_DIR
-fi
+# Replace working directory with newly generated stub
+rm -rf "$WORKING_DIR"
 echo "[INFO] create new '${WORKING_DIR}' from '${STUB_DIR}'"
-cp -r $STUB_DIR/swagger_server $WORKING_DIR
+cp -r "${STUB_DIR}/swagger_server" "$WORKING_DIR"
 
-# copy relevant directories from ARCHIVE_DIR to new WORKING_DIR
+# Copy preserved directories and files
 for f in "${DIRS_TO_COPY[@]}"; do
     echo "[INFO] copy directory: ${f} to new ${WORKING_DIR}"
-    cp -r $ARCHIVE_DIR/${f} $WORKING_DIR/${f}
+    cp -r "$ARCHIVE_DIR/${f}" "$WORKING_DIR/${f}"
 done
 
-# copy relevant files from ARCHIVE_DIR to new WORKING_DIR
 for f in "${FILES_TO_COPY[@]}"; do
     echo "[INFO] copy file: ${f} to new ${WORKING_DIR}"
-    cp $ARCHIVE_DIR/${f} $WORKING_DIR/${f}
+    cp "$ARCHIVE_DIR/${f}" "$WORKING_DIR/${f}"
 done
 
-# update controllers
+# Update controller files
 echo "[INFO] update controllers to include response import"
-while read f; do
+for f in "$WORKING_DIR/controllers/"*.py; do
+    fname=$(basename "$f")
+    if [[ "$fname" == __* ]]; then continue; fi
+
     echo "---------------------------------------------------"
-    echo "[INFO] updating file: ${f}"
-    sed -i '' "/from swagger_server import util/a from response_code import ${f%???} as rc" \
-        $WORKING_DIR/controllers/${f}
-    sed -i '' "s/from reports_api.swagger_server import util/from reports_api.swagger_server import util\\"$'\n'\\"from reports_api.response_code import ${f%???} as rc/g" \
-    $WORKING_DIR/controllers/${f}
-    while read line; do
+    echo "[INFO] updating file: ${fname}"
+    chmod u+w "$f"
+
+    # Add response import after 'from reports_api.swagger_server import util'
+    sed -i '' "/from reports_api.swagger_server import util/{
+a\\
+from reports_api.response_code import ${fname%.py} as rc
+}" "$f"
+
+    # Replace 'do some magic!' with corresponding rc.function call
+    while read -r line; do
         if [[ $line == def* ]]; then
-            echo "  - ${line}"
-            func_name=$(echo $line | cut -d ':' -f 1 | cut -d ' ' -f 2-)
-            echo "    ${func_name//=None/}"
-            sed -i '' "0,/'do some magic!'/s//rc.${func_name//=None/}/" $WORKING_DIR/controllers/${f}
+            func_name=$(echo "$line" | cut -d ':' -f 1 | cut -d ' ' -f 2-)
+            clean_name=${func_name//=None/}
+            echo "  - $clean_name"
+            sed -i '' "0,/'do some magic!'/s//rc.${clean_name}/" "$f"
         fi
-    done < <(cat $WORKING_DIR/controllers/${f})
-done < <(ls -1 $WORKING_DIR/controllers | grep -v '^__*')
+    done < "$f"
+done
 
-# completed
 echo "[INFO] completed - check files prior to use"
-
-# return to scripts directory and exit
-cd $SCRIPTS_DIR || exit 0
-
+cd "$SCRIPTS_DIR" || exit 0

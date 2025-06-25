@@ -2,7 +2,7 @@ from reports_api.response_code import projects_controller as rc
 
 
 
-def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, project_id=None, slice_id=None, slice_state=None, sliver_id=None, sliver_type=None, sliver_state=None, component_type=None, component_model=None, bdf=None, vlan=None, ip_subnet=None, facility=None, site=None, host=None, exclude_user_id=None, exclude_user_email=None, exclude_project_id=None, exclude_site=None, exclude_host=None, exclude_slice_state=None, exclude_sliver_state=None, project_type=None, exclude_project_type=None, active=None, page=None, per_page=None):  # noqa: E501
+def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, project_id=None, slice_id=None, slice_state=None, sliver_id=None, sliver_type=None, sliver_state=None, component_type=None, component_model=None, bdf=None, vlan=None, ip_subnet=None, facility=None, site=None, host=None, exclude_user_id=None, exclude_user_email=None, exclude_project_id=None, exclude_site=None, exclude_host=None, exclude_slice_state=None, exclude_sliver_state=None, project_type=None, exclude_project_type=None, project_active=None, page=None, per_page=None):  # noqa: E501
     """Retrieve a list of projects
 
     Returns a paginated list of projects with their UUIDs. # noqa: E501
@@ -15,7 +15,7 @@ def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, 
     :type user_id: List[str]
     :param user_email: Filter by user email
     :type user_email: List[str]
-    :param project_id: Filter by project uuid
+    :param project_id: Filter by list of project UUIDs to include
     :type project_id: List[str]
     :param slice_id: Filter by slice uuid
     :type slice_id: List[str]
@@ -47,7 +47,7 @@ def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, 
     :type exclude_user_id: List[str]
     :param exclude_user_email: Exclude Users by emails
     :type exclude_user_email: List[str]
-    :param exclude_project_id: Exclude projects
+    :param exclude_project_id: Filter by list of project UUIDs to exclude
     :type exclude_project_id: List[str]
     :param exclude_site: Exclude sites
     :type exclude_site: List[str]
@@ -61,8 +61,8 @@ def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, 
     :type project_type: List[str]
     :param exclude_project_type: Exclude by project type; allowed values research, education, maintenance, tutorial
     :type exclude_project_type: List[str]
-    :param active: 
-    :type active: bool
+    :param project_active: Filter by project active status
+    :type project_active: bool
     :param page: Page number for pagination. Default is 0.
     :type page: int
     :param per_page: Number of records per page. Default is 200.
@@ -78,31 +78,47 @@ def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, 
                            exclude_user_id=exclude_user_id, exclude_user_email=exclude_user_email, facility=facility,
                            exclude_project_id=exclude_project_id, exclude_site=exclude_site, exclude_host=exclude_host,
                            exclude_slice_state=exclude_slice_state, exclude_sliver_state=exclude_sliver_state,
-                           project_type=project_type, active=active, exclude_project_type=exclude_project_type)
+                           project_type=project_type, project_active=project_active, exclude_project_type=exclude_project_type)
 
 
-def projects_memberships_get(start_time=None, end_time=None, project_id=None, exclude_project_id=None, page=None, per_page=None):  # noqa: E501
-    """Retrieve project membership
+def projects_memberships_get(start_time=None, end_time=None, project_id=None, exclude_project_id=None, project_type=None, exclude_project_type=None, project_active=None, project_expired=None, project_retired=None, user_active=None, page=None, per_page=None):  # noqa: E501
+    """Retrieve project membership records
 
-    Returns a paginated list of projects including the users. # noqa: E501
+    Retrieve project memberships with filters on time range, project UUIDs, project status, user activity, and membership attributes. Only the highest-priority membership type is returned per user/project/timestamp. # noqa: E501
 
     :param start_time: Filter by start time (inclusive)
     :type start_time: str
     :param end_time: Filter by end time (inclusive)
     :type end_time: str
-    :param project_id: Filter by project uuid
+    :param project_id: Filter by list of project UUIDs to include
     :type project_id: List[str]
-    :param exclude_project_id: Exclude projects
+    :param exclude_project_id: Filter by list of project UUIDs to exclude
     :type exclude_project_id: List[str]
+    :param project_type: Filter by project type; allowed values research, education, maintenance, tutorial
+    :type project_type: List[str]
+    :param exclude_project_type: Exclude by project type; allowed values research, education, maintenance, tutorial
+    :type exclude_project_type: List[str]
+    :param project_active: Filter by project active status
+    :type project_active: bool
+    :param project_expired: Filter by project expiration (true &#x3D; expired)
+    :type project_expired: bool
+    :param project_retired: Filter by project retirement (true &#x3D; retired)
+    :type project_retired: bool
+    :param user_active: Filter by user active status
+    :type user_active: bool
     :param page: Page number for pagination. Default is 0.
     :type page: int
     :param per_page: Number of records per page. Default is 200.
     :type per_page: int
 
-    :rtype: Projects
+    :rtype: ProjectMemberships
     """
-    return rc.projects_memberships_get(start_time=start_time, end_time=end_time, project_id=project_id,
-                                       exclude_project_id=exclude_project_id, page=page, per_page=per_page)
+    return rc.projects_memberships_get(start_time=start_time, end_time=end_time,
+                                       project_id=project_id, exclude_project_id=exclude_project_id,
+                                       project_type=project_type, exclude_project_type=exclude_project_type,
+                                       project_active=project_active, project_expired=project_expired,
+                                       project_retired=project_retired, user_active=user_active, per_page=per_page,
+                                       page=page)
 
 
 def projects_uuid_get(uuid):  # noqa: E501

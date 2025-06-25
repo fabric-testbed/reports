@@ -591,7 +591,7 @@ class DatabaseManager:
                      exclude_user_email: list[str] = None, exclude_project_id: list[str] = None,
                      exclude_site: list[str] = None, exclude_host: list[str] = None, facility: list[str] = None,
                      exclude_slice_state: list[int] = None, exclude_sliver_state: list[int] = None,
-                     project_type: list[str] = None, exclude_project_type: list[str] = None, active: bool = None,
+                     project_type: list[str] = None, exclude_project_type: list[str] = None, project_active: bool = None,
                      page: int = 0, per_page: int = 100) -> dict:
         """
         Retrieve a list of projects filtered by related slices, slivers, users, components, interface attributes, and time range.
@@ -650,8 +650,8 @@ class DatabaseManager:
         :type project_type: List[str]
         :param exclude_project_type: Exclude by project type; allowed values research, education, maintenance, tutorial
         :type exclude_project_type: List[str]
-        :param active:
-        :type active: bool
+        :param project_active:
+        :type project_active: bool
 
         :param page: Page number for paginated results (0-based index).
         :type page: int, optional
@@ -748,8 +748,8 @@ class DatabaseManager:
             if project_id:
                 filters.append(Projects.project_uuid.in_(project_id))
 
-            if active:
-                filters.append(Projects.active == active)
+            if project_active:
+                filters.append(Projects.active == project_active)
 
             if project_type:
                 filters.append(Projects.project_type.in_(project_type))
@@ -893,7 +893,7 @@ class DatabaseManager:
                   exclude_user_email: list[str] = None, exclude_project_id: list[str] = None,
                   exclude_site: list[str] = None, exclude_host: list[str] = None, facility: list[str] = None,
                   exclude_slice_state: list[int] = None, exclude_sliver_state: list[int] = None,
-                  project_type: list[str] = None, exclude_project_type: list[str] = None, active: bool = None,
+                  project_type: list[str] = None, exclude_project_type: list[str] = None, user_active: bool = None,
                   page: int = 0, per_page: int = 100) -> dict:
         """
         Retrieve a list of users filtered by associated slices, slivers, components, network interfaces, and time range.
@@ -953,8 +953,8 @@ class DatabaseManager:
         :type project_type: List[str]
         :param exclude_project_type: Exclude by project type; allowed values research, education, maintenance, tutorial
         :type exclude_project_type: List[str]
-        :param active:
-        :type active: bool
+        :param user_active:
+        :type user_active: bool
         :param page: Page number for paginated results (0-based index).
         :type page: int, optional
         :param per_page: Number of users to return per page.
@@ -1048,6 +1048,8 @@ class DatabaseManager:
                 filters.append(Users.user_email.in_(user_email))
             if user_id:
                 filters.append(Users.user_uuid.in_(user_id))
+            if user_active:
+                filters.append(Users.active == user_active)
 
             # Project filters
             if project_id:
@@ -1055,9 +1057,6 @@ class DatabaseManager:
 
             if project_type:
                 filters.append(Projects.project_type.in_(project_type))
-
-            if active:
-                filters.append(Projects.active == active)
 
             # Slice filters
             if slice_id:
@@ -1111,7 +1110,6 @@ class DatabaseManager:
             if exclude_sliver_state:
                 filters.append(Slivers.state.notin_(exclude_sliver_state))
 
-            self.logger.info(f"KOMAL --- {query}")
             # Apply filters
             if filters:
                 query = query.filter(and_(*filters))
@@ -1834,7 +1832,6 @@ class DatabaseManager:
                 Membership.project_id == project_id,
                 Membership.active.is_(True)
             ).scalar()
-            self.logger.info(f"KOMAL --- User count for {project_id} {user_count}")
             return user_count
         finally:
             session.rollback()
@@ -1875,7 +1872,7 @@ class DatabaseManager:
             project_active: bool = None,
             project_expired: bool = None,
             project_retired: bool = None,
-            active: bool = None,
+            user_active: bool = None,
             page: int = 0,
             per_page: int = 100
     ):
@@ -1913,6 +1910,8 @@ class DatabaseManager:
                 filters.append(not_(Users.user_uuid.in_(exclude_user_id)))
             if exclude_user_email:
                 filters.append(not_(Users.user_email.in_(exclude_user_email)))
+            if user_active is not None:
+                filters.append(Users.active == user_active)
 
             # Project filters
             if project_type:
@@ -1928,10 +1927,6 @@ class DatabaseManager:
                 filters.append(Projects.retired_date is not None)
             elif project_retired is False:
                 filters.append(Projects.retired_date is None)
-
-            # Membership active filter
-            if active is not None:
-                filters.append(Membership.active == active)
 
             if filters:
                 query = query.filter(and_(*filters))
@@ -1971,7 +1966,10 @@ class DatabaseManager:
             for user_data in result.values():
                 user_data["projects"] = list(user_data["projects"].values())
 
-            return result
+            return {
+                "total": len(result.values()),
+                "users": list(result.values())
+            }
 
         finally:
             session.close()
@@ -1983,6 +1981,7 @@ class DatabaseManager:
         project_id: list[str],
         exclude_project_id: list[str],
         project_type: list[str] = None,
+        exclude_project_type: list[str] = None,
         project_active: bool = None,
         project_expired: bool = None,
         project_retired: bool = None,
@@ -2022,6 +2021,8 @@ class DatabaseManager:
                 filters.append(not_(Projects.project_uuid.in_(exclude_project_id)))
             if project_type:
                 filters.append(Projects.project_type.in_(project_type))
+            if exclude_project_type:
+                filters.append(not_(Projects.project_type.in_(exclude_project_type)))
             if project_active is not None:
                 filters.append(Projects.active == project_active)
             if project_expired is True:
@@ -2074,7 +2075,10 @@ class DatabaseManager:
             for project_data in result.values():
                 project_data["members"] = list(project_data["members"].values())
 
-            return list(result.values())
+            return {
+                "total": len(result.values()),
+                "projects": list(result.values())
+            }
 
         finally:
             session.close()
@@ -2088,7 +2092,7 @@ if __name__ == '__main__':
                              db_host="alpha-5.fabric-testbed.net:5432",
                              logger=logger)
     users = db_mgr.get_user_memberships(start_time=None, end_time=None, user_id=None, user_email=["mjstealey@gmail.com"], project_type=None,
-                                        exclude_project_type=None, exclude_user_id=None, exclude_user_email=None, active=None)
+                                        exclude_project_type=None, exclude_user_id=None, exclude_user_email=None, user_active=None)
 
     print(json.dumps(users, indent=4))
 

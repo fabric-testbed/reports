@@ -5,6 +5,8 @@ info:
   version: "1.0.0"
 servers:
   # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/RENCI3/analytics/1.0.0
   - url: "http://localhost:8080/reports"
 tags:
   - name: users
@@ -200,7 +202,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/users"
+                $ref: "#/components/schemas/userMemberships"
         "400":
           description: Bad Request
           content:
@@ -619,7 +621,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/projectMembership"
+                $ref: "#/components/schemas/projectMemberships"
         "400":
           description: Bad Request
           content:
@@ -1405,6 +1407,17 @@ components:
         name:
           type: string
 
+    projectMemberships:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_paginated'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/projectMembership' 
+              
     projectMembership:
       type: object
       properties:
@@ -1450,6 +1463,17 @@ components:
         membership_type:
           type: string
 
+    userMemberships:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_paginated'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/userMembership' 
+              
     userMembership:
       type: object
       properties:

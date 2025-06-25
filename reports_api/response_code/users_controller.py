@@ -35,6 +35,7 @@ from reports_api.response_code.cors_response import cors_500
 from reports_api.response_code.slice_sliver_states import SliverStates, SliceState
 from reports_api.response_code.utils import authorize, cors_success_response
 from reports_api.security.fabric_token import FabricToken
+from reports_api.swagger_server.models import UserMemberships, UserMembership
 from reports_api.swagger_server.models.user import User
 from reports_api.swagger_server.models.users import Users  # noqa: E501
 
@@ -43,8 +44,8 @@ def users_get(start_time=None, end_time=None, user_id=None, user_email=None, pro
               slice_state=None, sliver_id=None, sliver_type=None, sliver_state=None, component_type=None,
               component_model=None, bdf=None, vlan=None, ip_subnet=None, site=None, host=None, exclude_user_id=None,
               exclude_user_email=None, exclude_project_id=None, exclude_site=None, exclude_host=None, facility=None,
-              exclude_slice_state=None, exclude_sliver_state=None, project_type=None, exclude_project_type=None, active=None,
-              page=None, per_page=None):  # noqa: E501
+              exclude_slice_state=None, exclude_sliver_state=None, project_type=None, exclude_project_type=None,
+              user_active=None, page=None, per_page=None):  # noqa: E501
     """Get users
 
     Retrieve a list of users with optional filters. # noqa: E501
@@ -103,8 +104,8 @@ def users_get(start_time=None, end_time=None, user_id=None, user_email=None, pro
     :type project_type: List[str]
     :param exclude_project_type: Exclude by project type; allowed values research, education, maintenance, tutorial
     :type exclude_project_type: List[str]
-    :param active:
-    :type active: bool
+    :param user_active:
+    :type user_active: bool
     :param page: Page number for pagination. Default is 1.
     :type page: int
     :param per_page: Number of records per page. Default is 10.
@@ -156,7 +157,7 @@ def users_get(start_time=None, end_time=None, user_id=None, user_email=None, pro
                                  exclude_host=exclude_host, exclude_sliver_state=exclude_sliver_states,
                                  exclude_slice_state=exclude_slice_states,
                                  project_type=project_type, exclude_project_type=exclude_project_type,
-                                 active=active)
+                                 user_active=user_active)
         for u in users.get("users"):
             response.data.append(User.from_dict(u))
         response.size = len(response.data)
@@ -251,7 +252,9 @@ def users_post(user_uuid: str,
         #return cors_500(details=details)
 
 
-def users_memberships_get(start_time=None, end_time=None, user_id=None, user_email=None, exclude_user_id=None, exclude_user_email=None, project_type=None, exclude_project_type=None, active=None, page=None, per_page=None):  # noqa: E501
+def users_memberships_get(start_time=None, end_time=None, user_id=None, user_email=None, exclude_user_id=None,
+                          exclude_user_email=None, project_type=None, exclude_project_type=None, project_active=None,
+                          project_expired=None, project_retired=None, user_active=None, page=None, per_page=None):  # noqa: E501
     """Get users
 
     Retrieve a list of users with optional filters. # noqa: E501
@@ -305,7 +308,7 @@ def users_memberships_get(start_time=None, end_time=None, user_id=None, user_ema
                                  db_host=global_obj.config.database_config.get("db-host"),
                                  logger=logger)
 
-        response = Users()
+        response = UserMemberships()
         response.data = []
         start = datetime.fromisoformat(start_time) if start_time else None
         end = datetime.fromisoformat(end_time) if end_time else None
@@ -313,13 +316,15 @@ def users_memberships_get(start_time=None, end_time=None, user_id=None, user_ema
         users = db_mgr.get_user_memberships(start_time=start, end_time=end, user_email=user_email, user_id=user_id,
                                             exclude_user_id=exclude_user_id, exclude_user_email=exclude_user_email,
                                             project_type=project_type, exclude_project_type=exclude_project_type,
-                                            active=active, page=page, per_page=per_page)
+                                            project_active=project_active, project_expired=project_expired,
+                                            project_retired=project_retired, user_active=user_active,
+                                            page=page, per_page=per_page)
         for u in users.get("users"):
-            response.data.append(User.from_dict(u))
+            response.data.append(UserMembership.from_dict(u))
         response.size = len(response.data)
-        response.type = "users"
+        response.type = "userMemberships"
         response.total = users.get("total")
-        logger.debug("Processed - users_get")
+        logger.debug("Processed - users_memberships_get")
         return cors_success_response(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with users_memberships_get(): {0}'.format(exc)

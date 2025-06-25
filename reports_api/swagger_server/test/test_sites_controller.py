@@ -23,7 +23,7 @@ class TestSitesController(BaseTestCase):
         Get sites
         """
         response = self.client.open(
-            '/RENCI3/analytics/1.0.0/sites',
+            '/reports/sites',
             method='GET')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))

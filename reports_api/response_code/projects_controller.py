@@ -35,6 +35,7 @@ from reports_api.response_code.cors_response import cors_500
 from reports_api.response_code.slice_sliver_states import SliverStates, SliceState
 from reports_api.response_code.utils import authorize, cors_success_response
 from reports_api.security.fabric_token import FabricToken
+from reports_api.swagger_server.models import ProjectMembership, ProjectMemberships
 from reports_api.swagger_server.models.project import Project
 from reports_api.swagger_server.models.projects import Projects  # noqa: E501
 
@@ -44,7 +45,7 @@ def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, 
                  component_model=None, bdf=None, vlan=None, ip_subnet=None, site=None, host=None,
                  exclude_user_id=None, exclude_user_email=None, exclude_project_id=None, exclude_site=None,
                  exclude_host=None, exclude_slice_state=None, exclude_sliver_state=None,
-                 facility=None, project_type=None, exclude_project_type=None, active=None,
+                 facility=None, project_type=None, exclude_project_type=None, project_active=None,
                  page=0, per_page=100):  # noqa: E501
     """Retrieve a list of projects
 
@@ -104,8 +105,8 @@ def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, 
     :type project_type: List[str]
     :param exclude_project_type: Exclude by project type; allowed values research, education, maintenance, tutorial
     :type exclude_project_type: List[str]
-    :param active:
-    :type active: bool
+    :param project_active:
+    :type project_active: bool
     :param page: Page number for pagination. Default is 1.
     :type page: int
     :param per_page: Number of records per page. Default is 10.
@@ -157,7 +158,7 @@ def projects_get(start_time=None, end_time=None, user_id=None, user_email=None, 
                                        exclude_host=exclude_host, exclude_sliver_state=exclude_sliver_states,
                                        exclude_slice_state=exclude_slice_states,
                                        project_type=project_type, exclude_project_type=exclude_project_type,
-                                       active=active)
+                                       project_active=project_active)
         for s in projects.get("projects"):
             response.data.append(Project.from_dict(s))
         response.size = len(response.data)
@@ -250,25 +251,37 @@ def projects_post(project_uuid: str,
         #return cors_500(details=details)
 
 
-def projects_memberships_get(start_time=None, end_time=None, project_id=None, exclude_project_id=None, page=None, per_page=None):  # noqa: E501
-    """Retrieve project membership
+def projects_memberships_get(start_time=None, end_time=None, project_id=None, exclude_project_id=None, project_type=None, exclude_project_type=None, project_active=None, project_expired=None, project_retired=None, user_active=None, page=None, per_page=None):  # noqa: E501
+    """Retrieve project membership records
 
-    Returns a paginated list of projects including the users. # noqa: E501
+    Retrieve project memberships with filters on time range, project UUIDs, project status, user activity, and membership attributes. Only the highest-priority membership type is returned per user/project/timestamp. # noqa: E501
 
     :param start_time: Filter by start time (inclusive)
     :type start_time: str
     :param end_time: Filter by end time (inclusive)
     :type end_time: str
-    :param project_id: Filter by project uuid
+    :param project_id: Filter by list of project UUIDs to include
     :type project_id: List[str]
-    :param exclude_project_id: Exclude projects
+    :param exclude_project_id: Filter by list of project UUIDs to exclude
     :type exclude_project_id: List[str]
+    :param project_type: Filter by project type; allowed values research, education, maintenance, tutorial
+    :type project_type: List[str]
+    :param exclude_project_type: Exclude by project type; allowed values research, education, maintenance, tutorial
+    :type exclude_project_type: List[str]
+    :param project_active: Filter by project active status
+    :type project_active: bool
+    :param project_expired: Filter by project expiration (true &#x3D; expired)
+    :type project_expired: bool
+    :param project_retired: Filter by project retirement (true &#x3D; retired)
+    :type project_retired: bool
+    :param user_active: Filter by user active status
+    :type user_active: bool
     :param page: Page number for pagination. Default is 0.
     :type page: int
     :param per_page: Number of records per page. Default is 200.
     :type per_page: int
 
-    :rtype: Projects
+    :rtype: ProjectMembership
     """
     logger = GlobalsSingleton.get().log
     try:
@@ -294,20 +307,23 @@ def projects_memberships_get(start_time=None, end_time=None, project_id=None, ex
                                  db_host=global_obj.config.database_config.get("db-host"),
                                  logger=logger)
 
-        response = Projects()
+        response = ProjectMemberships()
         response.data = []
         start = datetime.fromisoformat(start_time) if start_time else None
         end = datetime.fromisoformat(end_time) if end_time else None
 
-        projects = db_mgr.get_project_membership(start_time=start, end_time=end, project_id=project_id,
-                                                 exclude_project_id=exclude_project_id, page=page,
-                                                 per_page=per_page)
+        projects = db_mgr.get_project_membership(start_time=start, end_time=end,
+                                                 project_id=project_id, exclude_project_id=exclude_project_id,
+                                                 project_type=project_type, exclude_project_type=exclude_project_type,
+                                                 project_active=project_active, project_expired=project_expired,
+                                                 project_retired=project_retired, user_active=user_active, per_page=per_page,
+                                                 page=page)
         for s in projects.get("projects"):
-            response.data.append(Project.from_dict(s))
+            response.data.append(ProjectMembership.from_dict(s))
         response.size = len(response.data)
-        response.type = "projects"
+        response.type = "projectMemberships"
         response.total = projects.get("total")
-        logger.debug("Processed - projects_get")
+        logger.debug("Processed - projects_memberships_get")
         return cors_success_response(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with projects_memberships_get(): {0}'.format(exc)

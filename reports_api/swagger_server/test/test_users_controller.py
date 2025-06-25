@@ -10,6 +10,7 @@ from reports_api.swagger_server.models.status401_unauthorized import Status401Un
 from reports_api.swagger_server.models.status403_forbidden import Status403Forbidden  # noqa: E501
 from reports_api.swagger_server.models.status404_not_found import Status404NotFound  # noqa: E501
 from reports_api.swagger_server.models.status500_internal_server_error import Status500InternalServerError  # noqa: E501
+from reports_api.swagger_server.models.user_memberships import UserMemberships  # noqa: E501
 from reports_api.swagger_server.models.users import Users  # noqa: E501
 from reports_api.swagger_server.test import BaseTestCase
 
@@ -49,11 +50,11 @@ class TestUsersController(BaseTestCase):
                         ('exclude_sliver_state', 'exclude_sliver_state_example'),
                         ('project_type', 'project_type_example'),
                         ('exclude_project_type', 'exclude_project_type_example'),
-                        ('active', true),
+                        ('user_active', true),
                         ('page', 0),
                         ('per_page', 200)]
         response = self.client.open(
-            '/RENCI3/analytics/1.0.0/users',
+            '/reports/users',
             method='GET',
             query_string=query_string)
         self.assert200(response,
@@ -72,11 +73,14 @@ class TestUsersController(BaseTestCase):
                         ('exclude_user_email', 'exclude_user_email_example'),
                         ('project_type', 'project_type_example'),
                         ('exclude_project_type', 'exclude_project_type_example'),
-                        ('active', true),
+                        ('project_active', true),
+                        ('project_expired', true),
+                        ('project_retired', true),
+                        ('user_active', true),
                         ('page', 0),
                         ('per_page', 200)]
         response = self.client.open(
-            '/RENCI3/analytics/1.0.0/users/memberships',
+            '/reports/users/memberships',
             method='GET',
             query_string=query_string)
         self.assert200(response,
@@ -88,7 +92,7 @@ class TestUsersController(BaseTestCase):
         Get specific user
         """
         response = self.client.open(
-            '/RENCI3/analytics/1.0.0/users/{uuid}'.format(uuid='uuid_example'),
+            '/reports/users/{uuid}'.format(uuid='uuid_example'),
             method='GET')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
