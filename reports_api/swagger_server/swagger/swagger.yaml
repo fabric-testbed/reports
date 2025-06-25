@@ -4,8 +4,6 @@ info:
   description: "API for managing users, projects, slices, slivers, and related entities."
   version: 1.0.0
 servers:
-- url: https://virtserver.swaggerhub.com/RENCI3/analytics/1.0.0
-  description: SwaggerHub API Auto Mocking
 - url: http://localhost:8080/reports
 tags:
 - name: users
