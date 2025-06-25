@@ -18,7 +18,7 @@ def slivers_get(start_time=None, end_time=None, user_id=None, user_email=None, p
     :type user_id: List[str]
     :param user_email: Filter by user email
     :type user_email: List[str]
-    :param project_id: Filter by project uuid
+    :param project_id: Filter by list of project UUIDs to include
     :type project_id: List[str]
     :param slice_id: Filter by slice uuid
     :type slice_id: List[str]
@@ -50,7 +50,7 @@ def slivers_get(start_time=None, end_time=None, user_id=None, user_email=None, p
     :type exclude_user_id: List[str]
     :param exclude_user_email: Exclude Users by emails
     :type exclude_user_email: List[str]
-    :param exclude_project_id: Exclude projects
+    :param exclude_project_id: Filter by list of project UUIDs to exclude
     :type exclude_project_id: List[str]
     :param exclude_site: Exclude sites
     :type exclude_site: List[str]

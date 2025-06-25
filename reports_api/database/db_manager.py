@@ -31,11 +31,12 @@ from collections import defaultdict
 from contextlib import contextmanager
 from typing import List, Optional, Union
 
-from sqlalchemy import create_engine, and_, or_, func, distinct
+from sqlalchemy import create_engine, and_, or_, func, distinct, not_
 from sqlalchemy.orm import sessionmaker, scoped_session
 from datetime import datetime, timedelta
 
-from reports_api.database import Slices, Slivers, Hosts, Sites, Users, Projects, Components, Interfaces, Base
+from reports_api.database import Slices, Slivers, Hosts, Sites, Users, Projects, Components, Interfaces, Base, \
+    Membership
 from reports_api.response_code.slice_sliver_states import SliceState, SliverStates
 
 
@@ -113,18 +114,60 @@ class DatabaseManager:
             session.rollback()
 
     # -------------------- ADD OR UPDATE DATA --------------------
-    def add_or_update_project(self, project_uuid: str, project_name: Optional[str] = None) -> int:
+    def add_or_update_project(
+            self,
+            project_uuid: str,
+            project_name: Optional[str] = None,
+            project_type: Optional[str] = None,
+            active: Optional[bool] = None,
+            created_date: Optional[datetime] = None,
+            expires_on: Optional[datetime] = None,
+            retired_date: Optional[datetime] = None,
+            last_updated: Optional[datetime] = None,
+    ) -> int:
         """
-        Adds a project if it doesn't exist, otherwise updates the name.
+        Adds a project if it doesn't exist, otherwise updates its fields.
+
+        :param project_uuid: Unique identifier for the project.
+        :param project_name: Name of the project.
+        :param project_type: Type or category of the project.
+        :param active: Boolean flag indicating whether the project is active.
+        :param created_date: Datetime when the project was created.
+        :param expires_on: Datetime when the project is set to expire.
+        :param retired_date: Datetime when the project was retired.
+        :param last_updated: Datetime of the last update. Defaults to current UTC time if not provided.
+        :return: ID of the created or updated project.
+        :rtype: int
         """
+
         session = self.get_session()
         try:
             project = session.query(Projects).filter(Projects.project_uuid == project_uuid).first()
             if project:
-                if project_name:
+                if project_name is not None:
                     project.project_name = project_name
+                if project_type is not None:
+                    project.project_type = project_type
+                if active is not None:
+                    project.active = active
+                if created_date is not None:
+                    project.created_date = created_date
+                if expires_on is not None:
+                    project.expires_on = expires_on
+                if retired_date is not None:
+                    project.retired_date = retired_date
+                project.last_updated = last_updated or datetime.utcnow()
             else:
-                project = Projects(project_uuid=project_uuid, project_name=project_name)
+                project = Projects(
+                    project_uuid=project_uuid,
+                    project_name=project_name,
+                    project_type=project_type,
+                    active=active,
+                    created_date=created_date or datetime.utcnow(),
+                    expires_on=expires_on,
+                    retired_date=retired_date,
+                    last_updated=last_updated or datetime.utcnow(),
+                )
                 session.add(project)
 
             session.commit()
@@ -132,24 +175,119 @@ class DatabaseManager:
         finally:
             session.rollback()
 
-    def add_or_update_user(self, user_uuid: str, user_email: Optional[str] = None) -> int:
+    def add_or_update_user(
+            self,
+            user_uuid: str,
+            user_email: Optional[str] = None,
+            active: Optional[bool] = None,
+            name: Optional[str] = None,
+            affiliation: Optional[str] = None,
+            registered_on: Optional[datetime] = None,
+            last_updated: Optional[datetime] = None,
+            google_scholar: Optional[str] = None,
+            scopus: Optional[str] = None,
+    ) -> int:
         """
-        Adds a user if it doesn't exist, otherwise updates the email.
+        Adds a user if it doesn't exist, otherwise updates its fields.
+
+        :param user_uuid: Unique identifier for the user.
+        :param user_email: Email address of the user.
+        :param active: Boolean flag indicating whether the user is active.
+        :param name: Full name of the user.
+        :param affiliation: Institutional or organizational affiliation of the user.
+        :param registered_on: Datetime when the user registered.
+        :param last_updated: Datetime of the last update. Defaults to current UTC time if not provided.
+        :param google_scholar: URL or identifier for the user's Google Scholar profile.
+        :param scopus: URL or identifier for the user's Scopus profile.
+        :return: ID of the created or updated user.
+        :rtype: int
         """
         session = self.get_session()
         try:
             user = session.query(Users).filter(Users.user_uuid == user_uuid).first()
             if user:
-                if user_email:
+                if user_email is not None:
                     user.user_email = user_email
+                if active is not None:
+                    user.active = active
+                if name is not None:
+                    user.name = name
+                if affiliation is not None:
+                    user.affiliation = affiliation
+                if registered_on is not None:
+                    user.registered_on = registered_on
+                user.last_updated = last_updated or datetime.utcnow()
+                if google_scholar is not None:
+                    user.google_scholar = google_scholar
+                if scopus is not None:
+                    user.scopus = scopus
             else:
-                user = Users(user_uuid=user_uuid, user_email=user_email)
+                user = Users(
+                    user_uuid=user_uuid,
+                    user_email=user_email,
+                    active=active,
+                    name=name,
+                    affiliation=affiliation,
+                    registered_on=registered_on or datetime.utcnow(),
+                    last_updated=last_updated or datetime.utcnow(),
+                    google_scholar=google_scholar,
+                    scopus=scopus,
+                )
                 session.add(user)
 
             session.commit()
             return user.id
         finally:
             session.rollback()
+
+    def add_or_update_membership(self, user_id, project_id, start_time, end_time, membership_type, active):
+        """
+        Add or update a user membership in a project.
+
+        If a membership record with the same user, project, start time, and type exists, it will be updated.
+        Otherwise, a new membership record is inserted.
+
+        :param user_id: ID of the user (foreign key to Users table)
+        :type user_id: int
+        :param project_id: ID of the project (foreign key to Projects table)
+        :type project_id: int
+        :param start_time: When the user was added to the project
+        :type start_time: datetime.datetime or None
+        :param end_time: When the user was removed from the project, if applicable
+        :type end_time: datetime.datetime or None
+        :param membership_type: Role or type of membership (e.g., member, owner, creator, tokenholder)
+        :type membership_type: str
+        :param active: Whether the membership is currently active (i.e., not removed)
+        :type active: bool
+
+        :return: None
+        """
+        session = self.get_session()
+        try:
+            existing = session.query(Membership).filter_by(
+                user_id=user_id,
+                project_id=project_id,
+                start_time=start_time,
+                membership_type=membership_type
+            ).first()
+
+            if existing:
+                existing.end_time = end_time
+                existing.active = active
+            else:
+                membership = Membership(
+                    user_id=user_id,
+                    project_id=project_id,
+                    start_time=start_time,
+                    end_time=end_time,
+                    membership_type=membership_type,
+                    active=active
+                )
+                session.add(membership)
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
 
     # -------------------- ADD OR UPDATE SLICE --------------------
     def add_or_update_slice(
@@ -453,6 +591,7 @@ class DatabaseManager:
                      exclude_user_email: list[str] = None, exclude_project_id: list[str] = None,
                      exclude_site: list[str] = None, exclude_host: list[str] = None, facility: list[str] = None,
                      exclude_slice_state: list[int] = None, exclude_sliver_state: list[int] = None,
+                     project_type: list[str] = None, exclude_project_type: list[str] = None, project_active: bool = None,
                      page: int = 0, per_page: int = 100) -> dict:
         """
         Retrieve a list of projects filtered by related slices, slivers, users, components, interface attributes, and time range.
@@ -507,6 +646,12 @@ class DatabaseManager:
         :type exclude_slice_state: List[int]
         :param exclude_sliver_state: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
         :type exclude_sliver_state: List[int]
+        :param project_type: Filter by project type; allowed values research, education, maintenance, tutorial
+        :type project_type: List[str]
+        :param exclude_project_type: Exclude by project type; allowed values research, education, maintenance, tutorial
+        :type exclude_project_type: List[str]
+        :param project_active:
+        :type project_active: bool
 
         :param page: Page number for paginated results (0-based index).
         :type page: int, optional
@@ -516,6 +661,13 @@ class DatabaseManager:
         :return: A dictionary containing the list of projects and associated metadata.
         :rtype: dict
         """
+        # Detect if any fields that require Slice JOIN are used
+        requires_slice = any([
+            slice_id, slice_state, user_email, user_id,
+            exclude_user_id, exclude_user_email,
+            exclude_slice_state
+        ])
+
         # Detect if any fields that require Sliver JOIN are used
         requires_sliver = any([
             sliver_id, sliver_type, sliver_state, ip_subnet,
@@ -550,16 +702,16 @@ class DatabaseManager:
             start_ts = time.time()
 
             # Base query for Projects
-            query = session.query(Projects).distinct() \
-                .join(Slices, Slices.project_id == Projects.id) \
-                .join(Users, Slices.user_id == Users.id)
+            query = session.query(Projects).distinct()
+
+            if requires_slice or requires_sliver:
+                query = query.join(Slices, Slices.project_id == Projects.id)\
+                    .join(Users, Slices.user_id == Users.id)
 
             filters = []
 
             # Only join Slivers if any Sliver-related filter is used
-            if any([sliver_id, sliver_type, sliver_state, ip_subnet,
-                    host, site, component_type, component_model, bdf, vlan, facility, exclude_site,
-                    exclude_host, exclude_sliver_state]):
+            if requires_sliver:
                 query = query.join(Slivers, Slivers.project_id == Projects.id)
 
                 if host or site or exclude_host or exclude_site:
@@ -572,12 +724,35 @@ class DatabaseManager:
 
             # Build filters
             if start_time or end_time:
-                time_filter = self.__build_time_filter(Slices, start_time, end_time)
-                if time_filter is not None:
-                    filters.append(time_filter)
-
+                if requires_slice or requires_sliver:
+                    time_filter = self.__build_time_filter(Slices, start_time, end_time)
+                    if time_filter is not None:
+                        filters.append(time_filter)
+                else:
+                    # Time filter directly on Projects (when no slices/slivers involved)
+                    if start_time and end_time:
+                        filters.append(or_(
+                            and_(Projects.created_date is not None, Projects.created_date.between(start_time, end_time)),
+                            and_(Projects.expires_on is not None, Projects.expires_on.between(start_time, end_time))
+                        ))
+                    elif start_time:
+                        filters.append(or_(
+                            and_(Projects.created_date is not None, Projects.created_date >= start_time),
+                            and_(Projects.expires_on is not None, Projects.expires_on >= start_time)
+                        ))
+                    elif end_time:
+                        filters.append(or_(
+                            and_(Projects.created_date is not None, Projects.created_date <= end_time),
+                            and_(Projects.expires_on is not None, Projects.expires_on <= end_time)
+                        ))
             if project_id:
                 filters.append(Projects.project_uuid.in_(project_id))
+
+            if project_active:
+                filters.append(Projects.active == project_active)
+
+            if project_type:
+                filters.append(Projects.project_type.in_(project_type))
 
             if slice_id:
                 filters.append(Slices.slice_guid.in_(slice_id))
@@ -617,6 +792,8 @@ class DatabaseManager:
 
             if exclude_project_id:
                 filters.append(Projects.project_uuid.notin_(exclude_project_id))
+            if exclude_project_type:
+                filters.append(Projects.project_type.notin_(exclude_project_type))
             if exclude_user_id:
                 filters.append(Users.user_uuid.notin_(exclude_user_id))
             if exclude_user_email:
@@ -637,16 +814,16 @@ class DatabaseManager:
             query_ts = time.time()
 
             # Separate lightweight count query
-            count_query = session.query(func.count(distinct(Projects.id))) \
-                .join(Slices, Slices.project_id == Projects.id) \
-                .join(Users, Slices.user_id == Users.id)
+            count_query = session.query(func.count(distinct(Projects.id)))
+
+            if requires_slice or requires_sliver:
+                count_query = count_query.join(Slices, Slices.project_id == Projects.id) \
+                    .join(Users, Slices.user_id == Users.id)
 
             if filters:
                 count_query = count_query.filter(and_(*filters))
 
-            if any([sliver_id, sliver_type, sliver_state, ip_subnet,
-                    host, site, component_type, component_model, bdf, vlan, facility, exclude_site,
-                    exclude_host, exclude_sliver_state]):
+            if requires_sliver:
                 count_query = count_query.join(Slivers, Slivers.project_id == Projects.id)
 
                 if host or site or exclude_host or exclude_site:
@@ -716,6 +893,7 @@ class DatabaseManager:
                   exclude_user_email: list[str] = None, exclude_project_id: list[str] = None,
                   exclude_site: list[str] = None, exclude_host: list[str] = None, facility: list[str] = None,
                   exclude_slice_state: list[int] = None, exclude_sliver_state: list[int] = None,
+                  project_type: list[str] = None, exclude_project_type: list[str] = None, user_active: bool = None,
                   page: int = 0, per_page: int = 100) -> dict:
         """
         Retrieve a list of users filtered by associated slices, slivers, components, network interfaces, and time range.
@@ -771,7 +949,12 @@ class DatabaseManager:
         :type exclude_slice_state: List[int]
         :param exclude_sliver_state: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
         :type exclude_sliver_state: List[int]
-
+        :param project_type: Filter by project type; allowed values research, education, maintenance, tutorial
+        :type project_type: List[str]
+        :param exclude_project_type: Exclude by project type; allowed values research, education, maintenance, tutorial
+        :type exclude_project_type: List[str]
+        :param user_active:
+        :type user_active: bool
         :param page: Page number for paginated results (0-based index).
         :type page: int, optional
         :param per_page: Number of users to return per page.
@@ -783,6 +966,12 @@ class DatabaseManager:
         session = self.get_session()
         try:
             start_ts = time.time()
+
+            requires_slice = any([
+                slice_id, slice_state, user_email, user_id,
+                exclude_user_id, exclude_user_email,
+                exclude_slice_state
+            ])
 
             # Detect if sliver-related fields are involved
             requires_sliver = any([
@@ -809,11 +998,18 @@ class DatabaseManager:
                     self.logger.info(f"Only end_time given. Setting start_time to {start_time.isoformat()}")
 
             # Base query for Users
-            query = session.query(Users).distinct() \
-                .join(Slices, Users.id == Slices.user_id)
+            query = session.query(Users).distinct()
 
+            if requires_slice or requires_sliver:
+                query = query.join(Slices, Users.id == Slices.user_id)
+
+            # Determine whether to use Slices or Membership for joining Projects
             if project_id:
-                query = query.join(Projects, Slices.project_id == Projects.id)
+                if requires_slice or requires_sliver:
+                    query = query.join(Projects, Slices.project_id == Projects.id)
+                else:
+                    query = query.join(Membership, Membership.user_id == Users.id) \
+                        .join(Projects, Projects.id == Membership.project_id)
 
             # Only join Slivers if needed
             if requires_sliver:
@@ -833,19 +1029,34 @@ class DatabaseManager:
 
             # Time range filter
             if start_time or end_time:
-                time_filter = self.__build_time_filter(Slices, start_time, end_time)
-                if time_filter is not None:
-                    filters.append(time_filter)
-
+                if requires_slice or requires_sliver:
+                    time_filter = self.__build_time_filter(Slices, start_time, end_time)
+                    if time_filter is not None:
+                        filters.append(time_filter)
+                else:
+                    # Apply time-based filter on Membership if time window is specified
+                    st = start_time or (end_time - timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS))
+                    et = end_time or (start_time + timedelta(days=self.DEFAULT_TIME_WINDOW_DAYS))
+                    filters.append(
+                        or_(
+                            and_(Membership.start_time <= et, Membership.end_time >= st),  # overlapping window
+                            and_(Membership.start_time <= et, Membership.end_time.is_(None))  # still active
+                        )
+                    )
             # User filters
             if user_email:
                 filters.append(Users.user_email.in_(user_email))
             if user_id:
                 filters.append(Users.user_uuid.in_(user_id))
+            if user_active:
+                filters.append(Users.active == user_active)
 
             # Project filters
             if project_id:
                 filters.append(Projects.project_uuid.in_(project_id))
+
+            if project_type:
+                filters.append(Projects.project_type.in_(project_type))
 
             # Slice filters
             if slice_id:
@@ -884,6 +1095,8 @@ class DatabaseManager:
             # Exclusions
             if exclude_project_id:
                 filters.append(Projects.project_uuid.notin_(exclude_project_id))
+            if exclude_project_type:
+                filters.append(Projects.project_type.notin_(exclude_project_type))
             if exclude_user_id:
                 filters.append(Users.user_uuid.notin_(exclude_user_id))
             if exclude_user_email:
@@ -907,10 +1120,12 @@ class DatabaseManager:
             # Use DISTINCT COUNT
             count_query = session.query(func.count(distinct(Users.id)))
 
-            count_query = count_query.join(Slices, Users.id == Slices.user_id)
+            if requires_slice or requires_sliver:
+                count_query = count_query.join(Slices, Users.id == Slices.user_id)
 
             if project_id:
-                count_query = count_query.join(Projects, Slices.project_id == Projects.id)
+                if requires_slice or requires_sliver:
+                    count_query = count_query.join(Projects, Slices.project_id == Projects.id)
 
             if filters:
                 count_query = count_query.filter(and_(*filters))
@@ -1569,6 +1784,13 @@ class DatabaseManager:
         return {
             "user_id": user.user_uuid,
             "user_email": user.user_email,
+            "active": user.active,
+            "user_name": user.name,
+            "affiliation": user.affiliation,
+            "registered_on": user.registered_on.isoformat() if user.registered_on else None,
+            "last_updated": user.last_updated.isoformat() if user.last_updated else None,
+            "google_scholar": user.google_scholar,
+            "scopus": user.scopus,
         }
 
     @staticmethod
@@ -1576,27 +1798,40 @@ class DatabaseManager:
         return {
             "project_id": project.project_uuid,
             "project_name": project.project_name,
+            "project_type": project.project_type,
+            "active": project.active,
+            "created_date": project.created_date.isoformat() if project.created_date else None,
+            "expires_on": project.expires_on.isoformat() if project.expires_on else None,
+            "retired_date": project.retired_date.isoformat() if project.retired_date else None,
+            "last_updated": project.last_updated.isoformat() if project.last_updated else None
         }
 
     def __get_projects_for_user(self, user_uuid: str):
         session = self.get_session()
         try:
-            projects = session.query(Projects).distinct() \
-                .join(Slices, Slices.project_id == Projects.id) \
-                .join(Users, Slices.user_id == Users.id) \
-                .filter(Users.user_uuid == user_uuid) \
-                .all()
+            projects = (
+                session.query(Projects)
+                    .distinct()
+                    .join(Membership, Membership.project_id == Projects.id)
+                    .join(Users, Membership.user_id == Users.id)
+                    .filter(
+                    Users.user_uuid == user_uuid,
+                    Membership.active.is_(True)
+                )
+                    .all()
+            )
             return projects
         finally:
             session.rollback()
 
-    def __get_user_count_for_project(self, project_id: str):
+    def __get_user_count_for_project(self, project_id: int):
         session = self.get_session()
         try:
-            user_count = session.query(func.count(func.distinct(Slices.user_id))) \
-                .join(Projects, Slices.project_id == Projects.id) \
-                .filter(Projects.id == project_id) \
-                .scalar()
+            user_count = session.query(func.count(distinct(Membership.user_id))) \
+                .filter(
+                Membership.project_id == project_id,
+                Membership.active.is_(True)
+            ).scalar()
             return user_count
         finally:
             session.rollback()
@@ -1623,3 +1858,288 @@ class DatabaseManager:
             return True
         finally:
             session.close()
+
+    def get_user_memberships(
+            self,
+            start_time: datetime,
+            end_time: datetime,
+            user_id: list[str],
+            user_email: list[str],
+            exclude_user_id: list[str],
+            exclude_user_email: list[str],
+            project_type: list[str] = None,
+            exclude_project_type: list[str] = None,
+            project_active: bool = None,
+            project_expired: bool = None,
+            project_retired: bool = None,
+            user_active: bool = None,
+            page: int = 0,
+            per_page: int = 100
+    ):
+        session = self.get_session()
+        try:
+            query = session.query(Membership, Users, Projects).join(
+                Users, Membership.user_id == Users.id
+            ).join(
+                Projects, Membership.project_id == Projects.id
+            )
+
+            filters = []
+
+            # Membership time overlap
+            if start_time and end_time:
+                filters.append(
+                    or_(
+                        Membership.start_time is None,
+                        Membership.start_time <= end_time
+                    )
+                )
+                filters.append(
+                    or_(
+                        Membership.end_time is None,
+                        Membership.end_time >= start_time
+                    )
+                )
+
+            # User filters
+            if user_id:
+                filters.append(Users.user_uuid.in_(user_id))
+            if user_email:
+                filters.append(Users.user_email.in_(user_email))
+            if exclude_user_id:
+                filters.append(not_(Users.user_uuid.in_(exclude_user_id)))
+            if exclude_user_email:
+                filters.append(not_(Users.user_email.in_(exclude_user_email)))
+            if user_active is not None:
+                filters.append(Users.active == user_active)
+
+            # Project filters
+            if project_type:
+                filters.append(Projects.project_type.in_(project_type))
+            if exclude_project_type:
+                filters.append(not_(Projects.project_type.in_(exclude_project_type)))
+            if project_active is not None:
+                filters.append(Projects.active == project_active)
+            if project_expired is True:
+                filters.append(Projects.expires_on is not None)
+                filters.append(Projects.expires_on < datetime.utcnow())
+            if project_retired is True:
+                filters.append(Projects.retired_date is not None)
+            elif project_retired is False:
+                filters.append(Projects.retired_date is None)
+
+            if filters:
+                query = query.filter(and_(*filters))
+
+            query = query.order_by(Membership.start_time.desc())
+            query = query.offset(page * per_page).limit(per_page)
+
+            result = {}
+            priority_order = {"owner": 1, "creator": 2, "tokenholder": 3, "member": 4}
+
+            for membership, user, project in query.all():
+                r_user_id = str(user.user_uuid)
+
+                user_dict = DatabaseManager.user_to_dict(user)
+                project_dict = DatabaseManager.project_to_dict(project)
+                project_dict["membership_type"] = membership.membership_type
+                project_dict["start_time"] = membership.start_time.isoformat() if membership.start_time else None
+                project_dict["end_time"] = membership.end_time.isoformat() if membership.end_time else None
+                project_dict["active"] = membership.active
+
+                if r_user_id not in result:
+                    user_dict["projects"] = {}
+                    result[r_user_id] = user_dict
+
+                project_key = f"{membership.project_id}_{membership.start_time}_{membership.end_time}"
+                existing_entry = result[r_user_id]["projects"].get(project_key)
+
+                current_priority = priority_order.get(membership.membership_type, 99)
+                existing_priority = priority_order.get(
+                    existing_entry["membership_type"], 99
+                ) if existing_entry else 999
+
+                if not existing_entry or current_priority < existing_priority:
+                    result[r_user_id]["projects"][project_key] = project_dict
+
+            # Convert projects to list
+            for user_data in result.values():
+                user_data["projects"] = list(user_data["projects"].values())
+
+            return {
+                "total": len(result.values()),
+                "users": list(result.values())
+            }
+
+        finally:
+            session.close()
+
+    def get_project_membership(
+        self,
+        start_time: datetime,
+        end_time: datetime,
+        project_id: list[str],
+        exclude_project_id: list[str],
+        project_type: list[str] = None,
+        exclude_project_type: list[str] = None,
+        project_active: bool = None,
+        project_expired: bool = None,
+        project_retired: bool = None,
+        user_active: bool = None,
+        page: int = 0,
+        per_page: int = 100
+    ):
+        session = self.get_session()
+        try:
+            query = session.query(Membership, Users, Projects).join(
+                Users, Membership.user_id == Users.id
+            ).join(
+                Projects, Membership.project_id == Projects.id
+            )
+
+            filters = []
+
+            # Membership time overlap
+            if start_time and end_time:
+                filters.append(
+                    or_(
+                        Membership.start_time is None,
+                        Membership.start_time <= end_time
+                    )
+                )
+                filters.append(
+                    or_(
+                        Membership.end_time is None,
+                        Membership.end_time >= start_time
+                    )
+                )
+
+            # Project filters
+            if project_id:
+                filters.append(Projects.project_uuid.in_(project_id))
+            if exclude_project_id:
+                filters.append(not_(Projects.project_uuid.in_(exclude_project_id)))
+            if project_type:
+                filters.append(Projects.project_type.in_(project_type))
+            if exclude_project_type:
+                filters.append(not_(Projects.project_type.in_(exclude_project_type)))
+            if project_active is not None:
+                filters.append(Projects.active == project_active)
+            if project_expired is True:
+                filters.append(Projects.expires_on is not None)
+                filters.append(Projects.expires_on < datetime.utcnow())
+            if project_retired is True:
+                filters.append(Projects.retired_date is not None)
+            elif project_retired is False:
+                filters.append(Projects.retired_date is None)
+
+            # User active status
+            if user_active is not None:
+                filters.append(Users.active == user_active)
+
+            if filters:
+                query = query.filter(and_(*filters))
+
+            query = query.order_by(Membership.start_time.desc())
+            query = query.offset(page * per_page).limit(per_page)
+
+            result = {}
+            priority_order = {"owner": 1, "creator": 2, "tokenholder": 3, "member": 4}
+
+            for membership, user, project in query.all():
+                r_project_id = str(project.project_uuid)
+
+                project_dict = DatabaseManager.project_to_dict(project)
+                user_dict = DatabaseManager.user_to_dict(user)
+                user_dict["membership_type"] = membership.membership_type
+                user_dict["start_time"] = membership.start_time.isoformat() if membership.start_time else None
+                user_dict["end_time"] = membership.end_time.isoformat() if membership.end_time else None
+                user_dict["active"] = membership.active
+
+                if r_project_id not in result:
+                    project_dict["members"] = {}
+                    result[r_project_id] = project_dict
+
+                user_key = f"{membership.user_id}_{membership.start_time}_{membership.end_time}"
+                existing_entry = result[r_project_id]["members"].get(user_key)
+
+                current_priority = priority_order.get(membership.membership_type, 99)
+                existing_priority = priority_order.get(
+                    existing_entry["membership_type"], 99
+                ) if existing_entry else 999
+
+                if not existing_entry or current_priority < existing_priority:
+                    result[r_project_id]["members"][user_key] = user_dict
+
+            # Finalize project members into list
+            for project_data in result.values():
+                project_data["members"] = list(project_data["members"].values())
+
+            return {
+                "total": len(result.values()),
+                "projects": list(result.values())
+            }
+
+        finally:
+            session.close()
+
+    def get_user_id_by_uuid(self, user_uuid: str) -> int | None:
+        """
+        Resolve internal user ID from user UUID.
+
+        :param user_uuid: UUID of the user
+        :return: user.id if found, else None
+        """
+        session = self.get_session()
+        try:
+            user = session.query(Users).filter_by(user_uuid=user_uuid).first()
+            return user.id if user else None
+        finally:
+            session.close()
+
+    def get_project_id_by_uuid(self, project_uuid: str) -> int | None:
+        """
+        Resolve internal project ID from project UUID.
+
+        :param project_uuid: UUID of the project
+        :return: project.id if found, else None
+        """
+        session = self.get_session()
+        try:
+            project = session.query(Projects).filter_by(project_uuid=project_uuid).first()
+            return project.id if project else None
+        finally:
+            session.close()
+
+    def get_active_membership(self, user_id: int, project_id: int) -> Membership | None:
+        """
+        Retrieve the active membership for a given user and project.
+
+        :param user_id: ID of the user
+        :param project_id: ID of the project
+        :return: Membership object if an active membership exists, else None
+        """
+        session = self.get_session()
+        try:
+            return session.query(Membership).filter_by(
+                user_id=user_id,
+                project_id=project_id,
+                active=True
+            ).first()
+        finally:
+            session.close()
+
+
+if __name__ == '__main__':
+    logger = logging.getLogger("test")
+    db_mgr = DatabaseManager(user="fabric",
+                             password="fabric",
+                             database="analytics",
+                             db_host="alpha-5.fabric-testbed.net:5432",
+                             logger=logger)
+    users = db_mgr.get_user_memberships(start_time=None, end_time=None, user_id=None, user_email=["mjstealey@gmail.com"], project_type=None,
+                                        exclude_project_type=None, exclude_user_id=None, exclude_user_email=None, user_active=None)
+
+    print(json.dumps(users, indent=4))
+
+    #db_mgr.get_project_membership(start_time=None, end_time=None, project_id=None, exclude_project_id=None)

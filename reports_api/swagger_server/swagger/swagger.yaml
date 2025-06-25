@@ -4,7 +4,7 @@ info:
   description: "API for managing users, projects, slices, slivers, and related entities."
   version: 1.0.0
 servers:
-- url: http://localhost:8080/reports/
+- url: http://localhost:8080/reports
 tags:
 - name: users
   description: Users in FABRIC
@@ -92,7 +92,7 @@ paths:
             type: string
       - name: project_id
         in: query
-        description: Filter by project uuid
+        description: Filter by list of project UUIDs to include
         required: false
         style: form
         explode: true
@@ -308,7 +308,7 @@ paths:
             type: string
       - name: exclude_project_id
         in: query
-        description: Exclude projects
+        description: Filter by list of project UUIDs to exclude
         required: false
         style: form
         explode: true
@@ -383,6 +383,46 @@ paths:
             - Failed
             - Unknown
             - CloseFail
+      - name: project_type
+        in: query
+        description: "Filter by project type; allowed values research, education,\
+          \ maintenance, tutorial"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - research
+            - education
+            - maintenance
+            - tutorial
+      - name: exclude_project_type
+        in: query
+        description: "Exclude by project type; allowed values research, education,\
+          \ maintenance, tutorial"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - research
+            - education
+            - maintenance
+            - tutorial
+      - name: user_active
+        in: query
+        description: Filter by user active status
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
       - name: page
         in: query
         description: Page number for pagination. Default is 0.
@@ -408,6 +448,254 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/users'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      security:
+      - bearerAuth: []
+      x-openapi-router-controller: reports_api.swagger_server.controllers.users_controller
+  /users/{uuid}:
+    get:
+      tags:
+      - users
+      summary: Get specific user
+      description: Returns a user identified by uuid.
+      operationId: users_uuid_get
+      parameters:
+      - name: uuid
+        in: path
+        description: User identified by universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/users'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      security:
+      - bearerAuth: []
+      x-openapi-router-controller: reports_api.swagger_server.controllers.users_controller
+  /users/memberships:
+    get:
+      tags:
+      - users
+      summary: Get users
+      description: Retrieve a list of users with optional filters.
+      operationId: users_memberships_get
+      parameters:
+      - name: start_time
+        in: query
+        description: Filter by start time (inclusive)
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+      - name: end_time
+        in: query
+        description: Filter by end time (inclusive)
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+      - name: user_id
+        in: query
+        description: Filter by user uuid
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
+      - name: user_email
+        in: query
+        description: Filter by user email
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: exclude_user_id
+        in: query
+        description: Exclude Users by IDs
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
+      - name: exclude_user_email
+        in: query
+        description: Exclude Users by emails
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: project_type
+        in: query
+        description: "Filter by project type; allowed values research, education,\
+          \ maintenance, tutorial"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - research
+            - education
+            - maintenance
+            - tutorial
+      - name: exclude_project_type
+        in: query
+        description: "Exclude by project type; allowed values research, education,\
+          \ maintenance, tutorial"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - research
+            - education
+            - maintenance
+            - tutorial
+      - name: project_active
+        in: query
+        description: Filter by project active status
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      - name: project_expired
+        in: query
+        description: Filter by project expiration (true = expired)
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      - name: project_retired
+        in: query
+        description: Filter by project retirement (true = retired)
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      - name: user_active
+        in: query
+        description: Filter by user active status
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      - name: page
+        in: query
+        description: Page number for pagination. Default is 0.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 0
+      - name: per_page
+        in: query
+        description: Number of records per page. Default is 200.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 200
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/userMemberships'
         "400":
           description: Bad Request
           content:
@@ -606,7 +894,7 @@ paths:
             type: string
       - name: project_id
         in: query
-        description: Filter by project uuid
+        description: Filter by list of project UUIDs to include
         required: false
         style: form
         explode: true
@@ -822,7 +1110,7 @@ paths:
             type: string
       - name: exclude_project_id
         in: query
-        description: Exclude projects
+        description: Filter by list of project UUIDs to exclude
         required: false
         style: form
         explode: true
@@ -1073,7 +1361,7 @@ paths:
             type: string
       - name: project_id
         in: query
-        description: Filter by project uuid
+        description: Filter by list of project UUIDs to include
         required: false
         style: form
         explode: true
@@ -1289,7 +1577,7 @@ paths:
             type: string
       - name: exclude_project_id
         in: query
-        description: Exclude projects
+        description: Filter by list of project UUIDs to exclude
         required: false
         style: form
         explode: true
@@ -1364,6 +1652,46 @@ paths:
             - Failed
             - Unknown
             - CloseFail
+      - name: project_type
+        in: query
+        description: "Filter by project type; allowed values research, education,\
+          \ maintenance, tutorial"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - research
+            - education
+            - maintenance
+            - tutorial
+      - name: exclude_project_type
+        in: query
+        description: "Exclude by project type; allowed values research, education,\
+          \ maintenance, tutorial"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - research
+            - education
+            - maintenance
+            - tutorial
+      - name: project_active
+        in: query
+        description: Filter by project active status
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
       - name: page
         in: query
         description: Page number for pagination. Default is 0.
@@ -1389,6 +1717,236 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/projects'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      security:
+      - bearerAuth: []
+      x-openapi-router-controller: reports_api.swagger_server.controllers.projects_controller
+  /projects/{uuid}:
+    get:
+      tags:
+      - projects
+      summary: Retrieve a project
+      description: Returns a project identified by uuid.
+      operationId: projects_uuid_get
+      parameters:
+      - name: uuid
+        in: path
+        description: Project identified by universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/projects'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      security:
+      - bearerAuth: []
+      x-openapi-router-controller: reports_api.swagger_server.controllers.projects_controller
+  /projects/memberships:
+    get:
+      tags:
+      - projects
+      summary: Retrieve project membership records
+      description: "Retrieve project memberships with filters on time range, project\
+        \ UUIDs, project status, user activity, and membership attributes. Only the\
+        \ highest-priority membership type is returned per user/project/timestamp."
+      operationId: projects_memberships_get
+      parameters:
+      - name: start_time
+        in: query
+        description: Filter by start time (inclusive)
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+      - name: end_time
+        in: query
+        description: Filter by end time (inclusive)
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+      - name: project_id
+        in: query
+        description: Filter by list of project UUIDs to include
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
+      - name: exclude_project_id
+        in: query
+        description: Filter by list of project UUIDs to exclude
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
+            example: a3f41e9a-7e2b-4df7-baf7-12f48a3c8e6f
+      - name: project_type
+        in: query
+        description: "Filter by project type; allowed values research, education,\
+          \ maintenance, tutorial"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - research
+            - education
+            - maintenance
+            - tutorial
+      - name: exclude_project_type
+        in: query
+        description: "Exclude by project type; allowed values research, education,\
+          \ maintenance, tutorial"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - research
+            - education
+            - maintenance
+            - tutorial
+      - name: project_active
+        in: query
+        description: Filter by project active status
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      - name: project_expired
+        in: query
+        description: Filter by project expiration (true = expired)
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      - name: project_retired
+        in: query
+        description: Filter by project retirement (true = retired)
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      - name: user_active
+        in: query
+        description: Filter by user active status
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      - name: page
+        in: query
+        description: Page number for pagination. Default is 0.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 0
+      - name: per_page
+        in: query
+        description: Number of records per page. Default is 200.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 200
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/projectMemberships'
         "400":
           description: Bad Request
           content:
@@ -1472,7 +2030,7 @@ paths:
             type: string
       - name: project_id
         in: query
-        description: Filter by project uuid
+        description: Filter by list of project UUIDs to include
         required: false
         style: form
         explode: true
@@ -1688,7 +2246,7 @@ paths:
             type: string
       - name: exclude_project_id
         in: query
-        description: Exclude projects
+        description: Filter by list of project UUIDs to exclude
         required: false
         style: form
         explode: true
@@ -1923,6 +2481,30 @@ components:
           type: string
         project_name:
           type: string
+        project_type:
+          type: string
+          description: "Type of the project (e.g., research, education, etc.)"
+          example: research
+        active:
+          type: boolean
+          description: Indicates if the project is currently active
+          example: true
+        created_date:
+          type: string
+          description: Timestamp when the project was created
+          format: date-time
+        expires_on:
+          type: string
+          description: Timestamp when the project is set to expire
+          format: date-time
+        retired_date:
+          type: string
+          description: "Timestamp when the project was retired, if applicable"
+          format: date-time
+        last_updated:
+          type: string
+          description: Timestamp of the last update to the project record
+          format: date-time
         users:
           $ref: '#/components/schemas/project_users'
     users:
@@ -1942,6 +2524,34 @@ components:
           type: string
         user_email:
           type: string
+        active:
+          type: boolean
+          description: Indicates if the user is currently active
+          example: true
+        user_name:
+          type: string
+          description: Full name of the user
+          example: Jane Doe
+        affiliation:
+          type: string
+          description: Institutional or organizational affiliation
+          example: NC State University
+        registered_on:
+          type: string
+          description: Timestamp when the user registered
+          format: date-time
+        last_updated:
+          type: string
+          description: Timestamp of the last update to the user record
+          format: date-time
+        google_scholar:
+          type: string
+          description: URL to the user's Google Scholar profile
+          example: https://scholar.google.com/citations?user=XYZ123
+        scopus:
+          type: string
+          description: URL to the user's Scopus profile
+          example: https://www.scopus.com/authid/detail.uri?authorId=9876543210
         slices:
           $ref: '#/components/schemas/user_slices'
     slices:
@@ -2074,6 +2684,109 @@ components:
           type: string
         name:
           type: string
+    projectMemberships:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_paginated'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/projectMembership'
+    projectMembership:
+      type: object
+      properties:
+        project_id:
+          type: string
+          format: uuid
+        project_name:
+          type: string
+        project_type:
+          type: string
+        active:
+          type: boolean
+        created_date:
+          type: string
+          format: date-time
+        expires_on:
+          type: string
+          format: date-time
+        retired_date:
+          type: string
+          format: date-time
+          nullable: true
+        last_updated:
+          type: string
+          format: date-time
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/projectMember'
+    projectMember:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        user_name:
+          type: string
+        user_email:
+          type: string
+        affiliation:
+          type: string
+        membership_type:
+          type: string
+    userMemberships:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_paginated'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/userMembership'
+    userMembership:
+      type: object
+      properties:
+        user_id:
+          type: string
+        user_email:
+          type: string
+        active:
+          type: boolean
+          description: Indicates if the user is currently active
+          example: true
+        user_name:
+          type: string
+          description: Full name of the user
+          example: Jane Doe
+        affiliation:
+          type: string
+          description: Institutional or organizational affiliation
+          example: NC State University
+        registered_on:
+          type: string
+          description: Timestamp when the user registered
+          format: date-time
+        last_updated:
+          type: string
+          description: Timestamp of the last update to the user record
+          format: date-time
+        google_scholar:
+          type: string
+          description: URL to the user's Google Scholar profile
+          example: https://scholar.google.com/citations?user=XYZ123
+        scopus:
+          type: string
+          description: URL to the user's Scopus profile
+          example: https://www.scopus.com/authid/detail.uri?authorId=9876543210
+        projects:
+          type: array
+          description: List of project memberships for the user
+          items:
+            $ref: '#/components/schemas/userMembership_projects'
     status_200_ok_paginated:
       type: object
       properties:
@@ -2323,6 +3036,47 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/interface'
+    userMembership_projects:
+      type: object
+      properties:
+        project_uuid:
+          type: string
+          description: UUID of the project
+        project_name:
+          type: string
+          description: Name of the project
+        project_type:
+          type: string
+          description: Type of the project
+        project_active:
+          type: boolean
+          description: Whether the project is active
+        expires_on:
+          type: string
+          description: "Expiration date of the project, if any"
+          format: date-time
+          nullable: true
+        retired_date:
+          type: string
+          description: "Date when the project was retired, if applicable"
+          format: date-time
+          nullable: true
+        membership_type:
+          type: string
+          description: "Role of the user in the project (e.g., owner, member)"
+        start_time:
+          type: string
+          description: Start time of the membership
+          format: date-time
+          nullable: true
+        end_time:
+          type: string
+          description: End time of the membership
+          format: date-time
+          nullable: true
+        active:
+          type: boolean
+          description: Whether the membership is currently active
   parameters:
     startTime:
       name: start_time
@@ -2395,7 +3149,7 @@ components:
     projectId:
       name: project_id
       in: query
-      description: Filter by project uuid
+      description: Filter by list of project UUIDs to include
       required: false
       style: form
       explode: true
@@ -2408,7 +3162,7 @@ components:
     excludeProjectId:
       name: exclude_project_id
       in: query
-      description: Exclude projects
+      description: Filter by list of project UUIDs to exclude
       required: false
       style: form
       explode: true
@@ -2521,6 +3275,40 @@ components:
           - Failed
           - Unknown
           - CloseFail
+    projectType:
+      name: project_type
+      in: query
+      description: "Filter by project type; allowed values research, education, maintenance,\
+        \ tutorial"
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: array
+        items:
+          type: string
+          enum:
+          - research
+          - education
+          - maintenance
+          - tutorial
+    excludeProjectType:
+      name: exclude_project_type
+      in: query
+      description: "Exclude by project type; allowed values research, education, maintenance,\
+        \ tutorial"
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: array
+        items:
+          type: string
+          enum:
+          - research
+          - education
+          - maintenance
+          - tutorial
     excludeSliverState:
       name: exclude_sliver_state
       in: query
@@ -2701,6 +3489,42 @@ components:
       schema:
         type: integer
         default: 200
+    projectActive:
+      name: project_active
+      in: query
+      description: Filter by project active status
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: boolean
+    projectExpired:
+      name: project_expired
+      in: query
+      description: Filter by project expiration (true = expired)
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: boolean
+    projectRetired:
+      name: project_retired
+      in: query
+      description: Filter by project retirement (true = retired)
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: boolean
+    userActive:
+      name: user_active
+      in: query
+      description: Filter by user active status
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: boolean
   requestBodies:
     payload_sliver:
       description: Create/Modify sliver

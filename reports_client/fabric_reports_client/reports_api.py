@@ -313,7 +313,8 @@ class ReportsApi:
                     exclude_user_id: list[str] = None, exclude_user_email: list[str] = None,
                     exclude_project_id: list[str] = None, exclude_site: list[str] = None, facility: list[str] = None,
                     exclude_host: list[str] = None, exclude_slice_state: list[str] = None,
-                     exclude_sliver_state: list[str] = None, page=0, per_page=1000, fetch_all=True):
+                    exclude_sliver_state: list[str] = None, user_active: bool = None, project_type: list[str] = None,
+                    exclude_project_type: list[str] = None, page=0, per_page=1000, fetch_all=True):
         """
         Fetch users with optional filters. Supports fetching all pages or just one.
 
@@ -367,7 +368,10 @@ class ReportsApi:
         :type exclude_slice_state: List[str]
         :param exclude_sliver_state: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
         :type exclude_sliver_state: List[str]
-
+        :param user_active: Filter by whether the user is active
+        :type user_active: bool
+        :param project_type: List of project types to include (research, education, maintenance, tutorial)
+        :param exclude_project_type: List of project types to exclude
         :param page: Page number for pagination. Default is 1.
         :type page: int
         :param per_page: Number of records per page. Default is 10.
@@ -399,6 +403,8 @@ class ReportsApi:
             "site": site,
             "host": host,
             "facility": facility,
+            "project_type": project_type,
+            "user_active": user_active,
             "exclude_user_id": exclude_user_id,
             "exclude_user_email": exclude_user_email,
             "exclude_project_id": exclude_project_id,
@@ -406,6 +412,7 @@ class ReportsApi:
             "exclude_host": exclude_host,
             "exclude_slice_state": exclude_slice_state,
             "exclude_sliver_state": exclude_sliver_state,
+            "exclude_project_type": exclude_project_type,
             "per_page": per_page  # page will be added per iteration
         }
 
@@ -446,7 +453,8 @@ class ReportsApi:
                        exclude_user_id: list[str] = None, exclude_user_email: list[str] = None,
                        exclude_project_id: list[str] = None, exclude_site: list[str] = None, facility: list[str] = None,
                        exclude_host: list[str] = None, exclude_slice_state: list[str] = None,
-                     exclude_sliver_state: list[str] = None, page=0, per_page=1000, fetch_all=True):
+                       exclude_sliver_state: list[str] = None, project_active: bool = None, project_type: list[str] = None,
+                       exclude_project_type: list[str] = None, page=0, per_page=1000, fetch_all=True):
         """
         Fetch projects with optional filters. Supports fetching all pages or just one.
 
@@ -500,6 +508,10 @@ class ReportsApi:
         :type exclude_slice_state: List[str]
         :param exclude_sliver_state: Filter by sliver state; allowed values Nascent, Ticketed, Active, ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail
         :type exclude_sliver_state: List[str]
+        :param project_active: Filter by whether the project is active
+        :type project_active: bool
+        :param project_type: List of project types to include (research, education, maintenance, tutorial)
+        :param exclude_project_type: List of project types to exclude
 
         :param page: Page number for pagination. Default is 1.
         :type page: int
@@ -532,6 +544,8 @@ class ReportsApi:
             "site": site,
             "host": host,
             "facility": facility,
+            "project_type": project_type,
+            "project_active": project_active,
             "exclude_user_id": exclude_user_id,
             "exclude_user_email": exclude_user_email,
             "exclude_project_id": exclude_project_id,
@@ -539,6 +553,7 @@ class ReportsApi:
             "exclude_host": exclude_host,
             "exclude_slice_state": exclude_slice_state,
             "exclude_sliver_state": exclude_sliver_state,
+            "exclude_project_type": exclude_project_type,
             "per_page": per_page  # page will be added per iteration
         }
 
@@ -674,3 +689,165 @@ class ReportsApi:
             return response.json()
         else:
             raise Exception(f"Failed to post slice: {response.status_code} - {response.text}")
+
+    def query_user_memberships(self,
+                               start_time: str = None,
+                               end_time: str = None,
+                               user_id: list[str] = None,
+                               user_email: list[str] = None,
+                               exclude_user_id: list[str] = None,
+                               exclude_user_email: list[str] = None,
+                               project_type: list[str] = None,
+                               exclude_project_type: list[str] = None,
+                               project_active: bool = None,
+                               project_expired: bool = None,
+                               project_retired: bool = None,
+                               user_active: bool = None,
+                               page: int = 0,
+                               per_page: int = 500,
+                               fetch_all: bool = True):
+        """
+        Query user-project memberships with optional filters and pagination.
+
+        :param start_time: Filter by start time (inclusive, ISO 8601 string)
+        :param end_time: Filter by end time (inclusive, ISO 8601 string)
+        :param user_id: List of user UUIDs to include
+        :param user_email: List of user emails to include
+        :param exclude_user_id: List of user UUIDs to exclude
+        :param exclude_user_email: List of user emails to exclude
+        :param project_type: List of project types to include (research, education, maintenance, tutorial)
+        :param exclude_project_type: List of project types to exclude
+        :param project_active: Filter by whether the project is active
+        :param project_expired: Filter by whether the project is expired
+        :param project_retired: Filter by whether the project is retired
+        :param user_active: Filter by whether the user is active
+        :param page: Page number for pagination (default: 0)
+        :param per_page: Number of records per page (default: 200)
+        :param fetch_all: If True, automatically paginates through all results
+        :return: Dict with 'total' and 'data' keys
+        """
+        all_memberships = []
+        total = 0
+        url = f"{self.base_url}/users/memberships"
+
+        base_params = {
+            "start_time": start_time,
+            "end_time": end_time,
+            "user_id": user_id,
+            "user_email": user_email,
+            "exclude_user_id": exclude_user_id,
+            "exclude_user_email": exclude_user_email,
+            "project_type": project_type,
+            "exclude_project_type": exclude_project_type,
+            "project_active": project_active,
+            "project_expired": project_expired,
+            "project_retired": project_retired,
+            "user_active": user_active,
+            "per_page": per_page
+        }
+
+        # Filter out None values
+        filtered_params = {k: v for k, v in base_params.items() if v is not None}
+
+        while True:
+            filtered_params["page"] = page
+            response = requests.get(url, headers=self.headers, params=filtered_params)
+
+            if response.status_code == 200:
+                result = response.json()
+            else:
+                raise Exception(f"Failed to fetch memberships: {response.status_code} - {response.text}")
+
+            if page == 0:
+                total = result.get("total", 0)
+
+            data = result.get("data", [])
+            all_memberships.extend(data)
+
+            if not fetch_all or not data or len(all_memberships) >= total:
+                break
+
+            page += 1
+
+        return {
+            "total": total,
+            "data": all_memberships
+        }
+
+    def query_project_memberships(self,
+                                  start_time: str = None,
+                                  end_time: str = None,
+                                  project_id: list[str] = None,
+                                  exclude_project_id: list[str] = None,
+                                  project_type: list[str] = None,
+                                  exclude_project_type: list[str] = None,
+                                  project_active: bool = None,
+                                  project_expired: bool = None,
+                                  project_retired: bool = None,
+                                  user_active: bool = None,
+                                  page: int = 0,
+                                  per_page: int = 500,
+                                  fetch_all: bool = True):
+        """
+        Query project-user memberships with optional filters and pagination.
+
+        :param start_time: Filter by start time (ISO 8601 string)
+        :param end_time: Filter by end time (ISO 8601 string)
+        :param project_id: List of project UUIDs to include
+        :param exclude_project_id: List of project UUIDs to exclude
+        :param project_type: List of project types to include (research, education, maintenance, tutorial)
+        :param exclude_project_type: List of project types to exclude
+        :param project_active: Filter by whether project is active
+        :param project_expired: Filter by whether project is expired
+        :param project_retired: Filter by whether project is retired
+        :param user_active: Filter by whether the user is active
+        :param page: Page number for pagination (default: 0)
+        :param per_page: Records per page (default: 200)
+        :param fetch_all: If True, automatically paginate through all results
+        :return: Dict with 'total' and 'data' keys
+        """
+        all_memberships = []
+        total = 0
+        url = f"{self.base_url}/projects/memberships"
+
+        base_params = {
+            "start_time": start_time,
+            "end_time": end_time,
+            "project_id": project_id,
+            "exclude_project_id": exclude_project_id,
+            "project_type": project_type,
+            "exclude_project_type": exclude_project_type,
+            "project_active": project_active,
+            "project_expired": project_expired,
+            "project_retired": project_retired,
+            "user_active": user_active,
+            "per_page": per_page  # page will be added dynamically
+        }
+
+        # Filter out None values
+        filtered_params = {k: v for k, v in base_params.items() if v is not None}
+
+        while True:
+            filtered_params["page"] = page
+            response = requests.get(url, headers=self.headers, params=filtered_params)
+
+            if response.status_code == 200:
+                result = response.json()
+            else:
+                raise Exception(f"Failed to fetch project memberships: {response.status_code} - {response.text}")
+
+            if page == 0:
+                total = result.get("total", 0)
+
+            data = result.get("data", [])
+            all_memberships.extend(data)
+
+            if not fetch_all or not data or len(all_memberships) >= total:
+                break
+
+            page += 1
+
+        return {
+            "total": total,
+            "data": all_memberships
+        }

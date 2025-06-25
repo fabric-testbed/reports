@@ -25,7 +25,7 @@ class TestHostsController(BaseTestCase):
         query_string = [('site', 'site_example'),
                         ('exclude_site', 'exclude_site_example')]
         response = self.client.open(
-            '/RENCI3/analytics/1.0.0/hosts',
+            '/reports/hosts',
             method='GET',
             query_string=query_string)
         self.assert200(response,

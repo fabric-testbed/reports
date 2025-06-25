@@ -36,6 +36,17 @@ sudo pip install tox
 tox
 ```
 
+## Code generation
+Generate the code using the following command:
+```
+swagger-codegen generate   -i openapi.yml   -l python-flask   -o generated-server
+```
+Run the following script:
+```
+./update_swagger_stub.sh
+```
+Compare `swagger_server_archive` and `swagger_server` to move any old changes as needed.
+
 ## Running with Docker
 
 To run the server on a Docker container, please execute the following from the root directory:

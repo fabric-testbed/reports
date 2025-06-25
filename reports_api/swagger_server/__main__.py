@@ -2,7 +2,7 @@
 
 import connexion
 
-from swagger_server import encoder
+from reports_api.swagger_server import encoder
 
 
 def main():

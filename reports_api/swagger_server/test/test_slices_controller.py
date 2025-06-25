@@ -5,7 +5,9 @@ from __future__ import absolute_import
 from flask import json
 from six import BytesIO
 
+from reports_api.swagger_server.models.slice import Slice  # noqa: E501
 from reports_api.swagger_server.models.slices import Slices  # noqa: E501
+from reports_api.swagger_server.models.status200_ok_no_content import Status200OkNoContent  # noqa: E501
 from reports_api.swagger_server.models.status400_bad_request import Status400BadRequest  # noqa: E501
 from reports_api.swagger_server.models.status401_unauthorized import Status401Unauthorized  # noqa: E501
 from reports_api.swagger_server.models.status403_forbidden import Status403Forbidden  # noqa: E501
@@ -50,7 +52,7 @@ class TestSlicesController(BaseTestCase):
                         ('page', 0),
                         ('per_page', 200)]
         response = self.client.open(
-            '/RENCI3/analytics/1.0.0/slices',
+            '/reports/slices',
             method='GET',
             query_string=query_string)
         self.assert200(response,
@@ -63,7 +65,7 @@ class TestSlicesController(BaseTestCase):
         """
         body = Slice()
         response = self.client.open(
-            '/RENCI3/analytics/1.0.0/slices/{slice_id}'.format(slice_id='38400000-8cf0-11bd-b23e-10b96e4ef00d'),
+            '/reports/slices/{slice_id}'.format(slice_id='38400000-8cf0-11bd-b23e-10b96e4ef00d'),
             method='POST',
             data=json.dumps(body),
             content_type='application/json')

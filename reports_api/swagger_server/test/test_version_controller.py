@@ -19,7 +19,7 @@ class TestVersionController(BaseTestCase):
         Version
         """
         response = self.client.open(
-            '/RENCI3/analytics/1.0.0/version',
+            '/reports/version',
             method='GET')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))

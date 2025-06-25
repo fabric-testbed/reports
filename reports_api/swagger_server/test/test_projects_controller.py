@@ -5,6 +5,7 @@ from __future__ import absolute_import
 from flask import json
 from six import BytesIO
 
+from reports_api.swagger_server.models.project_memberships import ProjectMemberships  # noqa: E501
 from reports_api.swagger_server.models.projects import Projects  # noqa: E501
 from reports_api.swagger_server.models.status400_bad_request import Status400BadRequest  # noqa: E501
 from reports_api.swagger_server.models.status401_unauthorized import Status401Unauthorized  # noqa: E501
@@ -47,12 +48,50 @@ class TestProjectsController(BaseTestCase):
                         ('exclude_host', 'exclude_host_example'),
                         ('exclude_slice_state', 'exclude_slice_state_example'),
                         ('exclude_sliver_state', 'exclude_sliver_state_example'),
+                        ('project_type', 'project_type_example'),
+                        ('exclude_project_type', 'exclude_project_type_example'),
+                        ('project_active', true),
                         ('page', 0),
                         ('per_page', 200)]
         response = self.client.open(
-            '/RENCI3/analytics/1.0.0/projects',
+            '/reports/projects',
             method='GET',
             query_string=query_string)
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
+    def test_projects_memberships_get(self):
+        """Test case for projects_memberships_get
+
+        Retrieve project membership records
+        """
+        query_string = [('start_time', '2013-10-20T19:20:30+01:00'),
+                        ('end_time', '2013-10-20T19:20:30+01:00'),
+                        ('project_id', 'project_id_example'),
+                        ('exclude_project_id', 'exclude_project_id_example'),
+                        ('project_type', 'project_type_example'),
+                        ('exclude_project_type', 'exclude_project_type_example'),
+                        ('project_active', true),
+                        ('project_expired', true),
+                        ('project_retired', true),
+                        ('user_active', true),
+                        ('page', 0),
+                        ('per_page', 200)]
+        response = self.client.open(
+            '/reports/projects/memberships',
+            method='GET',
+            query_string=query_string)
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
+    def test_projects_uuid_get(self):
+        """Test case for projects_uuid_get
+
+        Retrieve a project
+        """
+        response = self.client.open(
+            '/reports/projects/{uuid}'.format(uuid='uuid_example'),
+            method='GET')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
