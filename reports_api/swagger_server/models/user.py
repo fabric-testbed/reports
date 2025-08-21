@@ -15,7 +15,8 @@ class User(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, user_id: str=None, user_email: str=None, active: bool=None, user_name: str=None, affiliation: str=None, registered_on: datetime=None, last_updated: datetime=None, google_scholar: str=None, scopus: str=None, slices: UserSlices=None):  # noqa: E501
+    def __init__(self, user_id: str=None, user_email: str=None, active: bool=None, user_name: str=None, affiliation: str=None, registered_on: datetime=None, last_updated: datetime=None, google_scholar: str=None, 
+                 scopus: str=None, bastion_login: str=None, slices: UserSlices=None):  # noqa: E501
         """User - a model defined in Swagger
 
         :param user_id: The user_id of this User.  # noqa: E501
@@ -36,6 +37,8 @@ class User(Model):
         :type google_scholar: str
         :param scopus: The scopus of this User.  # noqa: E501
         :type scopus: str
+        :param bastion_login: The bastion_login of this User.  # noqa: E501
+        :type bastion_login: str
         :param slices: The slices of this User.  # noqa: E501
         :type slices: UserSlices
         """
@@ -49,6 +52,7 @@ class User(Model):
             'last_updated': datetime,
             'google_scholar': str,
             'scopus': str,
+            'bastion_login': str,
             'slices': UserSlices
         }
 
@@ -62,6 +66,7 @@ class User(Model):
             'last_updated': 'last_updated',
             'google_scholar': 'google_scholar',
             'scopus': 'scopus',
+            'bastion_login': 'bastion_login',
             'slices': 'slices'
         }
         self._user_id = user_id
@@ -73,6 +78,8 @@ class User(Model):
         self._last_updated = last_updated
         self._google_scholar = google_scholar
         self._scopus = scopus
+        self._bastion_login = bastion_login
+        
         self._slices = slices
 
     @classmethod
@@ -288,6 +295,29 @@ class User(Model):
         """
 
         self._scopus = scopus
+
+    @property
+    def bastion_login(self) -> str:
+        """Gets the bastion_login of this User.
+
+        Username for the bastion host login  # noqa: E501
+
+        :return: The bastion_login of this User.
+        :rtype: str
+        """
+        return self._bastion_login 
+    
+    @bastion_login.setter
+    def bastion_login(self, bastion_login: str):    
+        """Sets the bastion_login of this User.
+
+        Username for the bastion host login  # noqa: E501
+
+        :param bastion_login: The bastion_login of this User.
+        :type bastion_login: str
+        """
+
+        self._bastion_login = bastion_login
 
     @property
     def slices(self) -> UserSlices:

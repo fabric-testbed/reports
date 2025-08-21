@@ -2552,6 +2552,10 @@ components:
           type: string
           description: URL to the user's Scopus profile
           example: https://www.scopus.com/authid/detail.uri?authorId=9876543210
+        bastion_login:
+          type: string
+          description: Username for the bastion host login
+          example: jane.doe
         slices:
           $ref: '#/components/schemas/user_slices'
     slices:
