@@ -51,6 +51,7 @@ class Users(Base):
     last_updated = Column(TIMESTAMP(timezone=True), index=True)
     google_scholar = Column(String)
     scopus = Column(String)
+    bastion_login = Column(String)
 
     #memberships = relationship("Membership", back_populates="user", cascade="all, delete-orphan")
     __table_args__ = (
