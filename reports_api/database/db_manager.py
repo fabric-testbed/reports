@@ -186,6 +186,7 @@ class DatabaseManager:
             last_updated: Optional[datetime] = None,
             google_scholar: Optional[str] = None,
             scopus: Optional[str] = None,
+            bastion_login: Optional[str] = None
     ) -> int:
         """
         Adds a user if it doesn't exist, otherwise updates its fields.
@@ -199,6 +200,7 @@ class DatabaseManager:
         :param last_updated: Datetime of the last update. Defaults to current UTC time if not provided.
         :param google_scholar: URL or identifier for the user's Google Scholar profile.
         :param scopus: URL or identifier for the user's Scopus profile.
+        :param bastion_login: Bastion login for the user, if applicable.
         :return: ID of the created or updated user.
         :rtype: int
         """
@@ -221,6 +223,8 @@ class DatabaseManager:
                     user.google_scholar = google_scholar
                 if scopus is not None:
                     user.scopus = scopus
+                if bastion_login is not None:
+                    user.bastion_login = bastion_login
             else:
                 user = Users(
                     user_uuid=user_uuid,
@@ -232,6 +236,7 @@ class DatabaseManager:
                     last_updated=last_updated or datetime.utcnow(),
                     google_scholar=google_scholar,
                     scopus=scopus,
+                    bastion_login=bastion_login
                 )
                 session.add(user)
 
@@ -1791,6 +1796,7 @@ class DatabaseManager:
             "last_updated": user.last_updated.isoformat() if user.last_updated else None,
             "google_scholar": user.google_scholar,
             "scopus": user.scopus,
+            "bastion_login": user.bastion_login,
         }
 
     @staticmethod

@@ -108,7 +108,8 @@ class UserSyncScript:
                     registered_on=isoparse(detail["registered_on"]) if detail.get("registered_on") else None,
                     last_updated=isoparse(detail["last_updated"]) if detail.get("last_updated") else None,
                     google_scholar=detail.get("google_scholar"),
-                    scopus=detail.get("scopus")
+                    scopus=detail.get("scopus"),
+                    bastion_login=detail.get("bastion_login")
                 )
 
                 # Fetch and store memberships

@@ -107,3 +107,5 @@ CREATE TABLE membership (
 
 CREATE INDEX idx_membership_user_id ON membership (user_id);
 CREATE INDEX idx_membership_project_id ON membership (project_id);
+
+ALTER TABLE users ADD COLUMN bastion_login VARCHAR;
