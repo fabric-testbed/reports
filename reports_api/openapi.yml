@@ -1245,7 +1245,11 @@ components:
         scopus:
           type: string
           example: "https://www.scopus.com/authid/detail.uri?authorId=9876543210"
-          description: URL to the user's Scopus profile         
+          description: URL to the user's Scopus profile
+        bastion_login:
+          type: string
+          description: Username for the bastion host login
+          example: jane.doe
         slices:
           type: object
           properties:
