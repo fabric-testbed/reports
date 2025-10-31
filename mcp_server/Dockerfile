@@ -15,14 +15,6 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# --- NOTE on Client Files ---
-# Since your reports_api.py is a custom file, we need to copy it too.
-# Assuming it's in a subfolder named 'fabric_reports_client'
-# You would need to ensure the correct path exists on your host machine.
-# If fabric_reports_client is a package name, remove these lines.
-COPY fabric_reports_client /app/fabric_reports_client
-# -----------------------------
-
 # Copy the main application server file
 COPY mcp_reports_server.py /app/
 
