@@ -11,7 +11,9 @@ from fabric_reports_client.reports_api import ReportsApi
 
 # --- Configuration ---
 MCP_SERVER_VERSION = "1.3.0"
-REPORTS_API_BASE_URL = "https://reports.fabric-testbed.net/reports"
+DEFAULT_BASE_URL = "https://reports.fabric-testbed.net/reports"
+REPORTS_API_BASE_URL = os.environ.get("REPORTS_API_BASE_URL", DEFAULT_BASE_URL)
+print(f"Reports API Base URL set to: {REPORTS_API_BASE_URL}")
 
 
 # --- Pydantic Models for MCP and Tool Call Handling ---
