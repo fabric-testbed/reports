@@ -1,23 +1,40 @@
-FROM python:3.11.0
-MAINTAINER Komal Thareja<komal.thareja@gmail.com>
+# Smaller base image; feel free to keep full if you need build tooling
+FROM python:3.11-slim
 
-RUN apt-get update && apt-get install -y vim cron iputils-ping && rm -rf /var/lib/apt/lists/*
-# Set environment variables for better Python and server operation
-ENV PYTHONUNBUFFERED 1
+LABEL maintainer="Komal Thareja <komal.thareja@gmail.com>"
 
-# Create and set the working directory in the container
+# System deps (keep minimal)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    vim-tiny cron iputils-ping ca-certificates curl \
+ && rm -rf /var/lib/apt/lists/*
+
+# Python stdout/stderr unbuffered
+ENV PYTHONUNBUFFERED=1
+
+# App config (override at runtime)
+ENV REPORTS_API_BASE_URL="https://reports.fabric-testbed.net/reports" \
+    PORT=5000
+
+# Create app user (non-root)
+RUN useradd -m -u 10001 appuser
+
 WORKDIR /app
 
-# Copy the requirements file and install dependencies
-# We install dependencies first to leverage Docker layer caching
+# Leverage layer caching
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the main application server file
+# App code
 COPY mcp_reports_server.py /app/
 
-# Expose the port the application runs on
-EXPOSE 5000
+# Use an unprivileged user
+USER appuser
 
-# HARDCODING THE PORT 5000 HERE
-CMD ["uvicorn", "mcp_reports_server:app", "--host", "0.0.0.0", "--port", "5000"]
+# Expose the configurable port
+EXPOSE ${PORT}
+
+# Healthcheck uses a simple TCP probe so we don't depend on a specific HTTP route
+HEALTHCHECK --interval=30s --timeout=3s --retries=5 CMD bash -c "exec 3<>/dev/tcp/127.0.0.1/${PORT} && exit 0 || exit 1"
+
+# Start the FastMCP HTTP server (the script reads PORT env)
+CMD ["python", "/app/mcp_reports_server.py"]
