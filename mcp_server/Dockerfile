@@ -1,6 +1,7 @@
-# Use the official Python image from Docker Hub as the base image
-FROM python:3.11-slim
+FROM python:3.11.0
+MAINTAINER Komal Thareja<komal.thareja@gmail.com>
 
+RUN apt-get update && apt-get install -y vim cron iputils-ping && rm -rf /var/lib/apt/lists/*
 # Set environment variables for better Python and server operation
 ENV PYTHONUNBUFFERED 1
 
