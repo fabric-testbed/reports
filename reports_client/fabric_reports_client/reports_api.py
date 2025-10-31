@@ -4,9 +4,12 @@ import os
 
 
 class ReportsApi:
-    def __init__(self, base_url: str, token_file: str):
+    def __init__(self, base_url: str, token_file: str = None, token: str = None):
         self.base_url = base_url.rstrip("/")
-        self.token = self._load_token(token_file)
+        if token:
+            self.token = token
+        else:
+            self.token = self._load_token(token_file)
         self.headers = {
             "Authorization": f"Bearer {self.token}",
             "Accept": "application/json"
@@ -26,6 +29,19 @@ class ReportsApi:
         if not token:
             raise ValueError("Missing 'id_token' field in token JSON file")
         return token
+
+    def query_version(self):
+        """
+        Query version of reports API
+        """
+        url = f"{self.base_url}/version"
+
+        response = requests.get(url, headers=self.headers)
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise Exception(f"Failed to fetch version: {response.status_code} - {response.text}")
     
     def query_sites(self):
         """

@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+pydantic
+requests
+fabric_reports_client
