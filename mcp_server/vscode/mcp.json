@@ -1,0 +1,13 @@
+{
+	"servers": {
+		"fabric-reports": {
+			"type": "http",
+			"url": "https://reports.fabric-testbed.net/mcp",
+			"headers": {
+				"Authorization": "Bearer <REPLACE_WITH_ID_TOKEN_FROM_FABRIC_TOKEN>"
+			},
+		}
+	},
+	"inputs": [
+    ]
+}
