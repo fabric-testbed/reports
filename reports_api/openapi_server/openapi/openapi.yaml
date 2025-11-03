@@ -4,9 +4,8 @@ info:
   title: Analytics API with PostgreSQL
   version: 1.0.0
 servers:
-- description: SwaggerHub API Auto Mocking
-  url: https://virtserver.swaggerhub.com/RENCI3/analytics/1.0.0
-- url: http://localhost:8080/reports
+  - url: http://localhost:8080/reports/
+    description: Local development
 tags:
 - description: Users in FABRIC
   name: users
