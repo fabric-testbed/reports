@@ -90,7 +90,7 @@ paths:
       summary: Get hosts
       tags:
       - hosts
-      x-openapi-router-controller: openapi_server.controllers.hosts_controller
+      x-openapi-router-controller: reports_api.openapi_server.controllers.hosts_controller
   /projects:
     get:
       description: Returns a paginated list of projects with their UUIDs.
@@ -549,7 +549,7 @@ paths:
       summary: Retrieve a list of projects
       tags:
       - projects
-      x-openapi-router-controller: openapi_server.controllers.projects_controller
+      x-openapi-router-controller: reports_api.openapi_server.controllers.projects_controller
   /projects/memberships:
     get:
       description: "Retrieve project memberships with filters on time range, project\
@@ -723,7 +723,7 @@ paths:
       summary: Retrieve project membership records
       tags:
       - projects
-      x-openapi-router-controller: openapi_server.controllers.projects_controller
+      x-openapi-router-controller: reports_api.openapi_server.controllers.projects_controller
   /projects/{uuid}:
     get:
       description: Returns a project identified by uuid.
@@ -779,7 +779,7 @@ paths:
       summary: Retrieve a project
       tags:
       - projects
-      x-openapi-router-controller: openapi_server.controllers.projects_controller
+      x-openapi-router-controller: reports_api.openapi_server.controllers.projects_controller
   /sites:
     get:
       description: Retrieve a list of sites.
@@ -826,7 +826,7 @@ paths:
       summary: Get sites
       tags:
       - sites
-      x-openapi-router-controller: openapi_server.controllers.sites_controller
+      x-openapi-router-controller: reports_api.openapi_server.controllers.sites_controller
   /slices:
     get:
       description: Retrieve a list of slices with optional filters.
@@ -1245,7 +1245,7 @@ paths:
       summary: Get slices
       tags:
       - slices
-      x-openapi-router-controller: openapi_server.controllers.slices_controller
+      x-openapi-router-controller: reports_api.openapi_server.controllers.slices_controller
   /slices/{slice_id}:
     post:
       description: Create a Slice
@@ -1304,7 +1304,7 @@ paths:
       summary: Create/Update a slice
       tags:
       - slices
-      x-openapi-router-controller: openapi_server.controllers.slices_controller
+      x-openapi-router-controller: reports_api.openapi_server.controllers.slices_controller
   /slivers:
     get:
       description: Retrieve a list of slivers with optional filters.
@@ -1723,7 +1723,7 @@ paths:
       summary: Get slivers
       tags:
       - slivers
-      x-openapi-router-controller: openapi_server.controllers.slivers_controller
+      x-openapi-router-controller: reports_api.openapi_server.controllers.slivers_controller
   /slivers/{slice_id}/{sliver_id}:
     post:
       description: Create/Update Sliver.
@@ -1791,7 +1791,7 @@ paths:
       summary: Create/Update Sliver
       tags:
       - slivers
-      x-openapi-router-controller: openapi_server.controllers.slivers_controller
+      x-openapi-router-controller: reports_api.openapi_server.controllers.slivers_controller
   /users:
     get:
       description: Retrieve a list of users with optional filters.
@@ -2250,7 +2250,7 @@ paths:
       summary: Get users
       tags:
       - users
-      x-openapi-router-controller: openapi_server.controllers.users_controller
+      x-openapi-router-controller: reports_api.openapi_server.controllers.users_controller
   /users/memberships:
     get:
       description: Retrieve a list of users with optional filters.
@@ -2442,7 +2442,7 @@ paths:
       summary: Get users
       tags:
       - users
-      x-openapi-router-controller: openapi_server.controllers.users_controller
+      x-openapi-router-controller: reports_api.openapi_server.controllers.users_controller
   /users/{uuid}:
     get:
       description: Returns a user identified by uuid.
@@ -2498,7 +2498,7 @@ paths:
       summary: Get specific user
       tags:
       - users
-      x-openapi-router-controller: openapi_server.controllers.users_controller
+      x-openapi-router-controller: reports_api.openapi_server.controllers.users_controller
   /version:
     get:
       description: Version
@@ -2519,7 +2519,7 @@ paths:
       summary: Version
       tags:
       - version
-      x-openapi-router-controller: openapi_server.controllers.version_controller
+      x-openapi-router-controller: reports_api.openapi_server.controllers.version_controller
 components:
   parameters:
     startTime:
@@ -8213,4 +8213,4 @@ components:
       bearerFormat: JWT
       scheme: bearer
       type: http
-      x-bearerInfoFunc: openapi_server.controllers.security_controller.info_from_bearerAuth
+      x-bearerInfoFunc: reports_api.openapi_server.controllers.security_controller.info_from_bearerAuth
