@@ -4,6 +4,33 @@ The **Reports MCP Server** is a lightweight Model Context Protocol (MCP) bridge 
 
 It provides a structured, secure interface for querying **users**, **projects**, **slices**, **slivers**, **components**, and **sites** — while enforcing domain constraints, normalization rules, and optional project exclusion filters.
 
+## Table of Contents
+- [FABRIC Reports MCP Server](#fabric-reports-mcp-server)
+  - [Features](#features)
+  - [Architecture](#architecture)
+  - [Quick Start](#quick-start)
+    - [1. Clone and build](#1-clone-and-build)
+    - [2. Run directly with Docker](#2-run-directly-with-docker)
+    - [3. Verify](#3-verify)
+  - [Configuration](#configuration)
+    - [Environment Variables](#environment-variables)
+  - [Structure](#structure)
+  - [Local Development](#local-development)
+    - [Install dependencies](#install-dependencies)
+    - [Run the server](#run-the-server)
+  - [Integration with Reverse Proxy](#integration-with-reverse-proxy)
+  - [API Overview](#api-overview)
+    - [`GET /mcp/capabilities`](#get-mcpcapabilities)
+    - [`POST /mcp/call_tool`](#post-mcpcall_tool)
+  - [Prompts for LLM Integration](#prompts-for-llm-integration)
+  - [Dependencies](#dependencies)
+  - [Security](#security)
+  - [Example n8n Integration](#example-n8n-integration)
+  - [Example Use Cases](#example-use-cases)
+  - [Usage](#usage)
+    - [Using the MCP Server in VS Code](#using-the-mcp-server-in-vs-code)
+  - [Maintainer](#maintainer)
+
 
 ## Features
 

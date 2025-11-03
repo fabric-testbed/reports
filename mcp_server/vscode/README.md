@@ -1,5 +1,14 @@
 # Set up and use an HTTP-streamable MCP server in VS Code (with a custom Chat mode)
 
+## Table of Contents
+- [Set up and use an HTTP-streamable MCP server in VS Code (with a custom Chat mode)](#set-up-and-use-an-http-streamable-mcp-server-in-vs-code-with-a-custom-chat-mode)
+  - [Prerequisites](#prerequisites)
+  - [1) Create `.vscode/mcp.json` and add your server](#1-create-vscodemcpjson-and-add-your-server)
+  - [2) Start the MCP server from VS Code](#2-start-the-mcp-server-from-vs-code)
+  - [3) Create a custom Chat mode and add your System prompt](#3-create-a-custom-chat-mode-and-add-your-system-prompt)
+  - [4) Use your custom mode with the running MCP server](#4-use-your-custom-mode-with-the-running-mcp-server)
+  - [Example “first query” ideas](#example-first-query-ideas)
+
 ## Prerequisites
 
 * VS Code (latest)
