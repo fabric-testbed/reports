@@ -55,13 +55,15 @@ async def _call(client: ReportsApi, method: str, **kwargs) -> Dict[str, Any]:
 # ---------------------------------------
 @mcp.tool(name="query-version", title="Query Version",
           description="Returns version info from the Reports API.")
-async def query_version(ctx: Context) -> Dict[str, Any]:
+async def query_version(ctx: Context, **extra_kwargs: Any) -> Dict[str, Any]:
+    # Added **extra_kwargs to handle unexpected client arguments
     client = _client_from_headers()
     return await _call(client, "query_version")
 
 @mcp.tool(name="query-sites", title="Query Sites",
           description="Returns list of sites (no filters supported by client).")
-async def query_sites(ctx: Context) -> Dict[str, Any]:
+async def query_sites(ctx: Context, **extra_kwargs: Any) -> Dict[str, Any]:
+    # Added **extra_kwargs to handle unexpected client arguments
     client = _client_from_headers()
     return await _call(client, "query_sites")
 
@@ -103,6 +105,7 @@ async def query_slices(
     page: int = 0,
     per_page: int = 1000,
     fetch_all: bool = True,
+    **extra_kwargs: Any,  # Added to handle unexpected client arguments
 ) -> Dict[str, Any]:
     client = _client_from_headers()
     return await _call(
@@ -159,6 +162,7 @@ async def query_slivers(
     page: int = 0,
     per_page: int = 1000,
     fetch_all: bool = True,
+    **extra_kwargs: Any,  # Added to handle unexpected client arguments
 ) -> Dict[str, Any]:
     client = _client_from_headers()
     return await _call(
@@ -218,6 +222,7 @@ async def query_users(
     page: int = 0,
     per_page: int = 1000,
     fetch_all: bool = True,
+    **extra_kwargs: Any,  # Added to handle unexpected client arguments
 ) -> Dict[str, Any]:
     client = _client_from_headers()
     return await _call(
@@ -279,6 +284,7 @@ async def query_projects(
     page: int = 0,
     per_page: int = 1000,
     fetch_all: bool = True,
+    **extra_kwargs: Any,  # Added to handle unexpected client arguments
 ) -> Dict[str, Any]:
     client = _client_from_headers()
     return await _call(
@@ -324,6 +330,7 @@ async def query_user_memberships(
     page: int = 0,
     per_page: int = 500,
     fetch_all: bool = True,
+    **extra_kwargs: Any,  # Added to handle unexpected client arguments
 ) -> Dict[str, Any]:
     client = _client_from_headers()
     return await _call(
@@ -357,6 +364,7 @@ async def query_project_memberships(
     page: int = 0,
     per_page: int = 500,
     fetch_all: bool = True,
+    **extra_kwargs: Any,  # Added to handle unexpected client arguments
 ) -> Dict[str, Any]:
     client = _client_from_headers()
     return await _call(
