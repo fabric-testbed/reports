@@ -25,10 +25,10 @@ It provides a structured, secure interface for querying **users**, **projects**,
   - [Prompts for LLM Integration](#prompts-for-llm-integration)
   - [Dependencies](#dependencies)
   - [Security](#security)
-  - [Example n8n Integration](#example-n8n-integration)
-  - [Example Use Cases](#example-use-cases)
   - [Usage](#usage)
     - [Using the MCP Server in VS Code](#using-the-mcp-server-in-vs-code)
+    - [n8n Integration](#n8n-integration)
+      - [Example Queries](#example-queries)
   - [Maintainer](#maintainer)
 
 
@@ -227,7 +227,16 @@ fastmcp
 * Avoid exposing `/mcp/` endpoints publicly without access control.
 
 
-## Example n8n Integration
+## Usage
+
+### Using the MCP Server in VS Code
+
+You can interact with this MCP server directly from **VS Code Chat** using the built-in MCP client.
+To get started, follow the detailed setup guide in [`vscode/README.md`](vscode/README.md).
+
+Once configured, start the MCP server from VS Code, select your custom chat mode, and begin querying FABRIC data directly through the Chat interface.
+
+### N8n Integration
 
 In an N8n LLM node:
 
@@ -239,23 +248,13 @@ In an N8n LLM node:
 The node can then use `query_projects`, `query_slices`, etc., automatically using MCP conventions.
 
 
-## Example Use Cases
+### Example Queries
 
 * Ask an LLM: *“List all active slices at site RENC”*
   → Internally calls: `query-slices(site="RENC", state=["StableOK","StableError"])`
 
 * Ask an LLM: *“Show projects excluding FABRIC personnel”*
   → Internally calls: `query-projects(exclude_fabric_projects=True)`
-
-## Usage
-
-### Using the MCP Server in VS Code
-
-You can interact with this MCP server directly from **VS Code Chat** using the built-in MCP client.
-To get started, follow the detailed setup guide in [`vscode/README.md`](vscode/README.md).
-
-Once configured, start the MCP server from VS Code, select your custom chat mode, and begin querying FABRIC data directly through the Chat interface.
-
 
 ## Maintainer
 
