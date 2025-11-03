@@ -227,10 +227,6 @@ The node can then use `query_projects`, `query_slices`, etc., automatically usin
 You can interact with this MCP server directly from **VS Code Chat** using the built-in MCP client.
 To get started, follow the detailed setup guide in [`vscode/README.md`](vscode/README.md).
 
-In short, create or replace your workspace file `.vscode/mcp.json` with the provided configuration and update
-`<REPLACE_WITH_ID_TOKEN_FROM_FABRIC_TOKEN>` to use your actual `id_token` from a FABRIC token, which can be created at
-[https://cm.fabric-testbed.net/](https://cm.fabric-testbed.net/).
-
 Once configured, start the MCP server from VS Code, select your custom chat mode, and begin querying FABRIC data directly through the Chat interface.
 
 
