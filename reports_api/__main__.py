@@ -14,10 +14,10 @@ rest_port_str = 8080
 def main():
     GlobalsSingleton.get()
     logging.getLogger('sqlalchemy.engine.Engine').setLevel(logging.WARNING)
-    app = connexion.App(__name__, specification_dir='openapi_server/swagger/',
+    app = connexion.App(__name__, specification_dir='openapi_server/openapi/',
                         options={"swagger_ui": True})
     app.app.json_encoder = encoder.JSONEncoder
-    app.add_api('swagger.yaml', arguments={'title': 'Reports API with PostgreSQL'}, pythonic_params=True)
+    app.add_api('openapi.yaml', arguments={'title': 'Reports API with PostgreSQL'}, pythonic_params=True)
     app.debug = True
     waitress.serve(app, port=int(rest_port_str), threads=8)
 
