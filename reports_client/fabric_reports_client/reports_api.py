@@ -61,7 +61,8 @@ class ReportsApi:
                      slice_state: list[str] = None, sliver_id: list[str] = None, sliver_type: list[str] = None,
                      sliver_state: list[str] = None, component_type: list[str] = None,
                      component_model: list[str] = None, bdf: list[str] = None, vlan: list[str] = None,
-                     ip_subnet: list[str] = None, site: list[str] = None, host: list[str] = None,
+                     ip_subnet: list[str] = None, ip_v4: list[str] = None, ip_v6: list[str] = None,
+                     site: list[str] = None, host: list[str] = None,
                      exclude_user_id: list[str] = None, exclude_user_email: list[str] = None,
                      exclude_project_id: list[str] = None, exclude_site: list[str] = None, facility: list[str] = None,
                      exclude_host: list[str] = None, exclude_slice_state: list[str] = None,
@@ -100,6 +101,10 @@ class ReportsApi:
         :type vlan: List[str]
         :param ip_subnet: Filter by specified IP subnet
         :type ip_subnet: List[str]
+        :param ip_v4: Filter by IP V4 addresses
+        :type ip_v4: List[str]
+        :param ip_v6: Filter by IP V6 addresses
+        :type ip_v6: List[str]
         :param site: Filter by site
         :type site: List[str]
         :param host: Filter by host
@@ -147,6 +152,8 @@ class ReportsApi:
             "bdf": bdf,
             "vlan": vlan,
             "ip_subnet": ip_subnet,
+            "ip_v4": ip_v4,
+            "ip_v6": ip_v6,
             "site": site,
             "host": host,
             "facility": facility,
@@ -193,7 +200,8 @@ class ReportsApi:
                       slice_state: list[str] = None, sliver_id: list[str] = None, sliver_type: list[str] = None,
                       sliver_state: list[str] = None, component_type: list[str] = None,
                       component_model: list[str] = None, bdf: list[str] = None, vlan: list[str] = None,
-                      ip_subnet: list[str] = None, site: list[str] = None, host: list[str] = None,
+                      ip_subnet: list[str] = None,  ip_v4: list[str] = None, ip_v6: list[str] = None,
+                      site: list[str] = None, host: list[str] = None,
                       exclude_user_id: list[str] = None, exclude_user_email: list[str] = None,
                       exclude_project_id: list[str] = None, exclude_site: list[str] = None, facility: list[str] = None,
                       exclude_host: list[str] = None, exclude_slice_state: list[str] = None,
@@ -231,6 +239,10 @@ class ReportsApi:
         :type vlan: List[str]
         :param ip_subnet: Filter by specified IP subnet
         :type ip_subnet: List[str]
+        :param ip_v4: Filter by IP V4 addresses
+        :type ip_v4: List[str]
+        :param ip_v6: Filter by IP V6 addresses
+        :type ip_v6: List[str]
         :param site: Filter by site
         :type site: List[str]
         :param host: Filter by host
@@ -279,6 +291,8 @@ class ReportsApi:
             "bdf": bdf,
             "vlan": vlan,
             "ip_subnet": ip_subnet,
+            "ip_v4": ip_v4,
+            "ip_v6": ip_v6,
             "site": site,
             "host": host,
             "facility": facility,
@@ -325,7 +339,8 @@ class ReportsApi:
                     slice_state: list[str] = None, sliver_id: list[str] = None, sliver_type: list[str] = None,
                     sliver_state: list[str] = None, component_type: list[str] = None,
                     component_model: list[str] = None, bdf: list[str] = None, vlan: list[str] = None,
-                    ip_subnet: list[str] = None, site: list[str] = None, host: list[str] = None,
+                    ip_subnet: list[str] = None, ip_v4: list[str] = None, ip_v6: list[str] = None,
+                    site: list[str] = None, host: list[str] = None,
                     exclude_user_id: list[str] = None, exclude_user_email: list[str] = None,
                     exclude_project_id: list[str] = None, exclude_site: list[str] = None, facility: list[str] = None,
                     exclude_host: list[str] = None, exclude_slice_state: list[str] = None,
@@ -364,6 +379,10 @@ class ReportsApi:
         :type vlan: List[str]
         :param ip_subnet: Filter by specified IP subnet
         :type ip_subnet: List[str]
+        :param ip_v4: Filter by IP V4 addresses
+        :type ip_v4: List[str]
+        :param ip_v6: Filter by IP V6 addresses
+        :type ip_v6: List[str]
         :param site: Filter by site
         :type site: List[str]
         :param host: Filter by host
@@ -416,6 +435,8 @@ class ReportsApi:
             "bdf": bdf,
             "vlan": vlan,
             "ip_subnet": ip_subnet,
+            "ip_v4": ip_v4,
+            "ip_v6": ip_v6,
             "site": site,
             "host": host,
             "facility": facility,
@@ -465,7 +486,8 @@ class ReportsApi:
                        slice_state: list[str] = None, sliver_id: list[str] = None, sliver_type: list[str] = None,
                        sliver_state: list[str] = None, component_type: list[str] = None,
                        component_model: list[str] = None, bdf: list[str] = None, vlan: list[str] = None,
-                       ip_subnet: list[str] = None, site: list[str] = None, host: list[str] = None,
+                       ip_subnet: list[str] = None, ip_v4: list[str] = None, ip_v6: list[str] = None,
+                       site: list[str] = None, host: list[str] = None,
                        exclude_user_id: list[str] = None, exclude_user_email: list[str] = None,
                        exclude_project_id: list[str] = None, exclude_site: list[str] = None, facility: list[str] = None,
                        exclude_host: list[str] = None, exclude_slice_state: list[str] = None,
@@ -504,6 +526,10 @@ class ReportsApi:
         :type vlan: List[str]
         :param ip_subnet: Filter by specified IP subnet
         :type ip_subnet: List[str]
+        :param ip_v4: Filter by IP V4 addresses
+        :type ip_v4: List[str]
+        :param ip_v6: Filter by IP V6 addresses
+        :type ip_v6: List[str]
         :param site: Filter by site
         :type site: List[str]
         :param host: Filter by host
@@ -557,6 +583,8 @@ class ReportsApi:
             "bdf": bdf,
             "vlan": vlan,
             "ip_subnet": ip_subnet,
+            "ip_v4": ip_v4,
+            "ip_v6": ip_v6,
             "site": site,
             "host": host,
             "facility": facility,

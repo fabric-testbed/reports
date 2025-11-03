@@ -348,6 +348,8 @@ class DatabaseManager:
         sliver_type: str,
         node_id: Optional[str] = None,
         ip_subnet: Optional[str] = None,
+        ip_v4: Optional[str] = None,
+        ip_v6: Optional[str] = None,
         image: Optional[str] = None,
         core: Optional[int] = None,
         ram: Optional[int] = None,
@@ -374,6 +376,10 @@ class DatabaseManager:
                 sliver.sliver_type = sliver_type.lower()
                 if ip_subnet:
                     sliver.ip_subnet = ip_subnet
+                if ip_v4:
+                    sliver.ip_v4 = ip_v4
+                if ip_v6:
+                    sliver.ip_v6 = ip_v6
                 if image:
                     sliver.image = image
                 if core:
@@ -404,6 +410,8 @@ class DatabaseManager:
                     state=state,
                     sliver_type=sliver_type.lower(),
                     ip_subnet=ip_subnet,
+                    ip_v4=ip_v4,
+                    ip_v6=ip_v6,
                     image=image,
                     core=core,
                     ram=ram,
@@ -592,6 +600,7 @@ class DatabaseManager:
                      slice_id: list[str] = None, slice_state: list[int] = None, component_model: list[str] = None,
                      sliver_type: list[str] = None, sliver_id: list[str] = None, sliver_state: list[int] = None,
                      site: list[str] = None, ip_subnet: list[str] = None, bdf: list[str] = None,
+                     ip_v4: list[str] = None, ip_v6: list[str] = None,
                      vlan: list[str] = None, host: list[str] = None, exclude_user_id: list[str] = None,
                      exclude_user_email: list[str] = None, exclude_project_id: list[str] = None,
                      exclude_site: list[str] = None, exclude_host: list[str] = None, facility: list[str] = None,
@@ -675,7 +684,7 @@ class DatabaseManager:
 
         # Detect if any fields that require Sliver JOIN are used
         requires_sliver = any([
-            sliver_id, sliver_type, sliver_state, ip_subnet,
+            sliver_id, sliver_type, sliver_state, ip_subnet, ip_v4, ip_v6,
             host, site, component_type, component_model, bdf, vlan, facility, exclude_site,
             exclude_host, exclude_sliver_state
         ])
@@ -777,6 +786,10 @@ class DatabaseManager:
                 filters.append(Slivers.state.in_(sliver_state))
             if ip_subnet:
                 filters.append(Slivers.ip_subnet.in_(ip_subnet))
+            if ip_v4:
+                filters.append(Slivers.ip_v4.in_(ip_v4))
+            if ip_v6:
+                filters.append(Slivers.ip_v6.in_(ip_v6))
 
             if component_type:
                 filters.append(Components.type.in_([t.lower() for t in component_type]))
@@ -863,7 +876,8 @@ class DatabaseManager:
                                            sliver_id=sliver_id, sliver_type=sliver_type, slice_id=slice_id, bdf=bdf,
                                            sliver_state=sliver_state, site=site, host=host,
                                            project_id=project_id, component_model=component_model,
-                                           component_type=component_type, ip_subnet=ip_subnet, page=page,
+                                           component_type=component_type, ip_subnet=ip_subnet, ip_v4=ip_v4,
+                                           ip_v6=ip_v6, page=page,
                                            per_page=per_page, exclude_site=exclude_site, exclude_host=exclude_host,
                                            exclude_slice_state=exclude_slice_state, exclude_sliver_state=exclude_sliver_state,
                                            exclude_project_id=exclude_project_id, exclude_user_id=exclude_user_id,
@@ -894,6 +908,7 @@ class DatabaseManager:
                   slice_id: list[str] = None, slice_state: list[int] = None, component_model: list[str] = None,
                   sliver_type: list[str] = None, sliver_id: list[str] = None, sliver_state: list[int] = None,
                   site: list[str] = None, ip_subnet: list[str] = None, bdf: list[str] = None,
+                  ip_v4: list[str] = None, ip_v6: list[str] = None,
                   vlan: list[str] = None, host: list[str] = None, exclude_user_id: list[str] = None,
                   exclude_user_email: list[str] = None, exclude_project_id: list[str] = None,
                   exclude_site: list[str] = None, exclude_host: list[str] = None, facility: list[str] = None,
@@ -980,7 +995,7 @@ class DatabaseManager:
 
             # Detect if sliver-related fields are involved
             requires_sliver = any([
-                sliver_id, sliver_type, sliver_state, ip_subnet,
+                sliver_id, sliver_type, sliver_state, ip_subnet, ip_v4, ip_v6,
                 host, site, component_type, component_model, bdf, vlan, facility,
                 exclude_site, exclude_sliver_state, exclude_host
             ])
@@ -1079,6 +1094,10 @@ class DatabaseManager:
                 filters.append(Slivers.state.in_(sliver_state))
             if ip_subnet:
                 filters.append(Slivers.ip_subnet.in_(ip_subnet))
+            if ip_v4:
+                filters.append(Slivers.ip_v4.in_(ip_v4))
+            if ip_v6:
+                filters.append(Slivers.ip_v6.in_(ip_v6))
 
             if component_type:
                 filters.append(Components.type.in_([t.lower() for t in component_type]))
@@ -1173,7 +1192,7 @@ class DatabaseManager:
                         user_id=[u.user_uuid], vlan=vlan, sliver_id=sliver_id, sliver_type=sliver_type,
                         slice_id=slice_id, bdf=bdf, sliver_state=sliver_state, site=site, host=host,
                         project_id=project_id, component_model=component_model, component_type=component_type,
-                        ip_subnet=ip_subnet, exclude_site=exclude_site, exclude_host=exclude_host,
+                        ip_subnet=ip_subnet, ip_v4=ip_v4, ip_v6=ip_v6, exclude_site=exclude_site, exclude_host=exclude_host,
                         exclude_slice_state=exclude_slice_state, exclude_sliver_state=exclude_sliver_state,
                         exclude_project_id=exclude_project_id, exclude_user_id=exclude_user_id,
                         exclude_user_email=exclude_user_email
@@ -1205,6 +1224,7 @@ class DatabaseManager:
                     slice_id: list[str] = None, slice_state: list[int] = None, component_model: list[str] = None,
                     sliver_type: list[str] = None, sliver_id: list[str] = None, sliver_state: list[int] = None,
                     site: list[str] = None, ip_subnet: list[str] = None, bdf: list[str] = None,
+                    ip_v4: list[str] = None, ip_v6: list[str] = None,
                     vlan: list[str] = None, host: list[str] = None, exclude_user_id: list[str] = None,
                     exclude_user_email: list[str] = None, exclude_project_id: list[str] = None,
                     exclude_site: list[str] = None, exclude_host: list[str] = None, facility: list[str] = None,
@@ -1332,6 +1352,10 @@ class DatabaseManager:
                 filters.append(Slivers.state.in_(sliver_state))
             if ip_subnet:
                 filters.append(Slivers.ip_subnet.in_(ip_subnet))
+            if ip_v4:
+                filters.append(Slivers.ip_v4.in_(ip_v4))
+            if ip_v6:
+                filters.append(Slivers.ip_v6.in_(ip_v6))
 
             if component_type:
                 filters.append(Components.type.in_([t.lower() for t in component_type]))
@@ -1478,6 +1502,7 @@ class DatabaseManager:
                    slice_id: list[str] = None, slice_state: list[int] = None, component_model: list[str] = None,
                    sliver_type: list[str] = None, sliver_id: list[str] = None, sliver_state: list[int] = None,
                    site: list[str] = None, ip_subnet: list[str] = None, bdf: list[str] = None,
+                   ip_v4: list[str] = None, ip_v6: list[str] = None,
                    vlan: list[str] = None, host: list[str] = None, exclude_user_id: list[str] = None,
                    exclude_user_email: list[str] = None, exclude_project_id: list[str] = None,
                    exclude_site: list[str] = None, exclude_host: list[str] = None, facility: list[str] = None,
@@ -1565,7 +1590,7 @@ class DatabaseManager:
 
             # Join slivers only if needed
             join_slivers = any([
-                sliver_id, sliver_type, sliver_state, ip_subnet,
+                sliver_id, sliver_type, sliver_state, ip_subnet, ip_v4, ip_v6,
                 site, host, component_type, component_model, bdf, vlan, facility,
                 exclude_site, exclude_host, exclude_sliver_state
             ])
@@ -1609,6 +1634,10 @@ class DatabaseManager:
                 filters.append(Slivers.state.in_(sliver_state))
             if ip_subnet:
                 filters.append(Slivers.ip_subnet.in_(ip_subnet))
+            if ip_v4:
+                filters.append(Slivers.ip_v4.in_(ip_v4))
+            if ip_v6:
+                filters.append(Slivers.ip_v6.in_(ip_v6))
 
             if component_type:
                 filters.append(Components.type.in_([t.lower() for t in component_type]))
@@ -1699,6 +1728,7 @@ class DatabaseManager:
                         user_id=user_id, vlan=vlan, sliver_id=sliver_id, sliver_type=sliver_type, slice_id=[s.slice_guid],
                         bdf=bdf, sliver_state=sliver_state, site=site, host=host, project_id=project_id,
                         component_model=component_model, component_type=component_type, ip_subnet=ip_subnet,
+                        ip_v4=ip_v4, ip_v6=ip_v6,
                         exclude_site=exclude_site, exclude_host=exclude_host,
                         exclude_slice_state=exclude_slice_state, exclude_sliver_state=exclude_sliver_state,
                         exclude_project_id=exclude_project_id, exclude_user_id=exclude_user_id,
@@ -1756,6 +1786,8 @@ class DatabaseManager:
             "state": SliverStates(sliver.state).name,
             "sliver_type": sliver.sliver_type,
             "ip_subnet": sliver.ip_subnet,
+            "ip_v4": sliver.ip_v4,
+            "ip_v6": sliver.ip_v6,
             "image": sliver.image,
             "core": sliver.core,
             "ram": sliver.ram,

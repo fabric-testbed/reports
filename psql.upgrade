@@ -39,11 +39,16 @@ CREATE INDEX IF NOT EXISTS idx_slices_user_project ON slices (user_id, project_i
 CREATE INDEX IF NOT EXISTS idx_slices_state_project ON slices (state, project_id);
 
 -- Slivers
+ALTER TABLE slivers ADD COLUMN ip_v4 VARCHAR;
+ALTER TABLE slivers ADD COLUMN ip_v6 VARCHAR;
+
 CREATE INDEX IF NOT EXISTS idx_slivers_user_project ON slivers (user_id, project_id);
 CREATE INDEX IF NOT EXISTS idx_slivers_project_slice ON slivers (project_id, slice_id);
 CREATE INDEX IF NOT EXISTS idx_slivers_state_type ON slivers (state, sliver_type);
 CREATE INDEX IF NOT EXISTS idx_slivers_site_host ON slivers (site_id, host_id);
 CREATE INDEX IF NOT EXISTS idx_slivers_ip_subnet ON slivers (ip_subnet);
+CREATE INDEX IF NOT EXISTS idx_slivers_ip_v4 ON slivers (ip_v4);
+CREATE INDEX IF NOT EXISTS idx_slivers_ip_v6 ON slivers (ip_v6);
 
 -- Interfaces
 CREATE INDEX IF NOT EXISTS idx_interfaces_sliver_vlan ON interfaces (sliver_id, vlan);

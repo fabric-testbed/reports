@@ -67,3 +67,4 @@ target/
 .idea
 reports_api/python-flask-server-generated/
 mcp-server/node_modules
+openapi_server_archive

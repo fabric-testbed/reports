@@ -35,14 +35,14 @@ from reports_api.response_code.cors_response import cors_500
 from reports_api.response_code.slice_sliver_states import SliverStates, SliceState
 from reports_api.response_code.utils import authorize, cors_success_response
 from reports_api.security.fabric_token import FabricToken
-from reports_api.swagger_server.models import UserMemberships, UserMembership
-from reports_api.swagger_server.models.user import User
-from reports_api.swagger_server.models.users import Users  # noqa: E501
+from reports_api.openapi_server.models import UserMemberships, UserMembership
+from reports_api.openapi_server.models.user import User
+from reports_api.openapi_server.models.users import Users  # noqa: E501
 
 
 def users_get(start_time=None, end_time=None, user_id=None, user_email=None, project_id=None, slice_id=None,
               slice_state=None, sliver_id=None, sliver_type=None, sliver_state=None, component_type=None,
-              component_model=None, bdf=None, vlan=None, ip_subnet=None, site=None, host=None, exclude_user_id=None,
+              component_model=None, bdf=None, vlan=None, ip_subnet=None, ip_v4=None, ip_v6=None, site=None, host=None, exclude_user_id=None,
               exclude_user_email=None, exclude_project_id=None, exclude_site=None, exclude_host=None, facility=None,
               exclude_slice_state=None, exclude_sliver_state=None, project_type=None, exclude_project_type=None,
               user_active=None, page=None, per_page=None):  # noqa: E501
@@ -150,7 +150,7 @@ def users_get(start_time=None, end_time=None, user_id=None, user_email=None, pro
                                  sliver_id=sliver_id, sliver_type=sliver_type, slice_id=slice_id, bdf=bdf,
                                  sliver_state=sliver_states, site=site,
                                  host=host, project_id=project_id, component_model=component_model,
-                                 slice_state=slice_states, facility=facility,
+                                 slice_state=slice_states, facility=facility, ip_v4=ip_v4, ip_v6=ip_v6,
                                  component_type=component_type, ip_subnet=ip_subnet, page=page, per_page=per_page,
                                  exclude_user_id=exclude_user_id, exclude_user_email=exclude_user_email,
                                  exclude_project_id=exclude_project_id, exclude_site=exclude_site,
