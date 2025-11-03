@@ -1048,6 +1048,7 @@ class DatabaseManager:
                             and_(Membership.start_time <= et, Membership.end_time.is_(None))  # still active
                         )
                     )
+                    self.logger.info(f"Query Users filtering on membership start: {st} end: {et}")
             # User filters
             if user_email:
                 filters.append(Users.user_email.in_(user_email))

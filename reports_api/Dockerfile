@@ -2,7 +2,7 @@ FROM python:3.11.0
 MAINTAINER Komal Thareja<komal.thareja@gmail.com>
 
 # Install cron
-RUN apt-get update && apt-get install -y vim cron && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y vim cron iputils-ping && rm -rf /var/lib/apt/lists/*
 
 # Create app directory
 RUN mkdir -p /usr/src/app

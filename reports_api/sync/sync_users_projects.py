@@ -99,6 +99,7 @@ class UserSyncScript:
 
             try:
                 # Add or update user
+                print(f'User: {detail.get("bastion_login")}')
                 user_id = db_mgr.add_or_update_user(
                     user_uuid=detail.get("uuid"),
                     user_email=detail.get("email"),

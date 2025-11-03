@@ -18,7 +18,7 @@ The system is composed of the following Docker containers:
 - reports-db: PostgreSQL database storing sliver data.
 - reports-nginx: Nginx reverse proxy handling HTTPS traffic.
 - reports-api: Backend API serving sliver-related data.
-- dash-app: Dash-based web application for visualization.
+- reports-mcp-server: MCP Server for the reports. Refer [README](./mcp_server/README.md) for more details.
 - vouch-proxy: Authentication proxy for securing API requests.
 
 ### Network Segmentation
