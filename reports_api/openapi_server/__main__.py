@@ -6,9 +6,9 @@ from reports_api.openapi_server import encoder
 
 
 def main():
-    app = connexion.App(__name__, specification_dir='./swagger/')
+    app = connexion.App(__name__, specification_dir='./openapi/')
     app.app.json_encoder = encoder.JSONEncoder
-    app.add_api('swagger.yaml', arguments={'title': 'Analytics API with PostgreSQL'}, pythonic_params=True)
+    app.add_api('openapi.yaml', arguments={'title': 'Analytics API with PostgreSQL'}, pythonic_params=True)
     app.run(port=8080)
 
 
