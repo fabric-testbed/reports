@@ -32,7 +32,7 @@ from flask import request, Response
 
 # Constants
 from reports_api.database import Hosts, Users
-from reports_api.swagger_server.models import Slices, Slivers, Version, \
+from reports_api.openapi_server.models import Slices, Slivers, Version, \
     Status400BadRequestErrors, Status400BadRequest, Status401UnauthorizedErrors, \
     Status401Unauthorized, Status403ForbiddenErrors, Status403Forbidden, Status404NotFoundErrors, Status404NotFound, \
     Status500InternalServerErrorErrors, Status500InternalServerError

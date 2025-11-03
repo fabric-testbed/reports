@@ -111,6 +111,8 @@ class Slivers(Base):
     state = Column(Integer, nullable=False, index=True)
     sliver_type = Column(String, nullable=False, index=True)
     ip_subnet = Column(String, nullable=True, index=True)
+    ip_v4 = Column(String, nullable=True, index=True)
+    ip_v6 = Column(String, nullable=True, index=True)
     image = Column(String, nullable=True)
     core = Column(Integer, nullable=True)
     ram = Column(Integer, nullable=True)
@@ -127,6 +129,8 @@ class Slivers(Base):
         Index('idx_slivers_project_slice', 'project_id', 'slice_id'),
         Index('idx_slivers_state_type', 'state', 'sliver_type'),
         Index('idx_slivers_ip_subnet', 'ip_subnet'),
+        Index('idx_slivers_ip_v4', 'ip_v4'),
+        Index('idx_slivers_ip_v6', 'ip_v6'),
     )
 
 

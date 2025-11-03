@@ -34,8 +34,8 @@ from reports_api.database.db_manager import DatabaseManager
 from reports_api.response_code.cors_response import cors_500
 from reports_api.response_code.utils import authorize, cors_success_response
 from reports_api.security.fabric_token import FabricToken
-from reports_api.swagger_server.models.site import Site
-from reports_api.swagger_server.models.sites import Sites  # noqa: E501
+from reports_api.openapi_server.models.site import Site
+from reports_api.openapi_server.models.sites import Sites  # noqa: E501
 
 
 def sites_get():  # noqa: E501

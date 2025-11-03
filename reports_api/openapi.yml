@@ -69,6 +69,8 @@ paths:
         - $ref: '#/components/parameters/bdf'
         - $ref: '#/components/parameters/vlan'
         - $ref: '#/components/parameters/ipSubnet'
+        - $ref: '#/components/parameters/ipv4'
+        - $ref: '#/components/parameters/ipv6'
         - $ref: '#/components/parameters/facility'
         - $ref: '#/components/parameters/site'
         - $ref: '#/components/parameters/host'
@@ -351,6 +353,8 @@ paths:
         - $ref: '#/components/parameters/bdf'
         - $ref: '#/components/parameters/vlan'
         - $ref: '#/components/parameters/ipSubnet'
+        - $ref: '#/components/parameters/ipv4'
+        - $ref: '#/components/parameters/ipv6'
         - $ref: '#/components/parameters/facility'
         - $ref: '#/components/parameters/site'
         - $ref: '#/components/parameters/host'
@@ -488,6 +492,8 @@ paths:
         - $ref: '#/components/parameters/bdf'
         - $ref: '#/components/parameters/vlan'
         - $ref: '#/components/parameters/ipSubnet'
+        - $ref: '#/components/parameters/ipv4'
+        - $ref: '#/components/parameters/ipv6'
         - $ref: '#/components/parameters/facility'
         - $ref: '#/components/parameters/site'
         - $ref: '#/components/parameters/host'
@@ -676,6 +682,8 @@ paths:
         - $ref: '#/components/parameters/bdf'
         - $ref: '#/components/parameters/vlan'
         - $ref: '#/components/parameters/ipSubnet'
+        - $ref: '#/components/parameters/ipv4'
+        - $ref: '#/components/parameters/ipv6'
         - $ref: '#/components/parameters/facility'
         - $ref: '#/components/parameters/site'
         - $ref: '#/components/parameters/host'     
@@ -1051,6 +1059,26 @@ components:
         items:
           type: string
       description: Filter by specified IP subnet
+
+    ipv4:
+      name: ip_v4
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+      description: Filter by specified IP V4
+
+    ipv6:
+      name: ip_v6
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+      description: Filter by specified IP V6
       
     bdf:
       name: bdf
@@ -1339,6 +1367,10 @@ components:
         sliver_type:
           type: string
         ip_subnet:
+          type: string
+        ip_v4:
+          type: string
+        ip_v6:
           type: string
         error:
           type: string

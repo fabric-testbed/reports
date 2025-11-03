@@ -34,14 +34,14 @@ from reports_api.response_code.cors_response import cors_500, cors_401
 from reports_api.response_code.slice_sliver_states import SliverStates, SliceState
 from reports_api.response_code.utils import authorize, cors_success_response
 from reports_api.security.fabric_token import FabricToken
-from reports_api.swagger_server.models import Status200OkNoContentData, Status200OkNoContent
-from reports_api.swagger_server.models.sliver import Sliver
-from reports_api.swagger_server.models.slivers import Slivers  # noqa: E501
+from reports_api.openapi_server.models import Status200OkNoContentData, Status200OkNoContent
+from reports_api.openapi_server.models.sliver import Sliver
+from reports_api.openapi_server.models.slivers import Slivers  # noqa: E501
 
 
 def slivers_get(start_time=None, end_time=None, user_id=None, user_email=None, project_id=None, slice_id=None,
                 slice_state=None, sliver_id=None, sliver_type=None, sliver_state=None, component_type=None,
-                component_model=None, bdf=None, vlan=None, ip_subnet=None, site=None, host=None, exclude_user_id=None,
+                component_model=None, bdf=None, vlan=None, ip_subnet=None, ip_v4=None, ip_v6=None, site=None, host=None, exclude_user_id=None,
                 exclude_user_email=None, exclude_project_id=None, exclude_site=None, exclude_host=None, facility=None,
                 exclude_slice_state=None, exclude_sliver_state=None, page=None, per_page=None):  # noqa: E501
     """Get slivers
@@ -140,7 +140,7 @@ def slivers_get(start_time=None, end_time=None, user_id=None, user_email=None, p
 
         slivers = db_mgr.get_slivers(start_time=start, end_time=end, user_email=user_email, user_id=user_id, vlan=vlan,
                                      sliver_id=sliver_id, sliver_type=sliver_type, slice_id=slice_id, bdf=bdf,
-                                     sliver_state=sliver_states, site=site,
+                                     sliver_state=sliver_states, site=site, ip_v4=ip_v4, ip_v6=ip_v6,
                                      host=host, project_id=project_id, component_model=component_model,
                                      slice_state=slice_states, facility=facility,
                                      component_type=component_type, ip_subnet=ip_subnet, page=page, per_page=per_page,
@@ -218,7 +218,8 @@ def slivers_slice_id_sliver_id_post(body: Sliver, slice_id: str, sliver_id: str)
         sl_id = db_mgr.add_or_update_sliver(project_id=p_id, user_id=u_id, slice_id=s_id, site_id=site_id,
                                             host_id=host_id, sliver_guid=sliver_id, lease_start=body.lease_start,
                                             lease_end=body.lease_end, state=SliverStates.translate(body.state),
-                                            ip_subnet=body.ip_subnet, core=body.core, ram=body.ram, disk=body.disk,
+                                            ip_subnet=body.ip_subnet, ip_v4=body.ip_v4, ip_v6=body.ip_v6,
+                                            core=body.core, ram=body.ram, disk=body.disk,
                                             image=body.image, bandwidth=body.bandwidth, sliver_type=body.sliver_type,
                                             error=body.error)
         if body.components and body.components.data:

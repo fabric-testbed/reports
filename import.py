@@ -34,7 +34,7 @@ from reports_api.common.globals import GlobalsSingleton
 from reports_api.database.db_manager import DatabaseManager
 from reports_api.response_code.cors_response import cors_500
 from reports_api.response_code.slice_sliver_states import SliceState, SliverStates
-from reports_api.swagger_server.models import Slice, Sliver
+from reports_api.openapi_server.models import Slice, Sliver
 
 
 class ImportScript:

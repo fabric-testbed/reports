@@ -4,8 +4,8 @@
 
 # Variables
 STUB_DIR=python-flask-server-generated
-WORKING_DIR=swagger_server
-ARCHIVE_DIR=swagger_server_archive
+WORKING_DIR=openapi_server
+ARCHIVE_DIR=openapi_server_archive
 SCRIPTS_DIR=$(pwd)
 
 FILES_TO_COPY=(
@@ -18,21 +18,21 @@ DIRS_TO_COPY=(
 )
 
 # Generate server stub
-swagger-codegen generate -i openapi.yml -l python-flask -o "${STUB_DIR}"
+openapi-generator generate -i openapi.yml -l python-flask -o "${STUB_DIR}"
 
 # Ensure stub was created
-if [ ! -d "$STUB_DIR/swagger_server" ]; then
-    echo "[ERROR] Unable to find ${STUB_DIR}/swagger_server"
+if [ ! -d "$STUB_DIR/openapi_server" ]; then
+    echo "[ERROR] Unable to find ${STUB_DIR}/openapi_server"
     exit 1
 fi
 
 # Replace imports in all generated .py files
-find "${STUB_DIR}/swagger_server" -type f -name "*.py" -print0 | \
+find "${STUB_DIR}/openapi_server" -type f -name "*.py" -print0 | \
 xargs -0 sed -i '' \
-    -e 's/from swagger_server\./from reports_api.swagger_server./g' \
-    -e 's/from swagger_server /from reports_api.swagger_server /g' \
-    -e 's/import swagger_server\./import reports_api.swagger_server./g' \
-    -e 's/import swagger_server/import reports_api.swagger_server/g'
+    -e 's/from openapi_server\./from reports_api.openapi_server./g' \
+    -e 's/from openapi_server /from reports_api.openapi_server /g' \
+    -e 's/import openapi_server\./import reports_api.openapi_server./g' \
+    -e 's/import openapi_server/import reports_api.openapi_server/g'
 
 # Archive the old working directory
 if [ -d "$ARCHIVE_DIR" ]; then
@@ -44,7 +44,7 @@ cp -r "$WORKING_DIR" "$ARCHIVE_DIR"
 # Replace working directory with newly generated stub
 rm -rf "$WORKING_DIR"
 echo "[INFO] create new '${WORKING_DIR}' from '${STUB_DIR}'"
-cp -r "${STUB_DIR}/swagger_server" "$WORKING_DIR"
+cp -r "${STUB_DIR}/openapi_server" "$WORKING_DIR"
 
 # Copy preserved directories and files
 for f in "${DIRS_TO_COPY[@]}"; do
@@ -67,8 +67,8 @@ for f in "$WORKING_DIR/controllers/"*.py; do
     echo "[INFO] updating file: ${fname}"
     chmod u+w "$f"
 
-    # Add response import after 'from reports_api.swagger_server import util'
-    sed -i '' "/from reports_api.swagger_server import util/{
+    # Add response import after 'from reports_api.openapi_server import util'
+    sed -i '' "/from reports_api.openapi_server import util/{
 a\\
 from reports_api.response_code import ${fname%.py} as rc
 }" "$f"

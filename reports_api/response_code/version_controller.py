@@ -25,8 +25,8 @@
 # Author: Komal Thareja (kthare10@renci.org)
 from reports_api.common.globals import GlobalsSingleton
 from reports_api.response_code.cors_response import cors_200, cors_500
-from reports_api.swagger_server.models import VersionData
-from reports_api.swagger_server.models.version import Version  # noqa: E501
+from reports_api.openapi_server.models import VersionData
+from reports_api.openapi_server.models.version import Version  # noqa: E501
 
 from reports_api import __version__, __API_REFERENCE__
 

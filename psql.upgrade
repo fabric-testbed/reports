@@ -27,6 +27,8 @@ ALTER COLUMN slice_name DROP NOT NULL;
 
 ALTER TABLE interfaces
 ADD COLUMN site_id INTEGER;
+ADD COLUMN ip_v4 VARCHAR;
+ADD COLUMN ip_v6 VARCHAR;
 
 ALTER TABLE interfaces
 ADD CONSTRAINT fk_interfaces_site_id FOREIGN KEY (site_id) REFERENCES sites(id);
@@ -44,6 +46,8 @@ CREATE INDEX IF NOT EXISTS idx_slivers_project_slice ON slivers (project_id, sli
 CREATE INDEX IF NOT EXISTS idx_slivers_state_type ON slivers (state, sliver_type);
 CREATE INDEX IF NOT EXISTS idx_slivers_site_host ON slivers (site_id, host_id);
 CREATE INDEX IF NOT EXISTS idx_slivers_ip_subnet ON slivers (ip_subnet);
+CREATE INDEX IF NOT EXISTS idx_slivers_ip_v4 ON slivers (ip_v4);
+CREATE INDEX IF NOT EXISTS idx_slivers_ip_v6 ON slivers (ip_v6);
 
 -- Interfaces
 CREATE INDEX IF NOT EXISTS idx_interfaces_sliver_vlan ON interfaces (sliver_id, vlan);

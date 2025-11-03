@@ -5,7 +5,7 @@ import connexion
 import waitress as waitress
 
 from reports_api.common.globals import Globals, GlobalsSingleton
-from reports_api.swagger_server import encoder
+from reports_api.openapi_server import encoder
 rest_port_str = 8080
 
 #Globals.config_file = "test_config.yml"
@@ -14,7 +14,7 @@ rest_port_str = 8080
 def main():
     GlobalsSingleton.get()
     logging.getLogger('sqlalchemy.engine.Engine').setLevel(logging.WARNING)
-    app = connexion.App(__name__, specification_dir='swagger_server/swagger/',
+    app = connexion.App(__name__, specification_dir='openapi_server/swagger/',
                         options={"swagger_ui": True})
     app.app.json_encoder = encoder.JSONEncoder
     app.add_api('swagger.yaml', arguments={'title': 'Reports API with PostgreSQL'}, pythonic_params=True)
