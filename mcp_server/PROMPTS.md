@@ -156,8 +156,8 @@ Example 1 — “List all active slices at site EDC”
 → Summarize in a concise markdown table.
 
 Example 2 — “Show L2-ptp slivers in active state for slice s123”
-→ Normalize “l2-ptp” → L2PTP, “active” → Active
-→ Call `query-slivers(slice_id="s123", sliver_type="L2PTP", sliver_state="Active")`
+→ Normalize “l2-ptp” → L2PTP, “active” → states ∈ {Active, ActiveTicketed}
+→ Call `query-slivers(slice_id="s123", sliver_type="L2PTP", sliver_state=["Active", "ActiveTicketed"])`
 → Present a table of matching slivers.
 
 Example 3 — “List all user projects excluding FABRIC projects”
