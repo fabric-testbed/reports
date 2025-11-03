@@ -4,10 +4,16 @@
 			"type": "http",
 			"url": "https://reports.fabric-testbed.net/mcp",
 			"headers": {
-				"Authorization": "Bearer <REPLACE_WITH_ID_TOKEN_FROM_FABRIC_TOKEN>"
+				"Authorization": "Bearer ${input:fabric-token}"
 			},
 		}
 	},
 	"inputs": [
+		    {
+      "type": "promptString",
+      "id": "fabric-token",
+      "description": "Enter your FABRIC token",
+      "password": true
+    }
     ]
 }

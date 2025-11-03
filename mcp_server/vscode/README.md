@@ -5,16 +5,15 @@
 * VS Code (latest)
 * The MCP-capable chat extension enabled (e.g., GitHub Copilot Chat with MCP support)
 * Your MCP server reachable over HTTPS
-* Your per-user token (FABRIC token) handy
+* Your per-user token (FABRIC token) handy. You can generate a new FABRIC token by visiting [https://cm.fabric-testbed.net/](https://cm.fabric-testbed.net/).
 
 ---
 
 ## 1) Create `.vscode/mcp.json` and add your server
 
 In your workspace, create the file `.vscode/mcp.json` (or replace it with the provided `mcp.json`).
-Make sure to update the placeholder string `<REPLACE_WITH_ID_TOKEN_FROM_FABRIC_TOKEN>` with the actual `id_token` value from your FABRIC token.
-You can generate a new FABRIC token by visiting [https://cm.fabric-testbed.net/](https://cm.fabric-testbed.net/).
-
+The token is prompted once per VS Code session, per user. 
+![Start MCP](./images/1_start_mcp.png)
 ---
 
 ## 2) Start the MCP server from VS Code
@@ -22,7 +21,8 @@ You can generate a new FABRIC token by visiting [https://cm.fabric-testbed.net/]
 * Open `.vscode/mcp.json` in the editor.
 * Click the **Start** (▶︎) button that appears for the `fabric-reports` server.
 * Confirm it shows as **running** (you’ll typically see status in the MCP panel or the editor UI).
-
+![System Prompt-1](./images/2_create_custom_mode.png)
+![System Prompt-2](./images/2_create_prompt_file.png)
 ---
 
 ## 3) Create a custom Chat mode and add your System prompt
@@ -32,6 +32,7 @@ You can generate a new FABRIC token by visiting [https://cm.fabric-testbed.net/]
 * In the new mode file (it’s JSON), give it a name and paste the contents of `fabric-reports.chatmode.md`
 
 Save the file.
+![Ask Questions](./images/3_ask_questions.png)
 
 ---
 
