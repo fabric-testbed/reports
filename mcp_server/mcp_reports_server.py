@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import asyncio
+from pathlib import Path
 from typing import Any, Dict, Optional, List
 
 from fastmcp import FastMCP
@@ -35,6 +36,21 @@ mcp = FastMCP(
     version="1.3.0",
 )
 
+# Load your markdown system prompt
+SYSTEM_TEXT = Path("prompts/system.md").read_text(encoding="utf-8").strip()
+
+# Define a function to load the prompt content
+# The docstring becomes the prompt's description.
+@mcp.prompt(name="fabric-reports-system")
+def fabric_reports_system_prompt():
+    """System rules for querying FABRIC Reports via MCP"""
+    # FastMCP automatically wraps the string as a PromptMessage with role="system"
+    # if you return it from the function. You could also return a list of PromptMessage objects.
+    return SYSTEM_TEXT
+
+# Note: The function name (or the name parameter) is the key.
+# The docstring is the description.
+# The return value is the prompt content/messages.
 
 # ---------------------------------------
 # Helpers
