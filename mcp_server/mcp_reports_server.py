@@ -89,16 +89,37 @@ async def _call(client: ReportsApi, method: str, **kwargs) -> Dict[str, Any]:
           )
 async def query_version(ctx: Context, toolCallId: Optional[str] = None,
                         tool_call_id: Optional[str] = None, ) -> Dict[str, Any]:
+    """
+    Retrieve version information from the FABRIC Reports API.
+
+    Returns the current API version, build information, and service status.
+    Useful for verifying API availability and compatibility.
+
+    Returns:
+        Dict containing version details including version number, git commit,
+        and service metadata.
+    """
     client = _client_from_headers()
     return await _call(client, "query_version")
 
 
 @mcp.tool(name="query-sites", title="Query Sites",
           description="Returns list of sites (no filters supported by client).",
-
           )
 async def query_sites(ctx: Context, toolCallId: Optional[str] = None,
                       tool_call_id: Optional[str] = None, ) -> Dict[str, Any]:
+    """
+    Retrieve all FABRIC testbed sites.
+
+    Returns a complete list of physical FABRIC sites where resources are located.
+    Each site includes information about location, capacity, and available resources such as GPUs, FPGAs, SmartNICs.
+
+    Note: This endpoint does not support filtering.
+
+    Returns:
+        Dict containing list of sites with details including site name, ID,
+        location, and resource capacities.
+    """
     client = _client_from_headers()
     return await _call(client, "query_sites")
 
@@ -140,12 +161,66 @@ async def query_slices(
         exclude_project_id: Optional[List[str]] = None,
         exclude_site: Optional[List[str]] = None,
         exclude_host: Optional[List[str]] = None,
-        exclude_slice_state: Optional[List[str]] = None,
+        exclude_slice_state: Optional[List[str]] = ["Dead", "Closing"],
         exclude_sliver_state: Optional[List[str]] = None,
         page: int = 0,
         per_page: int = 1000,
         fetch_all: bool = True,
 ) -> Dict[str, Any]:
+    """
+    Query FABRIC experimental slices with comprehensive filtering.
+
+    Slices are user-created experimental environments that contain one or more
+    slivers (resource allocations). Use this endpoint to find slices based on
+    their state, associated resources, time periods, or relationships to users,
+    projects, and sites.
+
+    Args:
+        start_time: ISO8601 timestamp - filter slices created/modified after this time
+        end_time: ISO8601 timestamp - filter slices created/modified before this time
+        user_id: List of user UUIDs to filter by (OR logic)
+        user_email: List of user emails to filter by (OR logic)
+        project_id: List of project UUIDs to filter by (OR logic)
+        slice_id: List of slice UUIDs to filter by (OR logic)
+        slice_state: List of slice states (Nascent, Configuring, StableOK,
+                     StableError, ModifyOK, ModifyError, Closing, Dead)
+        sliver_id: Filter slices containing these sliver UUIDs
+        sliver_type: Filter slices by sliver types (VM, Switch, Facility, L2STS,
+                     L2PTP, L2Bridge, FABNetv4, FABNetv6, etc.)
+        sliver_state: Filter by sliver states within the slice (Nascent, Ticketed,
+                      Active, ActiveTicketed, Closed, CloseWait, Failed, etc.)
+        component_type: Filter by component types (GPU, SmartNIC, SharedNIC,
+                        FPGA, NVME, Storage)
+        component_model: Filter by specific hardware model strings
+        bdf: Filter by PCI Bus-Device-Function identifiers
+        vlan: Filter by VLAN tags
+        ip_subnet: Filter by IP subnet (CIDR notation)
+        ip_v4: Filter by IPv4 addresses
+        ip_v6: Filter by IPv6 addresses
+        site: List of FABRIC site names to filter by
+        host: List of physical host names to filter by
+        facility: Filter by facility type
+        exclude_user_id: Exclude slices from these user UUIDs
+        exclude_user_email: Exclude slices from these user emails
+        exclude_project_id: Exclude slices from these project UUIDs (use for
+                            filtering out FABRIC personnel projects)
+        exclude_site: Exclude slices from these sites
+        exclude_host: Exclude slices from these hosts
+        exclude_slice_state: Exclude these slice states
+        exclude_sliver_state: Exclude these sliver states
+        page: Page number for pagination (0-indexed)
+        per_page: Number of results per page (max 1000)
+        fetch_all: If True, automatically fetch all pages
+
+    Returns:
+        Dict containing list of slices with details including slice_id, slice_name,
+        state, project_id, user_id, site information, and associated resources.
+
+    Examples:
+        - Active slices at EDC site: slice_state=["StableOK", "StableError"], site=["EDC"]
+        - User's slices: user_email=["user@example.com"]
+        - Slices with GPUs: component_type=["GPU"]
+    """
     client = _client_from_headers()
     return await _call(
         client, "query_slices",
@@ -202,11 +277,64 @@ async def query_slivers(
         exclude_site: Optional[List[str]] = None,
         exclude_host: Optional[List[str]] = None,
         exclude_slice_state: Optional[List[str]] = None,
-        exclude_sliver_state: Optional[List[str]] = None,
+        exclude_sliver_state: Optional[List[str]] = ["Closed"],
         page: int = 0,
         per_page: int = 1000,
         fetch_all: bool = True,
 ) -> Dict[str, Any]:
+    """
+    Query individual resource allocations (slivers) with comprehensive filtering.
+
+    Slivers are the individual resource allocations within slices. Each sliver
+    represents a specific resource type (VM, network connection, storage, etc.)
+    allocated at a particular site. Use this endpoint for detailed resource-level
+    queries and utilization tracking.
+
+    Args:
+        start_time: ISO8601 timestamp - filter slivers created/modified after this time
+        end_time: ISO8601 timestamp - filter slivers created/modified before this time
+        user_id: List of user UUIDs owning the parent slice
+        user_email: List of user emails owning the parent slice
+        project_id: List of project UUIDs to filter by
+        slice_id: List of parent slice UUIDs
+        slice_state: Filter by parent slice states
+        sliver_id: List of specific sliver UUIDs to retrieve
+        sliver_type: Filter by sliver types (VM, Switch, Facility, L2STS, L2PTP,
+                     L2Bridge, FABNetv4, FABNetv6, PortMirror, L3VPN, etc.)
+        sliver_state: Filter by sliver states (Nascent, Ticketed, Active,
+                      ActiveTicketed, Closed, CloseWait, Failed, Unknown, CloseFail)
+        component_type: Filter by attached component types (GPU, SmartNIC,
+                        SharedNIC, FPGA, NVME, Storage)
+        component_model: Filter by specific hardware model strings
+        bdf: Filter by PCI Bus-Device-Function identifiers
+        vlan: Filter by VLAN tags assigned to sliver interfaces
+        ip_subnet: Filter by IP subnet (CIDR notation)
+        ip_v4: Filter by assigned IPv4 addresses
+        ip_v6: Filter by assigned IPv6 addresses
+        site: List of FABRIC site names where slivers are allocated
+        host: List of physical host names running the slivers
+        facility: Filter by facility type
+        exclude_user_id: Exclude slivers from these user UUIDs
+        exclude_user_email: Exclude slivers from these user emails
+        exclude_project_id: Exclude slivers from these project UUIDs
+        exclude_site: Exclude slivers from these sites
+        exclude_host: Exclude slivers from these hosts
+        exclude_slice_state: Exclude based on parent slice states
+        exclude_sliver_state: Exclude these sliver states
+        page: Page number for pagination (0-indexed)
+        per_page: Number of results per page (max 1000)
+        fetch_all: If True, automatically fetch all pages
+
+    Returns:
+        Dict containing list of slivers with details including sliver_id,
+        sliver_type, state, site, host, attached components, network interfaces,
+        and parent slice information.
+
+    Examples:
+        - Active VM slivers: sliver_type=["VM"], sliver_state=["Active"]
+        - SmartNIC allocations at RENC: component_type=["SmartNIC"], site=["RENC"]
+        - Failed slivers in last 24h: sliver_state=["Failed"], start_time="2025-01-09T00:00:00Z"
+    """
     client = _client_from_headers()
     return await _call(
         client, "query_slivers",
@@ -258,7 +386,7 @@ async def query_users(
         host: Optional[List[str]] = None,
         facility: Optional[List[str]] = None,
         project_type: Optional[List[str]] = None,
-        user_active: Optional[bool] = None,
+        user_active: Optional[bool] = True,
         exclude_user_id: Optional[List[str]] = None,
         exclude_user_email: Optional[List[str]] = None,
         exclude_project_id: Optional[List[str]] = None,
@@ -271,6 +399,59 @@ async def query_users(
         per_page: int = 1000,
         fetch_all: bool = True,
 ) -> Dict[str, Any]:
+    """
+    Query FABRIC users with relationship and activity-based filtering.
+
+    Retrieve user information with flexible filtering based on their project
+    memberships, slice ownership, resource usage, and activity status. Useful
+    for identifying active users, finding users by their experiments, or
+    analyzing user communities.
+
+    Args:
+        start_time: ISO8601 timestamp - filter users with activity after this time
+        end_time: ISO8601 timestamp - filter users with activity before this time
+        user_id: List of specific user UUIDs to retrieve
+        user_email: List of user email addresses to retrieve
+        project_id: Filter users who are members of these projects
+        slice_id: Filter users who own these slices
+        slice_state: Filter users with slices in these states
+        sliver_id: Filter users who own slices containing these slivers
+        sliver_type: Filter users utilizing these sliver types
+        sliver_state: Filter users with slivers in these states
+        component_type: Filter users utilizing these component types
+        component_model: Filter by specific hardware models used
+        bdf: Filter by PCI Bus-Device-Function identifiers
+        vlan: Filter by VLAN tags in user's resources
+        ip_subnet: Filter by IP subnets used
+        ip_v4: Filter by IPv4 addresses assigned to user resources
+        ip_v6: Filter by IPv6 addresses assigned to user resources
+        site: Filter users with resources at these sites
+        host: Filter users with resources on these hosts
+        facility: Filter by facility type
+        project_type: Filter users by project types they belong to (research,
+                      education, accept, test)
+        user_active: If True, return only active users; if False, only inactive
+        exclude_user_id: Exclude these user UUIDs
+        exclude_user_email: Exclude these user emails
+        exclude_project_id: Exclude users from these projects
+        exclude_site: Exclude users with resources at these sites
+        exclude_host: Exclude users with resources on these hosts
+        exclude_slice_state: Exclude users with slices in these states
+        exclude_sliver_state: Exclude users with slivers in these states
+        exclude_project_type: Exclude users from these project types
+        page: Page number for pagination (0-indexed)
+        per_page: Number of results per page (max 1000)
+        fetch_all: If True, automatically fetch all pages
+
+    Returns:
+        Dict containing list of users with details including user_id (UUID),
+        email, name, active status, associated projects, and resource usage.
+
+    Examples:
+        - Active users with GPU allocations: user_active=True, component_type=["GPU"]
+        - Users in research projects: project_type=["research"]
+        - Users with failed slices: slice_state=["Dead", "StableError"]
+    """
     client = _client_from_headers()
     return await _call(
         client, "query_users",
@@ -324,7 +505,7 @@ async def query_projects(
         host: Optional[List[str]] = None,
         facility: Optional[List[str]] = None,
         project_type: Optional[List[str]] = None,
-        project_active: Optional[bool] = None,
+        project_active: Optional[bool] = True,
         exclude_user_id: Optional[List[str]] = None,
         exclude_user_email: Optional[List[str]] = None,
         exclude_project_id: Optional[List[str]] = None,
@@ -337,6 +518,60 @@ async def query_projects(
         per_page: int = 1000,
         fetch_all: bool = True,
 ) -> Dict[str, Any]:
+    """
+    Query FABRIC projects with membership, activity, and resource-based filtering.
+
+    Projects are organizational units that group users and their experimental
+    resources. Use this endpoint to find projects by type, activity status,
+    member composition, or resource utilization patterns.
+
+    Args:
+        start_time: ISO8601 timestamp - filter projects with activity after this time
+        end_time: ISO8601 timestamp - filter projects with activity before this time
+        user_id: Filter projects containing these user UUIDs as members
+        user_email: Filter projects containing these user emails as members
+        project_id: List of specific project UUIDs to retrieve
+        slice_id: Filter projects that own these slices
+        slice_state: Filter projects with slices in these states
+        sliver_id: Filter projects with slices containing these slivers
+        sliver_type: Filter projects utilizing these sliver types
+        sliver_state: Filter projects with slivers in these states
+        component_type: Filter projects utilizing these component types (GPU,
+                        SmartNIC, SharedNIC, FPGA, NVME, Storage)
+        component_model: Filter by specific hardware models used
+        bdf: Filter by PCI Bus-Device-Function identifiers
+        vlan: Filter by VLAN tags in project's resources
+        ip_subnet: Filter by IP subnets used
+        ip_v4: Filter by IPv4 addresses assigned to project resources
+        ip_v6: Filter by IPv6 addresses assigned to project resources
+        site: Filter projects with resources at these sites
+        host: Filter projects with resources on these hosts
+        facility: Filter by facility type
+        project_type: Filter by project types (research, education, accept, test)
+        project_active: If True, return only active projects; if False, only inactive
+        exclude_user_id: Exclude projects containing these user UUIDs
+        exclude_user_email: Exclude projects containing these user emails
+        exclude_project_id: Exclude these project UUIDs (useful for filtering
+                            out FABRIC personnel projects)
+        exclude_site: Exclude projects with resources at these sites
+        exclude_host: Exclude projects with resources on these hosts
+        exclude_slice_state: Exclude projects with slices in these states
+        exclude_sliver_state: Exclude projects with slivers in these states
+        exclude_project_type: Exclude these project types
+        page: Page number for pagination (0-indexed)
+        per_page: Number of results per page (max 1000)
+        fetch_all: If True, automatically fetch all pages
+
+    Returns:
+        Dict containing list of projects with details including project_id (UUID),
+        name, description, type, active status, member count, created/modified dates,
+        and resource usage summary.
+
+    Examples:
+        - Active research projects: project_active=True, project_type=["research"]
+        - Projects using GPUs at RENC: component_type=["GPU"], site=["RENC"]
+        - Exclude FABRIC personnel: exclude_project_id=[list of FABRIC project UUIDs]
+    """
     client = _client_from_headers()
     return await _call(
         client, "query_projects",
@@ -375,16 +610,51 @@ async def query_user_memberships(
         user_email: Optional[List[str]] = None,
         exclude_user_id: Optional[List[str]] = None,
         exclude_user_email: Optional[List[str]] = None,
-        project_type: Optional[List[str]] = None,
+        project_type: Optional[List[str]] = ["research", "education"],
         exclude_project_type: Optional[List[str]] = None,
-        project_active: Optional[bool] = None,
+        project_active: Optional[bool] = True,
         project_expired: Optional[bool] = None,
         project_retired: Optional[bool] = None,
-        user_active: Optional[bool] = None,
+        user_active: Optional[bool] = True,
         page: int = 0,
         per_page: int = 500,
         fetch_all: bool = True,
 ) -> Dict[str, Any]:
+    """
+    Query user-to-project membership relationships.
+
+    Returns user-centric views of project memberships, showing which projects
+    each user belongs to, their roles, and membership status. Useful for
+    understanding user participation across projects and identifying user
+    communities.
+
+    Args:
+        start_time: ISO8601 timestamp - filter memberships created after this time
+        end_time: ISO8601 timestamp - filter memberships created before this time
+        user_id: List of user UUIDs to retrieve memberships for
+        user_email: List of user emails to retrieve memberships for
+        exclude_user_id: Exclude memberships for these user UUIDs
+        exclude_user_email: Exclude memberships for these user emails
+        project_type: Filter by project types (research, education, accept, test)
+        exclude_project_type: Exclude these project types
+        project_active: If True, only include memberships in active projects
+        project_expired: If True, only include memberships in expired projects
+        project_retired: If True, only include memberships in retired projects
+        user_active: If True, only include active users
+        page: Page number for pagination (0-indexed)
+        per_page: Number of results per page (max 500)
+        fetch_all: If True, automatically fetch all pages
+
+    Returns:
+        Dict containing list of user memberships with details including user_id,
+        email, list of projects with role information (owner, member, etc.),
+        and membership dates.
+
+    Examples:
+        - User's active projects: user_email=["user@example.com"], project_active=True
+        - Research project memberships: project_type=["research"]
+        - Active users in non-test projects: user_active=True, exclude_project_type=["test"]
+    """
     client = _client_from_headers()
     return await _call(
         client, "query_user_memberships",
@@ -411,16 +681,50 @@ async def query_project_memberships(
         end_time: Optional[str] = None,
         project_id: Optional[List[str]] = None,
         exclude_project_id: Optional[List[str]] = None,
-        project_type: Optional[List[str]] = None,
+        project_type: Optional[List[str]] = ["research", "education"],
         exclude_project_type: Optional[List[str]] = None,
-        project_active: Optional[bool] = None,
+        project_active: Optional[bool] = True,
         project_expired: Optional[bool] = None,
         project_retired: Optional[bool] = None,
-        user_active: Optional[bool] = None,
+        user_active: Optional[bool] = True,
         page: int = 0,
         per_page: int = 500,
         fetch_all: bool = True,
 ) -> Dict[str, Any]:
+    """
+    Query project-to-user membership relationships.
+
+    Returns project-centric views of memberships, showing which users belong
+    to each project, their roles, and membership status. Useful for analyzing
+    project team composition, identifying project owners, and tracking member
+    participation.
+
+    Args:
+        start_time: ISO8601 timestamp - filter memberships created after this time
+        end_time: ISO8601 timestamp - filter memberships created before this time
+        project_id: List of project UUIDs to retrieve memberships for
+        exclude_project_id: Exclude memberships for these project UUIDs (useful
+                            for filtering out FABRIC personnel projects)
+        project_type: Filter by project types (research, education, accept, test)
+        exclude_project_type: Exclude these project types
+        project_active: If True, only include active projects
+        project_expired: If True, only include expired projects
+        project_retired: If True, only include retired projects
+        user_active: If True, only include active users in results
+        page: Page number for pagination (0-indexed)
+        per_page: Number of results per page (max 500)
+        fetch_all: If True, automatically fetch all pages
+
+    Returns:
+        Dict containing list of project memberships with details including
+        project_id, name, type, active status, and list of members with their
+        roles (owner, member, etc.) and membership dates.
+
+    Examples:
+        - Project team roster: project_id=["uuid"]
+        - Research project teams: project_type=["research"], project_active=True
+        - Active members only: user_active=True
+    """
     client = _client_from_headers()
     return await _call(
         client, "query_project_memberships",
@@ -447,6 +751,25 @@ async def post_slice(
         slice_id: str,
         slice_payload: Dict[str, Any],
 ) -> Dict[str, Any]:
+    """
+    Create or update a slice in the Reports database.
+
+    This endpoint allows programmatic creation or updating of slice records.
+    Typically used for data import/sync operations rather than regular queries.
+    Requires appropriate authentication and permissions.
+
+    Args:
+        slice_id: The unique UUID of the slice to create or update
+        slice_payload: Dict containing slice data including state, name,
+                       project_id, user_id, created_time, and other slice attributes
+
+    Returns:
+        Dict with operation status and created/updated slice information.
+
+    Note:
+        This is an administrative endpoint primarily used for data synchronization
+        from other FABRIC systems into the Reports database.
+    """
     client = _client_from_headers()
     return await _call(client, "post_slice", slice_id=slice_id, slice_payload=slice_payload)
 
@@ -463,6 +786,28 @@ async def post_sliver(
         sliver_id: str,
         sliver_payload: Dict[str, Any],
 ) -> Dict[str, Any]:
+    """
+    Create or update a sliver within a slice in the Reports database.
+
+    This endpoint allows programmatic creation or updating of sliver records
+    (individual resource allocations). Typically used for data import/sync
+    operations rather than regular queries. Requires appropriate authentication
+    and permissions.
+
+    Args:
+        slice_id: The unique UUID of the parent slice
+        sliver_id: The unique UUID of the sliver to create or update
+        sliver_payload: Dict containing sliver data including state, type,
+                        site, host, components, interfaces, and other attributes
+
+    Returns:
+        Dict with operation status and created/updated sliver information.
+
+    Note:
+        This is an administrative endpoint primarily used for data synchronization
+        from other FABRIC systems (orchestrator, controllers) into the Reports
+        database.
+    """
     client = _client_from_headers()
     return await _call(
         client, "post_sliver",
