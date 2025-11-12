@@ -13,8 +13,8 @@
         "--env",
         "FABRIC_RC=/fabric_config",
         "--volume",
-        "/Users/kthare10/work/fabric_config:/fabric_config:ro",
-        "kthare10/reports-mcp-server:latest",
+        "/Users/kthare10/work/fabric_config_mcp:/fabric_config:ro",
+        "kthare10/fabric-reports:latest",
         "python",
         "/app/mcp_reports_server.py"
       ]

@@ -327,7 +327,7 @@ async def query_slices(
         state, project_id, user_id, site information, and associated resources.
 
     Examples:
-        - Active slices at EDC site: slice_state=["StableOK", "StableError"], site=["EDC"]
+        - Active slices at EDC site: site=["EDC"]
         - User's slices: user_email=["user@example.com"]
         - Slices with GPUs: component_type=["GPU"]
     """
@@ -437,7 +437,7 @@ async def query_slivers(
         and parent slice information.
 
     Examples:
-        - Active VM slivers: sliver_type=["VM"], sliver_state=["Active"]
+        - Active VM slivers: sliver_type=["VM"]
         - SmartNIC allocations at RENC: component_type=["SmartNIC"], site=["RENC"]
         - Failed slivers in last 24h: sliver_state=["Failed"], start_time="2025-01-09T00:00:00Z"
     """

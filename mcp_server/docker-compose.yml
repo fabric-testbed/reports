@@ -3,8 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: reports-mcp-server-local
-    image: kthare10/reports-mcp-server:latest
+    container_name: fabric-reports-local
+    image: kthare10/fabric-reports:latest
     restart: always
     # Port for stdio mode - not typically needed for Claude Desktop
     # but useful if you want to test the HTTP endpoint
@@ -19,6 +19,6 @@ services:
       FABRIC_RC: "/fabric_config"
     volumes:
       # Mount your FABRIC config directory (read-only)
-      - /Users/kthare10/work/fabric_config:/fabric_config:ro
+      - /Users/kthare10/work/fabric_config_mcp:/fabric_config:ro
       # Optional: for application logs
       - ./mcp-logs:/var/log/mcp

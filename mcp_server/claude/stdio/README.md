@@ -43,7 +43,7 @@ Add the following to your `claude_desktop_config.json`:
         "--env", "MCP_TRANSPORT=stdio",
         "--env", "REPORTS_API_BASE_URL=https://reports.fabric-testbed.net/reports",
         "--env", "FABRIC_RC=/fabric_config",
-        "--volume", "/Users/kthare10/work/fabric_config:/fabric_config:ro",
+        "--volume", "/Users/kthare10/work/fabric_config_mcp:/fabric_config:ro",
         "kthare10/reports-mcp-server:latest",
         "python", "/app/mcp_reports_server.py"
       ]
@@ -53,7 +53,7 @@ Add the following to your `claude_desktop_config.json`:
 ```
 
 **Important**: Update the volume mount path to match your FABRIC config location:
-- Change `/Users/kthare10/work/fabric_config` to your actual FABRIC config directory
+- Change `/Users/kthare10/work/fabric_config_mcp` to your actual FABRIC config directory
 
 #### Option B: Direct Python Execution (No Docker)
 
@@ -69,7 +69,7 @@ If you prefer to run without Docker:
       ],
       "env": {
         "MCP_TRANSPORT": "stdio",
-        "FABRIC_RC": "/Users/kthare10/work/fabric_config",
+        "FABRIC_RC": "/Users/kthare10/work/fabric_config_mcp",
         "REPORTS_API_BASE_URL": "https://reports.fabric-testbed.net/reports"
       }
     }
@@ -79,7 +79,7 @@ If you prefer to run without Docker:
 
 **Important**: Update these paths:
 - Python script path: `/Users/kthare10/claude-reports/reports/mcp_server/mcp_reports_server_unified.py`
-- FABRIC config path: `/Users/kthare10/work/fabric_config`
+- FABRIC config path: `/Users/kthare10/work/fabric_config_mcp`
 
 ### 4. Restart Claude Desktop
 
@@ -118,7 +118,7 @@ To verify the MCP server is working:
    docker run --rm -i \
      --env MCP_TRANSPORT=stdio \
      --env FABRIC_RC=/fabric_config \
-     --volume /Users/kthare10/work/fabric_config:/fabric_config:ro \
+     --volume /Users/kthare10/work/fabric_config_mcp:/fabric_config:ro \
      reports-mcp-server:latest \
      python /app/mcp_reports_server.py
    ```
@@ -137,16 +137,16 @@ To verify the MCP server is working:
 
 2. **Check token file format**:
    ```bash
-   cat /Users/kthare10/work/fabric_config/fabric_rc
+   cat /Users/kthare10/work/fabric_config_mcp/fabric_rc
    # Should show: export FABRIC_TOKEN_LOCATION=/path/to/token.json
 
-   cat $(grep FABRIC_TOKEN_LOCATION /Users/kthare10/work/fabric_config/fabric_rc | cut -d= -f2)
+   cat $(grep FABRIC_TOKEN_LOCATION /Users/kthare10/work/fabric_config_mcp/fabric_rc | cut -d= -f2)
    # Should show JSON with "id_token" field
    ```
 
 3. **Test token loading**:
    ```bash
-   export FABRIC_RC=/Users/kthare10/work/fabric_config
+   export FABRIC_RC=/Users/kthare10/work/fabric_config_mcp
    export MCP_TRANSPORT=stdio
    python3 mcp_reports_server.py
    ```
@@ -157,7 +157,7 @@ To verify the MCP server is working:
 
 If Docker commands fail:
 1. Ensure Docker Desktop is running
-2. Check volume mount permissions - the fabric_config directory must be readable
+2. Check volume mount permissions - the fabric_config_mcp directory must be readable
 3. Try running with absolute paths in the volume mount
 
 ## Using the MCP Server
@@ -180,6 +180,6 @@ Claude will use the MCP tools to query the FABRIC Reports API and provide detail
 ## Support
 
 For issues specific to:
-- **MCP Server**: Check the main [MCP Server README](../README.md)
+- **MCP Server**: Check the main [MCP Server README](../../README.md)
 - **FABRIC Reports API**: See [FABRIC Reports documentation](https://reports.fabric-testbed.net/reports/ui/)
 - **Claude Desktop**: Visit [Claude Desktop documentation](https://docs.anthropic.com/claude/docs)

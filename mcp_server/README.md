@@ -7,7 +7,7 @@ It provides a structured, secure interface for querying **users**, **projects**,
 ## Quick Links
 
 - **[Claude Desktop Setup →](CLAUDE_DESKTOP_QUICKSTART.md)** - Fast setup for Claude Desktop integration
-- **[Claude Desktop Configuration →](claude-desktop/README.md)** - Detailed Claude Desktop documentation
+- **[Claude Desktop Configuration →](claude/stdio/README.md)** - Detailed Claude Desktop documentation
 - **[Local Mode Setup](#local-mode-stdio)** - Run locally with Python or Docker
 
 ## Table of Contents
@@ -181,7 +181,7 @@ The launcher script will:
 Quick setup:
 1. Build the Docker image: `docker build -t reports-mcp-server:latest .`
 2. Add the MCP server to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS)
-3. See [claude-desktop/claude_desktop_config.json](claude-desktop/claude_desktop_config.json) for example configuration
+3. See [claude-desktop/claude_desktop_config.json](claude/stdio/claude_desktop_config_stdio.json) for example configuration
 
 **Claude Code Integration**
 
