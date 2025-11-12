@@ -81,7 +81,31 @@ If you prefer to run without Docker:
 - Python script path: `/Users/kthare10/claude-reports/reports/mcp_server/mcp_reports_server_unified.py`
 - FABRIC config path: `/Users/kthare10/work/fabric_config_mcp`
 
-### 4. Restart Claude Desktop
+### 4. Create FABRIC-Reports Project in Claude Desktop
+
+To get the best experience with domain-specific prompts and context:
+
+1. **Create a new project** in Claude Desktop:
+   - Click on "Projects" in the sidebar
+   - Click "Create Project"
+   - Name it **"FABRIC-Reports"** (exact name recommended for consistency)
+
+2. **Add the system prompt**:
+   - In the project settings, go to "Custom Instructions"
+   - Upload or copy the contents of `mcp_server/system.md` into the project instructions
+   - This file contains specialized prompts for querying FABRIC Reports data
+
+   ```bash
+   # The system.md file is located at:
+   /Users/kthare10/claude-reports/reports/mcp_server/system.md
+   ```
+
+3. **Why this matters**:
+   - The system.md file provides Claude with context about FABRIC terminology, data structures, and query patterns
+   - It helps Claude understand concepts like slivers, slices, components, and sites
+   - It includes best practices for formulating queries and interpreting results
+
+### 5. Restart Claude Desktop
 
 After modifying the configuration:
 1. Quit Claude Desktop completely
@@ -169,6 +193,8 @@ Once configured, you can ask Claude Desktop questions like:
 - "List all projects using GPUs"
 - "Find users with failed slices in the last week"
 - "What are the current project memberships?"
+
+**Important**: For the best results, always use the **FABRIC-Reports project** when asking these questions. This ensures Claude has access to both the MCP tools and the domain-specific context from system.md.
 
 Claude will use the MCP tools to query the FABRIC Reports API and provide detailed answers.
 
