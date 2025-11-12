@@ -1,0 +1,15 @@
+{
+	"mcpServers": {
+		"fabric-reports-local": {
+			"command": "python3",
+			"args": [
+				"/Users/kthare10/claude-reports/reports/mcp_server/mcp_reports_server.py"
+			],
+			"env": {
+				"MCP_TRANSPORT": "stdio",
+				"FABRIC_RC": "/Users/kthare10/work/fabric_config",
+				"REPORTS_API_BASE_URL": "https://reports.fabric-testbed.net/reports"
+			}
+		}
+	}
+}
