@@ -74,10 +74,11 @@ It provides a structured, secure interface for querying **users**, **projects**,
           ▼
       PostgreSQL
 ```
+![Architecture](../images/reports-mcp.png)
 
 ## Deployment Options
 
-The MCP server supports two transport modes, both powered by a single unified codebase (`mcp_reports_server_unified.py`):
+The MCP server supports two transport modes, both powered by a single unified codebase (`mcp_reports_server.py`):
 
 1. **HTTP Mode**: Runs as an HTTP server for remote access, suitable for production deployment behind reverse proxy
 2. **Local/stdio Mode**: Runs locally using stdio transport for direct integration with Claude Code, MCP Inspector, and other local MCP clients
