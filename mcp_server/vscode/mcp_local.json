@@ -13,7 +13,7 @@
 				"-e",
 				"FABRIC_RC=/fabric_config",
 				"-e",
-				"REPORTS_API_BASE_URL=http://reports-api:8080/reports",
+				"REPORTS_API_BASE_URL=http://reports.fabric-testbed.net/reports",
 				"kthare10/fabric-reports:latest"
 			]
 		}
