@@ -271,7 +271,7 @@ async def query_slices(
         exclude_project_id: Optional[List[str]] = None,
         exclude_site: Optional[List[str]] = None,
         exclude_host: Optional[List[str]] = None,
-        exclude_slice_state: Optional[List[str]] = ["Dead", "Closing"],
+        exclude_slice_state: Optional[List[str]] = None,
         exclude_sliver_state: Optional[List[str]] = None,
         page: int = 0,
         per_page: int = 1000,
@@ -327,7 +327,7 @@ async def query_slices(
         state, project_id, user_id, site information, and associated resources.
 
     Examples:
-        - Active slices at EDC site: site=["EDC"]
+        - Active slices at EDC site: site=["EDC"], , exclude_slice_state=["Dead", "Closing"]
         - User's slices: user_email=["user@example.com"]
         - Slices with GPUs: component_type=["GPU"]
     """
@@ -383,7 +383,7 @@ async def query_slivers(
         exclude_site: Optional[List[str]] = None,
         exclude_host: Optional[List[str]] = None,
         exclude_slice_state: Optional[List[str]] = None,
-        exclude_sliver_state: Optional[List[str]] = ["Closed"],
+        exclude_sliver_state: Optional[List[str]] = None,
         page: int = 0,
         per_page: int = 1000,
         fetch_all: bool = True,
@@ -437,7 +437,7 @@ async def query_slivers(
         and parent slice information.
 
     Examples:
-        - Active VM slivers: sliver_type=["VM"]
+        - Active VM slivers: sliver_type=["VM"], exclude_sliver_state=["Dead"]
         - SmartNIC allocations at RENC: component_type=["SmartNIC"], site=["RENC"]
         - Failed slivers in last 24h: sliver_state=["Failed"], start_time="2025-01-09T00:00:00Z"
     """

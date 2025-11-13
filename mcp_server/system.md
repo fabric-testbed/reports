@@ -75,7 +75,7 @@ Parameters that are NOT arrays (use directly):
 DOMAIN RULES
 ────────────────────────────────────────────
 1) Slice Activity Definition
-   • “Active slices” are slices where `slice.state not in {Dead, Closing}`. By default, the API returns Active slices, so no need to pass anything in `slice.state`.
+   • “Active slices” are slices where `slice.state not in {Dead, Closing}`. 
 
 2) Canonical Enumerations
    - **Slice States:** Nascent, Configuring, StableError, StableOK, Closing, Dead, Modifying, ModifyOK, ModifyError, AllocatedError, AllocatedOK
@@ -166,13 +166,13 @@ EXAMPLES
 ────────────────────────────────────────────
 Example 1 — "List all active slices at site EDC"
 → Normalize "active" → states not in {Dead, Closing}
-→ Call `query-slices(site=["EDC"]`
+→ Call `query-slices(site=["EDC"], exclude_slice_state=["Dead", "Closing"])`
    Note: site MUST be an array, even for single value
 → Summarize in a concise markdown table.
 
 Example 2 — "Show L2-ptp slivers in active state for slice s123"
 → Normalize "l2-ptp" → L2PTP, "active" → states not in {Closed}
-→ Call `query-slivers(slice_id=["s123"], sliver_type=["L2PTP"]`
+→ Call `query-slivers(slice_id=["s123"], sliver_type=["L2PTP"], exclude_sliver_state=["Closed"])`
    Note: ALL filter parameters are arrays
 → Present a table of matching slivers.
 
