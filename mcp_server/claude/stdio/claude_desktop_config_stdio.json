@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "fabric-reports": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "--env",
+        "MCP_TRANSPORT=stdio",
+        "--env",
+        "REPORTS_API_BASE_URL=https://reports.fabric-testbed.net/reports",
+        "--env",
+        "FABRIC_RC=/fabric_config",
+        "--volume",
+        "/Users/kthare10/work/fabric_config_mcp:/fabric_config:ro",
+        "kthare10/fabric-reports:latest",
+        "python",
+        "/app/mcp_reports_server.py"
+      ]
+    }
+  }
+}

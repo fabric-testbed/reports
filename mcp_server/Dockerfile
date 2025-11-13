@@ -13,7 +13,8 @@ ENV PYTHONUNBUFFERED=1
 
 # App config (override at runtime)
 ENV REPORTS_API_BASE_URL="https://reports.fabric-testbed.net/reports" \
-    PORT=5000
+    PORT=5000 \
+    MCP_TRANSPORT="http"
 
 # Create app user (non-root)
 RUN useradd -m -u 10001 appuser
@@ -37,5 +38,5 @@ EXPOSE ${PORT}
 # Healthcheck uses a simple TCP probe so we don't depend on a specific HTTP route
 HEALTHCHECK --interval=30s --timeout=3s --retries=5 CMD bash -c "exec 3<>/dev/tcp/127.0.0.1/${PORT} && exit 0 || exit 1"
 
-# Start the FastMCP HTTP server (the script reads PORT env)
+# Start the FastMCP HTTP server (the script reads PORT and MCP_TRANSPORT env)
 CMD ["python", "/app/mcp_reports_server.py"]

@@ -1,24 +1,129 @@
 from __future__ import annotations
 
+import ast
 import os
+import json
 import asyncio
 from pathlib import Path
 from typing import Any, Dict, Optional, List
 
 from fastmcp import FastMCP
-from fastmcp.server.context import Context
-from fastmcp.server.dependencies import get_http_headers
-
 from fabric_reports_client.reports_api import ReportsApi
 
 # ---------------------------------------
 # Config
 # ---------------------------------------
+# Transport mode: "stdio" (local) or "http" (server)
+MCP_TRANSPORT = os.environ.get("MCP_TRANSPORT", "stdio").lower()
+
 REPORTS_API_BASE_URL = os.environ.get(
     "REPORTS_API_BASE_URL",
     "https://reports.fabric-testbed.net/reports",
 )
-print(f"Reports API Base URL set to: {REPORTS_API_BASE_URL}")
+
+# For local/stdio mode, get token from FABRIC_RC or FABRIC_TOKEN
+def _load_fabric_config() -> None:
+    """
+    Load FABRIC configuration from fabric_rc file if FABRIC_RC is set.
+
+    This makes all FABRIC environment variables available, including:
+    - FABRIC_TOKEN_LOCATION: Path to token JSON file
+    - FABRIC_ORCHESTRATOR_HOST: Orchestrator API endpoint
+    - FABRIC_CREDMGR_HOST: Credential manager endpoint
+    - FABRIC_CORE_API_HOST: Core API endpoint
+    - FABRIC_PROJECT_ID: Default project ID
+    - FABRIC_BASTION_HOST: Bastion host for SSH access
+    - FABRIC_BASTION_USERNAME: Bastion username
+    - And other FABRIC-specific configuration
+
+    These variables are available for current and future MCP server features.
+    """
+    fabric_rc_dir = os.environ.get("FABRIC_RC")
+    if not fabric_rc_dir:
+        return
+
+    fabric_rc_file = Path(fabric_rc_dir) / 'fabric_rc'
+    if not fabric_rc_file.exists():
+        print(f"INFO: FABRIC_RC set to {fabric_rc_dir} but fabric_rc file not found")
+        return
+
+    try:
+        # Read the fabric_rc file and parse environment variables
+        with open(fabric_rc_file, 'r') as f:
+            for line in f:
+                line = line.strip()
+                # Skip comments and empty lines
+                if not line or line.startswith('#'):
+                    continue
+                # Parse export statements
+                if line.startswith('export '):
+                    line = line[7:]  # Remove 'export '
+                    if '=' in line:
+                        key, value = line.split('=', 1)
+                        # Remove quotes if present
+                        value = value.strip().strip('"').strip("'")
+                        # Only set if not already in environment
+                        if key not in os.environ:
+                            os.environ[key] = value
+        print(f"Loaded FABRIC configuration from: {fabric_rc_file}")
+    except Exception as e:
+        print(f"WARNING: Failed to load fabric_rc from {fabric_rc_file}: {e}")
+
+
+def _load_fabric_token() -> Optional[str]:
+    """Load FABRIC token from FABRIC_RC directory or FABRIC_TOKEN env var."""
+    # First, try to load fabric_rc configuration
+    _load_fabric_config()
+
+    # Check if FABRIC_TOKEN_LOCATION is set (from fabric_rc)
+    token_location = os.environ.get("FABRIC_TOKEN_LOCATION")
+    if token_location:
+        token_file = Path(token_location)
+        if token_file.exists():
+            try:
+                with open(token_file, 'r') as f:
+                    token_data = json.load(f)
+                    # Token file typically has structure: {"id_token": "...", "refresh_token": "..."}
+                    token = token_data.get("id_token") or token_data.get("token")
+                    if token:
+                        print(f"Loaded token from FABRIC_TOKEN_LOCATION: {token_location}")
+                        return token
+                    else:
+                        print(f"WARNING: Token file found at {token_file} but no 'id_token' or 'token' field")
+            except Exception as e:
+                print(f"WARNING: Failed to read token from {token_file}: {e}")
+        else:
+            print(f"WARNING: FABRIC_TOKEN_LOCATION set to {token_location} but file not found")
+
+    # Fall back to FABRIC_TOKEN environment variable
+    token = os.environ.get("FABRIC_TOKEN")
+    if token:
+        print("Using FABRIC_TOKEN from environment")
+    return token
+
+FABRIC_TOKEN = _load_fabric_token() if MCP_TRANSPORT == "stdio" else None
+
+# For HTTP mode
+HTTP_PORT = int(os.getenv("PORT", "5000"))
+HTTP_HOST = os.getenv("HOST", "0.0.0.0")
+
+print(f"MCP Transport Mode: {MCP_TRANSPORT}")
+print(f"Reports API Base URL: {REPORTS_API_BASE_URL}")
+
+if MCP_TRANSPORT == "stdio":
+    if not FABRIC_TOKEN:
+        print("WARNING: Neither FABRIC_RC nor FABRIC_TOKEN environment variable set. Authentication will fail.")
+        print("  Set FABRIC_RC to point to your fabric config file (e.g., /Users/username/fabric_config/fabric_rc)")
+        print("  Or set FABRIC_TOKEN directly with your token string")
+    else:
+        print("FABRIC token loaded successfully")
+elif MCP_TRANSPORT == "http":
+    print(f"HTTP Server will run on {HTTP_HOST}:{HTTP_PORT}")
+
+# Conditionally import HTTP-specific dependencies
+if MCP_TRANSPORT == "http":
+    from fastmcp.server.context import Context
+    from fastmcp.server.dependencies import get_http_headers
 
 # Meta fields various bridges may attach to tool calls
 EXTRA_META_ARGS = [
@@ -31,31 +136,28 @@ EXTRA_META_ARGS = [
 ]
 
 mcp = FastMCP(
-    name="fabric-reports-mcp-proxy",
+    name=f"fabric-reports-mcp-{MCP_TRANSPORT}",
     instructions="Proxy for accessing FABRIC Reports API data via LLM tool calls.",
     version="1.3.0",
 )
 
-# Load your markdown system prompt
-SYSTEM_TEXT = Path("system.md").read_text(encoding="utf-8").strip()
+# Load system prompt
+SYSTEM_TEXT_PATH = Path(__file__).parent / "system.md"
+if SYSTEM_TEXT_PATH.exists():
+    SYSTEM_TEXT = SYSTEM_TEXT_PATH.read_text(encoding="utf-8").strip()
+else:
+    SYSTEM_TEXT = "System rules for querying FABRIC Reports via MCP"
 
-# Define a function to load the prompt content
-# The docstring becomes the prompt's description.
 @mcp.prompt(name="fabric-reports-system")
 def fabric_reports_system_prompt():
     """System rules for querying FABRIC Reports via MCP"""
-    # FastMCP automatically wraps the string as a PromptMessage with role="system"
-    # if you return it from the function. You could also return a list of PromptMessage objects.
     return SYSTEM_TEXT
-
-# Note: The function name (or the name parameter) is the key.
-# The docstring is the description.
-# The return value is the prompt content/messages.
 
 # ---------------------------------------
 # Helpers
 # ---------------------------------------
 def _bearer_from_headers(headers: Dict[str, str]) -> Optional[str]:
+    """Extract bearer token from HTTP headers (HTTP mode only)"""
     low = {k.lower(): v for k, v in headers.items()}
     auth = low.get("authorization", "").strip()
     if auth.lower().startswith("bearer "):
@@ -63,12 +165,20 @@ def _bearer_from_headers(headers: Dict[str, str]) -> Optional[str]:
     return None
 
 
-def _client_from_headers() -> ReportsApi:
-    headers = get_http_headers() or {}
-    token = _bearer_from_headers(headers)
-    if not token:
-        raise ValueError("Authentication Required: Missing or invalid Authorization Bearer token.")
-    return ReportsApi(base_url=REPORTS_API_BASE_URL, token=token)
+def _get_client() -> ReportsApi:
+    """Get Reports API client based on transport mode"""
+    if MCP_TRANSPORT == "http":
+        # HTTP mode: extract token from headers
+        headers = get_http_headers() or {}
+        token = _bearer_from_headers(headers)
+        if not token:
+            raise ValueError("Authentication Required: Missing or invalid Authorization Bearer token.")
+        return ReportsApi(base_url=REPORTS_API_BASE_URL, token=token)
+    else:
+        # stdio mode: use environment variable
+        if not FABRIC_TOKEN:
+            raise ValueError("FABRIC_TOKEN environment variable must be set")
+        return ReportsApi(base_url=REPORTS_API_BASE_URL, token=FABRIC_TOKEN)
 
 
 async def _call(client: ReportsApi, method: str, **kwargs) -> Dict[str, Any]:
@@ -79,15 +189,18 @@ async def _call(client: ReportsApi, method: str, **kwargs) -> Dict[str, Any]:
     final_args = {k: v for k, v in kwargs.items() if v is not None}
     return await asyncio.to_thread(fn, **final_args)
 
+# ---------------------------------------
+# Tool definitions
+# Note: ctx parameter is optional and only used in HTTP mode
+# ---------------------------------------
 
-# ---------------------------------------
-# Simple endpoints
-# ---------------------------------------
 @mcp.tool(name="query-version", title="Query Version",
-          description="Get API version, build info, and service status. Use to verify API availability and compatibility."
+          #description="Get API version, build info, and service status. Use to verify API availability and compatibility."
           )
-async def query_version(ctx: Context, toolCallId: Optional[str] = None,
-                        tool_call_id: Optional[str] = None, ) -> Dict[str, Any]:
+async def query_version(
+        toolCallId: Optional[str] = None,
+        tool_call_id: Optional[str] = None,
+) -> Dict[str, Any]:
     """
     Retrieve version information from the FABRIC Reports API.
 
@@ -98,15 +211,17 @@ async def query_version(ctx: Context, toolCallId: Optional[str] = None,
         Dict containing version details including version number, git commit,
         and service metadata.
     """
-    client = _client_from_headers()
+    client = _get_client()
     return await _call(client, "query_version")
 
 
 @mcp.tool(name="query-sites", title="Query Sites",
-          description="Get all FABRIC testbed sites with location, capacity, and available resources (GPUs, FPGAs, SmartNICs). No filters available - returns complete site list."
+          #description="Get all FABRIC testbed sites with location, capacity, and available resources (GPUs, FPGAs, SmartNICs). No filters available - returns complete site list."
           )
-async def query_sites(ctx: Context, toolCallId: Optional[str] = None,
-                      tool_call_id: Optional[str] = None, ) -> Dict[str, Any]:
+async def query_sites(
+        toolCallId: Optional[str] = None,
+        tool_call_id: Optional[str] = None,
+) -> Dict[str, Any]:
     """
     Retrieve all FABRIC testbed sites.
 
@@ -119,20 +234,17 @@ async def query_sites(ctx: Context, toolCallId: Optional[str] = None,
         Dict containing list of sites with details including site name, ID,
         location, and resource capacities.
     """
-    client = _client_from_headers()
+    client = _get_client()
     return await _call(client, "query_sites")
 
 
-# ---------------------------------------
-# Slices
-# ---------------------------------------
 @mcp.tool(
     name="query-slices",
     title="Query Slices",
-    description="Query FABRIC experimental slices (user environments containing resources). Filter by state (StableOK, StableError, Dead, etc.), user, project, site, time range, or resource types (GPU, SmartNIC, etc.). Use exclude_slice_state to filter out terminated slices. Default excludes Dead and Closing states."
+    #description="Query FABRIC experimental slices (user environments containing resources). Filter by state (StableOK, StableError, Dead, etc.), user, project, site, time range, or resource types (GPU, SmartNIC, etc.). Use exclude_slice_state to filter out terminated slices. Default excludes Dead and Closing states."
 )
 async def query_slices(
-        ctx: Context, toolCallId: Optional[str] = None,
+        toolCallId: Optional[str] = None,
         tool_call_id: Optional[str] = None,
         start_time: Optional[str] = None,
         end_time: Optional[str] = None,
@@ -159,7 +271,7 @@ async def query_slices(
         exclude_project_id: Optional[List[str]] = None,
         exclude_site: Optional[List[str]] = None,
         exclude_host: Optional[List[str]] = None,
-        exclude_slice_state: Optional[List[str]] = ["Dead", "Closing"],
+        exclude_slice_state: Optional[List[str]] = None,
         exclude_sliver_state: Optional[List[str]] = None,
         page: int = 0,
         per_page: int = 1000,
@@ -215,11 +327,11 @@ async def query_slices(
         state, project_id, user_id, site information, and associated resources.
 
     Examples:
-        - Active slices at EDC site: slice_state=["StableOK", "StableError"], site=["EDC"]
+        - Active slices at EDC site: site=["EDC"], , exclude_slice_state=["Dead", "Closing"]
         - User's slices: user_email=["user@example.com"]
         - Slices with GPUs: component_type=["GPU"]
     """
-    client = _client_from_headers()
+    client = _get_client()
     return await _call(
         client, "query_slices",
         start_time=start_time, end_time=end_time,
@@ -237,16 +349,13 @@ async def query_slices(
     )
 
 
-# ---------------------------------------
-# Slivers
-# ---------------------------------------
 @mcp.tool(
     name="query-slivers",
     title="Query Slivers",
-    description="Query individual resource allocations (VMs, network connections, storage). Filter by sliver_type (VM, L2PTP, FABNetv4, etc.), sliver_state (Active, Failed, Closed, etc.), component_type (GPU, SmartNIC, FPGA, NVME, Storage), site, host, or time range. Use for detailed resource utilization tracking. Default excludes Closed slivers."
+    #description="Query individual resource allocations (VMs, network connections, storage). Filter by sliver_type (VM, L2PTP, FABNetv4, etc.), sliver_state (Active, Failed, Closed, etc.), component_type (GPU, SmartNIC, FPGA, NVME, Storage), site, host, or time range. Use for detailed resource utilization tracking. Default excludes Closed slivers."
 )
 async def query_slivers(
-        ctx: Context, toolCallId: Optional[str] = None,
+        toolCallId: Optional[str] = None,
         tool_call_id: Optional[str] = None,
         start_time: Optional[str] = None,
         end_time: Optional[str] = None,
@@ -274,7 +383,7 @@ async def query_slivers(
         exclude_site: Optional[List[str]] = None,
         exclude_host: Optional[List[str]] = None,
         exclude_slice_state: Optional[List[str]] = None,
-        exclude_sliver_state: Optional[List[str]] = ["Closed"],
+        exclude_sliver_state: Optional[List[str]] = None,
         page: int = 0,
         per_page: int = 1000,
         fetch_all: bool = True,
@@ -328,11 +437,11 @@ async def query_slivers(
         and parent slice information.
 
     Examples:
-        - Active VM slivers: sliver_type=["VM"], sliver_state=["Active"]
+        - Active VM slivers: sliver_type=["VM"], exclude_sliver_state=["Dead"]
         - SmartNIC allocations at RENC: component_type=["SmartNIC"], site=["RENC"]
         - Failed slivers in last 24h: sliver_state=["Failed"], start_time="2025-01-09T00:00:00Z"
     """
-    client = _client_from_headers()
+    client = _get_client()
     return await _call(
         client, "query_slivers",
         start_time=start_time, end_time=end_time,
@@ -350,16 +459,13 @@ async def query_slivers(
     )
 
 
-# ---------------------------------------
-# Users
-# ---------------------------------------
 @mcp.tool(
     name="query-users",
     title="Query Users",
-    description="Query FABRIC users filtered by activity, project membership, resource usage, or experiments. Filter by user_active (default: true), project_type (research/education/test), component_type, site, or slice ownership. Use to identify active users, find users by experiments, or analyze user communities."
+    #description="Query FABRIC users filtered by activity, project membership, resource usage, or experiments. Filter by user_active (default: true), project_type (research/education/test), component_type, site, or slice ownership. Use to identify active users, find users by experiments, or analyze user communities."
 )
 async def query_users(
-        ctx: Context, toolCallId: Optional[str] = None,
+        toolCallId: Optional[str] = None,
         tool_call_id: Optional[str] = None,
         start_time: Optional[str] = None,
         end_time: Optional[str] = None,
@@ -448,7 +554,7 @@ async def query_users(
         - Users in research projects: project_type=["research"]
         - Users with failed slices: slice_state=["Dead", "StableError"]
     """
-    client = _client_from_headers()
+    client = _get_client()
     return await _call(
         client, "query_users",
         start_time=start_time, end_time=end_time,
@@ -468,16 +574,13 @@ async def query_users(
     )
 
 
-# ---------------------------------------
-# Projects
-# ---------------------------------------
 @mcp.tool(
     name="query-projects",
     title="Query Projects",
-    description="Query FABRIC projects (organizational units grouping users and resources). Filter by project_active (default: true), project_type (research/education/test), members, resource usage, or site. Use exclude_project_id to filter out FABRIC personnel projects. Useful for finding projects by activity, team composition, or resource patterns."
+    #description="Query FABRIC projects (organizational units grouping users and resources). Filter by project_active (default: true), project_type (research/education/test), members, resource usage, or site. Use exclude_project_id to filter out FABRIC personnel projects. Useful for finding projects by activity, team composition, or resource patterns."
 )
 async def query_projects(
-        ctx: Context, toolCallId: Optional[str] = None,
+        toolCallId: Optional[str] = None,
         tool_call_id: Optional[str] = None,
         start_time: Optional[str] = None,
         end_time: Optional[str] = None,
@@ -567,7 +670,7 @@ async def query_projects(
         - Projects using GPUs at RENC: component_type=["GPU"], site=["RENC"]
         - Exclude FABRIC personnel: exclude_project_id=[list of FABRIC project UUIDs]
     """
-    client = _client_from_headers()
+    client = _get_client()
     return await _call(
         client, "query_projects",
         start_time=start_time, end_time=end_time,
@@ -587,16 +690,13 @@ async def query_projects(
     )
 
 
-# ---------------------------------------
-# Memberships
-# ---------------------------------------
 @mcp.tool(
     name="query-user-memberships",
     title="Query User Memberships",
-    description="Get user-centric view of project memberships showing which projects each user belongs to with roles. Filter by user_active (default: true), project_type (default: research, education), project_active (default: true), or project status. Use to understand user participation across projects."
+    #description="Get user-centric view of project memberships showing which projects each user belongs to with roles. Filter by user_active (default: true), project_type (default: research, education), project_active (default: true), or project status. Use to understand user participation across projects."
 )
 async def query_user_memberships(
-        ctx: Context, toolCallId: Optional[str] = None,
+        toolCallId: Optional[str] = None,
         tool_call_id: Optional[str] = None,
         start_time: Optional[str] = None,
         end_time: Optional[str] = None,
@@ -649,7 +749,7 @@ async def query_user_memberships(
         - Research project memberships: project_type=["research"]
         - Active users in non-test projects: user_active=True, exclude_project_type=["test"]
     """
-    client = _client_from_headers()
+    client = _get_client()
     return await _call(
         client, "query_user_memberships",
         start_time=start_time, end_time=end_time,
@@ -665,10 +765,10 @@ async def query_user_memberships(
 @mcp.tool(
     name="query-project-memberships",
     title="Query Project Memberships",
-    description="Get project-centric view of memberships showing which users belong to each project with roles. Filter by project_type (default: research, education), project_active (default: true), user_active (default: true), or project status. Use to analyze team composition and identify project owners."
+    #description="Get project-centric view of memberships showing which users belong to each project with roles. Filter by project_type (default: research, education), project_active (default: true), user_active (default: true), or project status. Use to analyze team composition and identify project owners."
 )
 async def query_project_memberships(
-        ctx: Context, toolCallId: Optional[str] = None,
+        toolCallId: Optional[str] = None,
         tool_call_id: Optional[str] = None,
         start_time: Optional[str] = None,
         end_time: Optional[str] = None,
@@ -718,7 +818,7 @@ async def query_project_memberships(
         - Research project teams: project_type=["research"], project_active=True
         - Active members only: user_active=True
     """
-    client = _client_from_headers()
+    client = _get_client()
     return await _call(
         client, "query_project_memberships",
         start_time=start_time, end_time=end_time,
@@ -730,16 +830,12 @@ async def query_project_memberships(
     )
 
 
-# ---------------------------------------
-# POST helpers (optional tools)
-# ---------------------------------------
 @mcp.tool(
     name="post-slice",
     title="Post Slice",
-    description="Administrative endpoint to create or update slice records in Reports database. Requires slice_id and slice_payload with state, name, project_id, user_id, timestamps. Use for data import/sync operations only, not regular queries."
+    #description="Administrative endpoint to create or update slice records in Reports database. Requires slice_id and slice_payload with state, name, project_id, user_id, timestamps. Use for data import/sync operations only, not regular queries."
 )
 async def post_slice(
-        ctx: Context,
         slice_id: str,
         slice_payload: Dict[str, Any],
 ) -> Dict[str, Any]:
@@ -762,17 +858,16 @@ async def post_slice(
         This is an administrative endpoint primarily used for data synchronization
         from other FABRIC systems into the Reports database.
     """
-    client = _client_from_headers()
+    client = _get_client()
     return await _call(client, "post_slice", slice_id=slice_id, slice_payload=slice_payload)
 
 
 @mcp.tool(
     name="post-sliver",
     title="Post Sliver",
-    description="Administrative endpoint to create or update sliver records in Reports database. Requires slice_id, sliver_id, and sliver_payload with state, type, site, host, components, interfaces. Use for data import/sync from orchestrator/controllers only, not regular queries."
+    #description="Administrative endpoint to create or update sliver records in Reports database. Requires slice_id, sliver_id, and sliver_payload with state, type, site, host, components, interfaces. Use for data import/sync from orchestrator/controllers only, not regular queries."
 )
 async def post_sliver(
-        ctx: Context,
         slice_id: str,
         sliver_id: str,
         sliver_payload: Dict[str, Any],
@@ -799,7 +894,7 @@ async def post_sliver(
         from other FABRIC systems (orchestrator, controllers) into the Reports
         database.
     """
-    client = _client_from_headers()
+    client = _get_client()
     return await _call(
         client, "post_sliver",
         slice_id=slice_id, sliver_id=sliver_id, sliver_payload=sliver_payload
@@ -810,9 +905,9 @@ async def post_sliver(
 # Run
 # ---------------------------------------
 if __name__ == "__main__":
-    import os
-
-    port = int(os.getenv("PORT", "5000"))
-    host = os.getenv("HOST", "0.0.0.0")
-    print(f"Starting FABRIC Reports MCP (FastMCP) on http://{host}:{port}")
-    mcp.run(transport="http", host=host, port=port)
+    if MCP_TRANSPORT == "http":
+        print(f"Starting FABRIC Reports MCP (FastMCP) in HTTP mode on http://{HTTP_HOST}:{HTTP_PORT}")
+        mcp.run(transport="http", host=HTTP_HOST, port=HTTP_PORT)
+    else:
+        print(f"Starting FABRIC Reports MCP (FastMCP) in stdio mode")
+        mcp.run(transport="stdio")

@@ -1,0 +1,24 @@
+services:
+  mcp-server-local:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fabric-reports-local
+    image: kthare10/fabric-reports:latest
+    restart: always
+    # Port for stdio mode - not typically needed for Claude Desktop
+    # but useful if you want to test the HTTP endpoint
+    ports:
+      - "5000:5000"
+    environment:
+      # Set to stdio for local MCP client integration (Claude Desktop, etc.)
+      MCP_TRANSPORT: "stdio"
+      # Point to production Reports API
+      REPORTS_API_BASE_URL: "https://reports.fabric-testbed.net/reports"
+      # FABRIC_RC should point to the directory, not the fabric_rc file
+      FABRIC_RC: "/fabric_config"
+    volumes:
+      # Mount your FABRIC config directory (read-only)
+      - /Users/kthare10/work/fabric_config_mcp:/fabric_config:ro
+      # Optional: for application logs
+      - ./mcp-logs:/var/log/mcp

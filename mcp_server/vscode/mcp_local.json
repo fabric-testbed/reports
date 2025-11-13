@@ -1,0 +1,21 @@
+{
+	"servers": {
+		"fabric-reports-local": {
+			"command": "docker",
+			"args": [
+				"run",
+				"--rm",
+				"-i",
+				"-v",
+				"/Users/kthare10/work/fabric_config_mcp:/fabric_config:ro",
+				"-e",
+				"MCP_TRANSPORT=stdio",
+				"-e",
+				"FABRIC_RC=/fabric_config",
+				"-e",
+				"REPORTS_API_BASE_URL=http://reports.fabric-testbed.net/reports",
+				"kthare10/fabric-reports:latest"
+			]
+		}
+	}
+}
