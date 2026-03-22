@@ -217,7 +217,8 @@ def slivers_slice_id_sliver_id_post(body: Sliver, slice_id: str, sliver_id: str)
 
         sl_id = db_mgr.add_or_update_sliver(project_id=p_id, user_id=u_id, slice_id=s_id, site_id=site_id,
                                             host_id=host_id, sliver_guid=sliver_id, lease_start=body.lease_start,
-                                            lease_end=body.lease_end, state=SliverStates.translate(body.state),
+                                            lease_end=body.lease_end, closed_at=body.closed_at,
+                                            state=SliverStates.translate(body.state),
                                             ip_subnet=body.ip_subnet, ip_v4=body.ip_v4, ip_v6=body.ip_v6,
                                             core=body.core, ram=body.ram, disk=body.disk,
                                             image=body.image, bandwidth=body.bandwidth, sliver_type=body.sliver_type,

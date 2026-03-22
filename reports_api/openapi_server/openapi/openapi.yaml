@@ -6293,6 +6293,7 @@ components:
         host: host
         state: state
         lease_end: 2000-01-23T04:56:07.000+00:00
+        closed_at: 2000-01-23T04:56:07.000+00:00
         ram: 2
         image: image
         user_email: user_email
@@ -6396,6 +6397,10 @@ components:
         lease_end:
           format: date-time
           title: lease_end
+          type: string
+        closed_at:
+          format: date-time
+          title: closed_at
           type: string
         components:
           $ref: "#/components/schemas/sliver_components"

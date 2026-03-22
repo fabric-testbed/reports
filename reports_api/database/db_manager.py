@@ -357,6 +357,7 @@ class DatabaseManager:
         bandwidth: Optional[int] = None,
         lease_start: Optional[datetime] = None,
         lease_end: Optional[datetime] = None,
+        closed_at: Optional[datetime] = None,
         error: Optional[str] = None
     ) -> int:
         """
@@ -394,6 +395,8 @@ class DatabaseManager:
                     sliver.lease_start = lease_start
                 if lease_end:
                     sliver.lease_end = lease_end
+                if closed_at:
+                    sliver.closed_at = closed_at
                 if error:
                     sliver.error = error
                 if node_id:
@@ -419,6 +422,7 @@ class DatabaseManager:
                     bandwidth=bandwidth,
                     lease_start=lease_start,
                     lease_end=lease_end,
+                    closed_at=closed_at,
                     error=error
                 )
                 session.add(sliver)
