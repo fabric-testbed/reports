@@ -683,6 +683,182 @@ class DatabaseManager:
         finally:
             session.rollback()
 
+    # -------------------- SHARED CALENDAR QUERY HELPERS --------------------
+    @staticmethod
+    def _query_host_capacities(session, site=None, host=None, exclude_site=None, exclude_host=None):
+        cap_query = session.query(
+            HostCapacities, Hosts.name.label("host_name"), Sites.name.label("site_name")
+        ).join(Hosts, HostCapacities.host_id == Hosts.id
+        ).join(Sites, HostCapacities.site_id == Sites.id)
+
+        if site:
+            cap_query = cap_query.filter(Sites.name.in_(site))
+        if host:
+            cap_query = cap_query.filter(Hosts.name.in_(host))
+        if exclude_site:
+            cap_query = cap_query.filter(not_(Sites.name.in_(exclude_site)))
+        if exclude_host:
+            cap_query = cap_query.filter(not_(Hosts.name.in_(exclude_host)))
+
+        capacities = cap_query.all()
+
+        host_cap_map = {}
+        for cap, h_name, s_name in capacities:
+            host_cap_map[cap.host_id] = {
+                "name": h_name, "site": s_name,
+                "cores_capacity": cap.cores_capacity or 0,
+                "ram_capacity": cap.ram_capacity or 0,
+                "disk_capacity": cap.disk_capacity or 0,
+                "components": cap.components or {}
+            }
+        return capacities, host_cap_map
+
+    @staticmethod
+    def _query_link_capacities(session, site=None, exclude_site=None):
+        site_a_alias = Sites.__table__.alias("site_a")
+        site_b_alias = Sites.__table__.alias("site_b")
+        link_query = session.query(
+            LinkCapacities,
+            site_a_alias.c.name.label("site_a_name"),
+            site_b_alias.c.name.label("site_b_name")
+        ).join(site_a_alias, LinkCapacities.site_a_id == site_a_alias.c.id
+        ).join(site_b_alias, LinkCapacities.site_b_id == site_b_alias.c.id)
+
+        if site:
+            link_query = link_query.filter(or_(
+                site_a_alias.c.name.in_(site),
+                site_b_alias.c.name.in_(site)
+            ))
+        if exclude_site:
+            link_query = link_query.filter(
+                not_(site_a_alias.c.name.in_(exclude_site)),
+                not_(site_b_alias.c.name.in_(exclude_site))
+            )
+
+        link_capacities = link_query.all()
+
+        link_cap_map = {}
+        for lc, sa_name, sb_name in link_capacities:
+            pair = tuple(sorted([sa_name, sb_name]))
+            link_cap_map[pair] = {
+                "name": lc.name,
+                "site_a": pair[0],
+                "site_b": pair[1],
+                "layer": lc.layer,
+                "bandwidth_capacity": lc.bandwidth_capacity or 0
+            }
+        return link_capacities, link_cap_map
+
+    @staticmethod
+    def _query_fp_capacities(session, site=None, exclude_site=None):
+        fp_query = session.query(
+            FacilityPortCapacities,
+            Sites.name.label("site_name")
+        ).join(Sites, FacilityPortCapacities.site_id == Sites.id)
+
+        if site:
+            fp_query = fp_query.filter(Sites.name.in_(site))
+        if exclude_site:
+            fp_query = fp_query.filter(not_(Sites.name.in_(exclude_site)))
+
+        fp_capacities = fp_query.all()
+
+        fp_cap_map = {}
+        for fp, s_name in fp_capacities:
+            key = (fp.name, s_name, fp.device_name, fp.local_name)
+            fp_cap_map[key] = {
+                "name": fp.name,
+                "site": s_name,
+                "device_name": fp.device_name,
+                "local_name": fp.local_name,
+                "vlan_range": fp.vlan_range or "",
+                "total_vlans": fp.total_vlans or 0
+            }
+        return fp_capacities, fp_cap_map
+
+    @staticmethod
+    def _query_compute_slivers(session, host_ids, start_time, end_time):
+        active_states = [1, 2, 4, 5]
+        slivers_in_range = []
+        if host_ids:
+            slivers_in_range = session.query(
+                Slivers.id, Slivers.host_id, Slivers.core, Slivers.ram, Slivers.disk,
+                Slivers.lease_start, Slivers.lease_end
+            ).filter(
+                Slivers.host_id.in_(host_ids),
+                Slivers.state.in_(active_states),
+                Slivers.lease_start < end_time,
+                Slivers.lease_end > start_time
+            ).all()
+
+        sliver_ids = [s.id for s in slivers_in_range]
+        comp_rows = []
+        if sliver_ids:
+            comp_rows = session.query(
+                Components.sliver_id, Components.type, Components.model, Components.component_guid
+            ).filter(Components.sliver_id.in_(sliver_ids)).all()
+
+        comp_by_sliver = defaultdict(list)
+        for cr in comp_rows:
+            key = f"{cr.type}-{cr.model}" if cr.model else cr.type
+            comp_by_sliver[cr.sliver_id].append((key, cr.component_guid))
+
+        return slivers_in_range, comp_by_sliver
+
+    @staticmethod
+    def _query_network_slivers(session, link_cap_map, start_time, end_time):
+        active_states = [1, 2, 4, 5]
+        net_slivers_in_range = []
+        net_sliver_interfaces = defaultdict(list)
+        if link_cap_map:
+            cross_site_types = ['l2ptp', 'l2sts']
+            net_slivers_in_range = session.query(
+                Slivers.id, Slivers.bandwidth, Slivers.lease_start, Slivers.lease_end
+            ).filter(
+                Slivers.sliver_type.in_(cross_site_types),
+                Slivers.state.in_(active_states),
+                Slivers.lease_start < end_time,
+                Slivers.lease_end > start_time
+            ).all()
+
+            net_sliver_ids = [s.id for s in net_slivers_in_range]
+            if net_sliver_ids:
+                iface_rows = session.query(
+                    Interfaces.sliver_id, Sites.name.label("site_name")
+                ).join(Sites, Interfaces.site_id == Sites.id
+                ).filter(
+                    Interfaces.sliver_id.in_(net_sliver_ids),
+                    Interfaces.site_id.isnot(None)
+                ).all()
+
+                for row in iface_rows:
+                    net_sliver_interfaces[row.sliver_id].append(row.site_name)
+
+        return net_slivers_in_range, net_sliver_interfaces
+
+    @staticmethod
+    def _query_fp_slivers(session, fp_cap_map, start_time, end_time):
+        active_states = [1, 2, 4, 5]
+        fp_iface_slivers = []
+        if fp_cap_map:
+            fp_names = list(set(k[0] for k in fp_cap_map.keys()))
+            fp_iface_slivers = session.query(
+                Interfaces.name.label("fp_name"),
+                Sites.name.label("site_name"),
+                Interfaces.vlan,
+                Slivers.lease_start,
+                Slivers.lease_end
+            ).join(Slivers, Interfaces.sliver_id == Slivers.id
+            ).join(Sites, Interfaces.site_id == Sites.id
+            ).filter(
+                Interfaces.name.in_(fp_names),
+                Interfaces.site_id.isnot(None),
+                Slivers.state.in_(active_states),
+                Slivers.lease_start < end_time,
+                Slivers.lease_end > start_time
+            ).all()
+        return fp_iface_slivers
+
     # -------------------- CALENDAR QUERY --------------------
     def get_calendar(self, start_time: datetime, end_time: datetime,
                      interval: str = "day",
@@ -691,105 +867,20 @@ class DatabaseManager:
                      exclude_host: Optional[List[str]] = None) -> dict:
         session = self.get_session()
         try:
-            # Build capacity query with optional site/host filters
-            cap_query = session.query(
-                HostCapacities, Hosts.name.label("host_name"), Sites.name.label("site_name")
-            ).join(Hosts, HostCapacities.host_id == Hosts.id
-            ).join(Sites, HostCapacities.site_id == Sites.id)
-
-            if site:
-                cap_query = cap_query.filter(Sites.name.in_(site))
-            if host:
-                cap_query = cap_query.filter(Hosts.name.in_(host))
-            if exclude_site:
-                cap_query = cap_query.filter(not_(Sites.name.in_(exclude_site)))
-            if exclude_host:
-                cap_query = cap_query.filter(not_(Hosts.name.in_(exclude_host)))
-
-            capacities = cap_query.all()
-
-            # Build host capacity map
-            host_cap_map = {}
-            for cap, h_name, s_name in capacities:
-                host_cap_map[cap.host_id] = {
-                    "name": h_name, "site": s_name,
-                    "cores_capacity": cap.cores_capacity or 0,
-                    "ram_capacity": cap.ram_capacity or 0,
-                    "disk_capacity": cap.disk_capacity or 0,
-                    "components": cap.components or {}
-                }
-
+            capacities, host_cap_map = self._query_host_capacities(
+                session, site=site, host=host, exclude_site=exclude_site, exclude_host=exclude_host)
             host_ids = list(host_cap_map.keys())
 
-            # ── Link capacities ──
-            site_a_alias = Sites.__table__.alias("site_a")
-            site_b_alias = Sites.__table__.alias("site_b")
-            link_query = session.query(
-                LinkCapacities,
-                site_a_alias.c.name.label("site_a_name"),
-                site_b_alias.c.name.label("site_b_name")
-            ).join(site_a_alias, LinkCapacities.site_a_id == site_a_alias.c.id
-            ).join(site_b_alias, LinkCapacities.site_b_id == site_b_alias.c.id)
+            link_capacities, link_cap_map = self._query_link_capacities(
+                session, site=site, exclude_site=exclude_site)
 
-            if site:
-                link_query = link_query.filter(or_(
-                    site_a_alias.c.name.in_(site),
-                    site_b_alias.c.name.in_(site)
-                ))
-            if exclude_site:
-                link_query = link_query.filter(
-                    not_(site_a_alias.c.name.in_(exclude_site)),
-                    not_(site_b_alias.c.name.in_(exclude_site))
-                )
-
-            link_capacities = link_query.all()
-
-            # Build link capacity map: keyed by sorted site pair
-            link_cap_map = {}
-            for lc, sa_name, sb_name in link_capacities:
-                pair = tuple(sorted([sa_name, sb_name]))
-                link_cap_map[pair] = {
-                    "name": lc.name,
-                    "site_a": pair[0],
-                    "site_b": pair[1],
-                    "layer": lc.layer,
-                    "bandwidth_capacity": lc.bandwidth_capacity or 0
-                }
-
-            # ── Facility port capacities ──
-            fp_query = session.query(
-                FacilityPortCapacities,
-                Sites.name.label("site_name")
-            ).join(Sites, FacilityPortCapacities.site_id == Sites.id)
-
-            if site:
-                fp_query = fp_query.filter(Sites.name.in_(site))
-            if exclude_site:
-                fp_query = fp_query.filter(not_(Sites.name.in_(exclude_site)))
-
-            fp_capacities = fp_query.all()
-
-            # Build facility port capacity map: keyed by (name, site, device_name, local_name)
-            # Each physical port is a separate entry
-            fp_cap_map = {}
-            for fp, s_name in fp_capacities:
-                key = (fp.name, s_name, fp.device_name, fp.local_name)
-                fp_cap_map[key] = {
-                    "name": fp.name,
-                    "site": s_name,
-                    "device_name": fp.device_name,
-                    "local_name": fp.local_name,
-                    "vlan_range": fp.vlan_range or "",
-                    "total_vlans": fp.total_vlans or 0
-                }
+            fp_capacities, fp_cap_map = self._query_fp_capacities(
+                session, site=site, exclude_site=exclude_site)
 
             # Return empty if no capacities at all
             if not capacities and not link_capacities and not fp_capacities:
                 return {"data": [], "interval": interval,
                         "query_start": start_time.isoformat(), "query_end": end_time.isoformat(), "total": 0}
-
-            # Active sliver states: Nascent(1), Ticketed(2), Active(4), ActiveTicketed(5)
-            active_states = [1, 2, 4, 5]
 
             # Generate time slots
             if interval == "week":
@@ -806,78 +897,13 @@ class DatabaseManager:
                 slots.append((slot_start, slot_end))
                 slot_start = slot_end
 
-            # ── Compute slivers: fetch active slivers overlapping the entire range ──
-            slivers_in_range = []
-            if host_ids:
-                slivers_in_range = session.query(
-                    Slivers.id, Slivers.host_id, Slivers.core, Slivers.ram, Slivers.disk,
-                    Slivers.lease_start, Slivers.lease_end
-                ).filter(
-                    Slivers.host_id.in_(host_ids),
-                    Slivers.state.in_(active_states),
-                    Slivers.lease_start < end_time,
-                    Slivers.lease_end > start_time
-                ).all()
+            slivers_in_range, comp_by_sliver = self._query_compute_slivers(
+                session, host_ids, start_time, end_time)
 
-            # Fetch components for compute slivers
-            sliver_ids = [s.id for s in slivers_in_range]
-            comp_rows = []
-            if sliver_ids:
-                comp_rows = session.query(
-                    Components.sliver_id, Components.type, Components.model, Components.component_guid
-                ).filter(Components.sliver_id.in_(sliver_ids)).all()
+            net_slivers_in_range, net_sliver_interfaces = self._query_network_slivers(
+                session, link_cap_map, start_time, end_time)
 
-            comp_by_sliver = defaultdict(list)
-            for cr in comp_rows:
-                key = f"{cr.type}-{cr.model}" if cr.model else cr.type
-                comp_by_sliver[cr.sliver_id].append((key, cr.component_guid))
-
-            # ── Network slivers: fetch cross-site network slivers for link bandwidth ──
-            net_slivers_in_range = []
-            net_sliver_interfaces = defaultdict(list)  # sliver_id -> [(site_name, ...)]
-            if link_cap_map:
-                cross_site_types = ['l2ptp', 'l2sts']
-                net_slivers_in_range = session.query(
-                    Slivers.id, Slivers.bandwidth, Slivers.lease_start, Slivers.lease_end
-                ).filter(
-                    Slivers.sliver_type.in_(cross_site_types),
-                    Slivers.state.in_(active_states),
-                    Slivers.lease_start < end_time,
-                    Slivers.lease_end > start_time
-                ).all()
-
-                net_sliver_ids = [s.id for s in net_slivers_in_range]
-                if net_sliver_ids:
-                    iface_rows = session.query(
-                        Interfaces.sliver_id, Sites.name.label("site_name")
-                    ).join(Sites, Interfaces.site_id == Sites.id
-                    ).filter(
-                        Interfaces.sliver_id.in_(net_sliver_ids),
-                        Interfaces.site_id.isnot(None)
-                    ).all()
-
-                    for row in iface_rows:
-                        net_sliver_interfaces[row.sliver_id].append(row.site_name)
-
-            # ── Facility port slivers: fetch interfaces that match facility port names ──
-            fp_iface_slivers = []
-            if fp_cap_map:
-                fp_names = list(set(k[0] for k in fp_cap_map.keys()))
-                fp_iface_slivers = session.query(
-                    Interfaces.name.label("fp_name"),
-                    Sites.name.label("site_name"),
-                    Interfaces.vlan,
-                    Slivers.lease_start,
-                    Slivers.lease_end
-                ).join(Slivers, Interfaces.sliver_id == Slivers.id
-                ).join(Sites, Interfaces.site_id == Sites.id
-                ).filter(
-                    Interfaces.name.in_(fp_names),
-                    Interfaces.site_id.isnot(None),
-                    Slivers.state.in_(active_states),
-                    Slivers.lease_start < end_time,
-                    Slivers.lease_end > start_time
-                ).all()
+            fp_iface_slivers = self._query_fp_slivers(session, fp_cap_map, start_time, end_time)
 
             # Build per-slot results
             result_data = []
@@ -1018,6 +1044,255 @@ class DatabaseManager:
             }
         finally:
             session.rollback()
+
+    # -------------------- FIND SLOT QUERY --------------------
+    def find_slot(self, start_time: datetime, end_time: datetime,
+                  duration: int, resources: List[dict],
+                  max_results: int = 1) -> dict:
+        session = self.get_session()
+        try:
+            # Collect all sites referenced by compute requests
+            compute_sites = set()
+            for r in resources:
+                if r.get("type") == "compute" and r.get("site"):
+                    compute_sites.add(r["site"])
+
+            # Collect all sites referenced by link requests
+            link_sites = set()
+            for r in resources:
+                if r.get("type") == "link":
+                    link_sites.add(r["site_a"])
+                    link_sites.add(r["site_b"])
+
+            # Collect all sites referenced by facility port requests
+            fp_sites = set()
+            for r in resources:
+                if r.get("type") == "facility_port" and r.get("site"):
+                    fp_sites.add(r["site"])
+
+            all_sites = compute_sites | link_sites | fp_sites
+
+            # Query capacities - for compute, pass site filter only if all compute requests have a site
+            compute_requests = [r for r in resources if r.get("type") == "compute"]
+            has_siteless_compute = any(not r.get("site") for r in compute_requests)
+            host_site_filter = list(compute_sites) if compute_sites and not has_siteless_compute else None
+
+            capacities, host_cap_map = self._query_host_capacities(
+                session, site=host_site_filter)
+            host_ids = list(host_cap_map.keys())
+
+            link_requests = [r for r in resources if r.get("type") == "link"]
+            link_capacities, link_cap_map = (
+                self._query_link_capacities(session) if link_requests else ([], {}))
+
+            fp_requests = [r for r in resources if r.get("type") == "facility_port"]
+            fp_capacities, fp_cap_map = (
+                self._query_fp_capacities(session) if fp_requests else ([], {}))
+
+            # Early exit if no capacity data for requested resource types
+            if compute_requests and not host_cap_map:
+                return self._empty_find_slot_result(start_time, end_time, duration)
+            if link_requests and not link_cap_map:
+                return self._empty_find_slot_result(start_time, end_time, duration)
+            if fp_requests and not fp_cap_map:
+                return self._empty_find_slot_result(start_time, end_time, duration)
+
+            # Query active slivers
+            slivers_in_range, comp_by_sliver = self._query_compute_slivers(
+                session, host_ids, start_time, end_time)
+
+            net_slivers_in_range, net_sliver_interfaces = self._query_network_slivers(
+                session, link_cap_map, start_time, end_time)
+
+            fp_iface_slivers = self._query_fp_slivers(session, fp_cap_map, start_time, end_time)
+
+            # Group hosts by site for efficient lookup
+            hosts_by_site = defaultdict(list)
+            for host_id, cap in host_cap_map.items():
+                hosts_by_site[cap["site"]].append(host_id)
+
+            # Generate hourly slots for sliding window
+            total_hours = int((end_time - start_time).total_seconds() // 3600)
+            if total_hours < duration:
+                return self._empty_find_slot_result(start_time, end_time, duration)
+
+            # Sliding window search
+            windows = []
+            for h in range(total_hours - duration + 1):
+                window_start = start_time + timedelta(hours=h)
+                window_end = window_start + timedelta(hours=duration)
+
+                if self._check_window(
+                    window_start, window_end, duration,
+                    compute_requests, link_requests, fp_requests,
+                    host_cap_map, hosts_by_site, slivers_in_range, comp_by_sliver,
+                    link_cap_map, net_slivers_in_range, net_sliver_interfaces,
+                    fp_cap_map, fp_iface_slivers
+                ):
+                    windows.append({
+                        "start": window_start.isoformat(),
+                        "end": window_end.isoformat()
+                    })
+                    if len(windows) >= max_results:
+                        break
+
+            return {
+                "windows": windows,
+                "total": len(windows),
+                "search_start": start_time.isoformat(),
+                "search_end": end_time.isoformat(),
+                "duration_hours": duration
+            }
+        finally:
+            session.rollback()
+
+    @staticmethod
+    def _empty_find_slot_result(start_time, end_time, duration):
+        return {
+            "windows": [],
+            "total": 0,
+            "search_start": start_time.isoformat(),
+            "search_end": end_time.isoformat(),
+            "duration_hours": duration
+        }
+
+    @staticmethod
+    def _check_window(window_start, window_end, duration,
+                      compute_requests, link_requests, fp_requests,
+                      host_cap_map, hosts_by_site, slivers_in_range, comp_by_sliver,
+                      link_cap_map, net_slivers_in_range, net_sliver_interfaces,
+                      fp_cap_map, fp_iface_slivers):
+        # Check compute requests using greedy bin-packing
+        if compute_requests:
+            for dh in range(duration):
+                hour_start = window_start + timedelta(hours=dh)
+                hour_end = hour_start + timedelta(hours=1)
+
+                # Build remaining capacity for each host at this hour
+                remaining = {}
+                for host_id, cap in host_cap_map.items():
+                    remaining[host_id] = {
+                        "cores": cap["cores_capacity"],
+                        "ram": cap["ram_capacity"],
+                        "disk": cap["disk_capacity"],
+                        "components": {k.lower(): v for k, v in cap["components"].items()}
+                    }
+
+                # Subtract existing allocations for this hour
+                for sliver in slivers_in_range:
+                    if sliver.lease_start < hour_end and sliver.lease_end > hour_start:
+                        h = sliver.host_id
+                        if h in remaining:
+                            remaining[h]["cores"] -= sliver.core or 0
+                            remaining[h]["ram"] -= sliver.ram or 0
+                            remaining[h]["disk"] -= sliver.disk or 0
+                            for comp_key, _ in comp_by_sliver.get(sliver.id, []):
+                                comp_key_lower = comp_key.lower()
+                                if comp_key_lower in remaining[h]["components"]:
+                                    remaining[h]["components"][comp_key_lower] -= 1
+
+                # Greedy bin-pack each compute request
+                for req in compute_requests:
+                    req_cores = req.get("cores", 0)
+                    req_ram = req.get("ram", 0)
+                    req_disk = req.get("disk", 0)
+                    req_components = req.get("components", {})
+                    req_site = req.get("site")
+
+                    # Determine candidate hosts
+                    if req_site:
+                        candidate_hosts = [hid for hid in hosts_by_site.get(req_site, [])
+                                           if hid in remaining]
+                    else:
+                        candidate_hosts = list(remaining.keys())
+
+                    placed = False
+                    for host_id in candidate_hosts:
+                        rem = remaining[host_id]
+                        if rem["cores"] < req_cores:
+                            continue
+                        if rem["ram"] < req_ram:
+                            continue
+                        if rem["disk"] < req_disk:
+                            continue
+
+                        # Check components
+                        comp_ok = True
+                        for comp_key, comp_count in req_components.items():
+                            if rem["components"].get(comp_key.lower(), 0) < comp_count:
+                                comp_ok = False
+                                break
+                        if not comp_ok:
+                            continue
+
+                        # Place on this host — subtract from remaining
+                        rem["cores"] -= req_cores
+                        rem["ram"] -= req_ram
+                        rem["disk"] -= req_disk
+                        for comp_key, comp_count in req_components.items():
+                            rem["components"][comp_key.lower()] -= comp_count
+                        placed = True
+                        break
+
+                    if not placed:
+                        return False
+
+        # Check link requests
+        for req in link_requests:
+            pair = tuple(sorted([req["site_a"], req["site_b"]]))
+            cap_entry = link_cap_map.get(pair)
+            if not cap_entry:
+                return False
+            bw_cap = cap_entry["bandwidth_capacity"]
+            req_bw = req["bandwidth"]
+
+            for dh in range(duration):
+                hour_start = window_start + timedelta(hours=dh)
+                hour_end = hour_start + timedelta(hours=1)
+
+                bw_used = 0
+                for ns in net_slivers_in_range:
+                    if ns.lease_start < hour_end and ns.lease_end > hour_start:
+                        sites_list = net_sliver_interfaces.get(ns.id, [])
+                        unique_sites = sorted(set(sites_list))
+                        if len(unique_sites) == 2 and tuple(unique_sites) == pair:
+                            bw_used += ns.bandwidth or 0
+
+                if bw_cap - bw_used < req_bw:
+                    return False
+
+        # Check facility port requests
+        for req in fp_requests:
+            req_name = req["name"]
+            req_site = req["site"]
+            req_vlans = req["vlans"]
+
+            # Find matching facility port capacity
+            matching_fp = None
+            for (fp_name, s_name, dev_name, loc_name), cap in fp_cap_map.items():
+                if fp_name == req_name and s_name == req_site:
+                    matching_fp = cap
+                    break
+            if not matching_fp:
+                return False
+
+            total_vlans = matching_fp["total_vlans"]
+
+            for dh in range(duration):
+                hour_start = window_start + timedelta(hours=dh)
+                hour_end = hour_start + timedelta(hours=1)
+
+                vlans_in_use = set()
+                for fp_iface in fp_iface_slivers:
+                    if (fp_iface.fp_name == req_name and fp_iface.site_name == req_site and
+                            fp_iface.lease_start < hour_end and fp_iface.lease_end > hour_start):
+                        if fp_iface.vlan:
+                            vlans_in_use.add(fp_iface.vlan)
+
+                if total_vlans - len(vlans_in_use) < req_vlans:
+                    return False
+
+        return True
 
     # -------------------- QUERY DATA --------------------
     @staticmethod

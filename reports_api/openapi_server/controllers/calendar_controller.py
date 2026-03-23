@@ -31,6 +31,21 @@ def calendar_get(start_time, end_time, interval=None, site=None, host=None,
                            site=site, host=host, exclude_site=exclude_site, exclude_host=exclude_host)
 
 
+def calendar_find_slot(body):  # noqa: E501
+    """Find available time slots for a resource request
+
+    Find the earliest time windows where all requested resources are simultaneously available. # noqa: E501
+
+    :param body: Resource request payload
+    :type body: dict
+
+    :rtype: dict
+    """
+    if connexion.request.is_json:
+        body = connexion.request.get_json()
+    return rc.calendar_find_slot(body=body)
+
+
 def hosts_host_name_capacity_post(host_name, body):  # noqa: E501
     """Create/Update host capacity
 

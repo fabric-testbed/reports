@@ -164,6 +164,79 @@ def links_capacity_post(body=None):
         return cors_500(details=details)
 
 
+def calendar_find_slot(body=None):
+    logger = GlobalsSingleton.get().log
+    try:
+        logger.debug("Processing - calendar_find_slot")
+        ret_val = authorize()
+
+        if isinstance(ret_val, Response):
+            return ret_val
+        elif isinstance(ret_val, dict):
+            logger.debug("Authorized via bearer token")
+        elif isinstance(ret_val, FabricToken):
+            logger.debug("Authorized via Fabric token")
+
+        if not body:
+            return cors_400(details="Request body is required")
+
+        # Validate required fields
+        start_str = body.get("start")
+        end_str = body.get("end")
+        duration = body.get("duration")
+        resources = body.get("resources")
+        max_results = body.get("max_results", 1)
+
+        if not start_str or not end_str:
+            return cors_400(details="'start' and 'end' are required")
+        if not duration or not isinstance(duration, int) or duration <= 0:
+            return cors_400(details="'duration' must be a positive integer (hours)")
+        if not resources or not isinstance(resources, list) or len(resources) == 0:
+            return cors_400(details="'resources' must be a non-empty array")
+        if not isinstance(max_results, int) or max_results < 1 or max_results > 50:
+            return cors_400(details="'max_results' must be an integer between 1 and 50")
+
+        start = datetime.fromisoformat(start_str)
+        end = datetime.fromisoformat(end_str)
+
+        if start >= end:
+            return cors_400(details="'start' must be before 'end'")
+
+        range_hours = (end - start).total_seconds() / 3600
+        if range_hours > 30 * 24:
+            return cors_400(details="Search range must not exceed 30 days")
+        if duration > range_hours:
+            return cors_400(details="'duration' exceeds the search range")
+
+        # Validate each resource
+        valid_types = {"compute", "link", "facility_port"}
+        for i, r in enumerate(resources):
+            rtype = r.get("type")
+            if rtype not in valid_types:
+                return cors_400(details=f"resources[{i}].type must be one of: {', '.join(valid_types)}")
+            if rtype == "link":
+                if not r.get("site_a") or not r.get("site_b") or r.get("bandwidth") is None:
+                    return cors_400(details=f"resources[{i}] (link): 'site_a', 'site_b', and 'bandwidth' are required")
+            elif rtype == "facility_port":
+                if not r.get("name") or not r.get("site") or r.get("vlans") is None:
+                    return cors_400(details=f"resources[{i}] (facility_port): 'name', 'site', and 'vlans' are required")
+
+        db_mgr = _get_db_manager()
+        result = db_mgr.find_slot(start_time=start, end_time=end,
+                                  duration=duration, resources=resources,
+                                  max_results=max_results)
+
+        from flask import request
+        response = cors_response(req=request, status_code=200,
+                                 body=json.dumps(result, indent=2, sort_keys=True))
+        return response
+    except Exception as exc:
+        details = 'Oops! something went wrong with calendar_find_slot(): {0}'.format(exc)
+        logger.error(details)
+        logger.error(traceback.format_exc())
+        return cors_500(details=details)
+
+
 def facility_ports_capacity_post(body=None):
     logger = GlobalsSingleton.get().log
     try:

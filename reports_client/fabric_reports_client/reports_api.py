@@ -854,6 +854,38 @@ class ReportsApi:
         else:
             raise Exception(f"Failed to fetch calendar: {response.status_code} - {response.text}")
 
+    def find_slot(self, start_time: str, end_time: str, duration: int,
+                  resources: list, max_results: int = 1) -> dict:
+        """
+        Find available time slots where all requested resources are simultaneously available.
+
+        :param start_time: Start of search range (ISO 8601 string)
+        :param end_time: End of search range (ISO 8601 string)
+        :param duration: Consecutive hours needed
+        :param resources: List of resource request dicts
+        :param max_results: Maximum number of windows to return (1-50, default 1)
+        :return: Dict with 'windows', 'total', 'search_start', 'search_end', 'duration_hours'
+        """
+        url = f"{self.base_url}/calendar/find-slot"
+
+        headers = self.headers.copy()
+        headers["Content-Type"] = "application/json"
+
+        payload = {
+            "start": start_time,
+            "end": end_time,
+            "duration": duration,
+            "resources": resources,
+            "max_results": max_results
+        }
+
+        response = requests.post(url, headers=headers, json=payload)
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise Exception(f"Failed to find slot: {response.status_code} - {response.text}")
+
     def post_host_capacity(self, host_name: str, capacity_payload: dict) -> dict:
         """
         Create or update host capacity data.
