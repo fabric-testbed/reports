@@ -819,6 +819,70 @@ class ReportsApi:
             "data": all_memberships
         }
 
+    def query_calendar(self, start_time: str, end_time: str, interval: str = "day",
+                       site: list[str] = None, host: list[str] = None,
+                       exclude_site: list[str] = None, exclude_host: list[str] = None) -> dict:
+        """
+        Query the resource availability calendar.
+
+        :param start_time: Start time for the calendar range (ISO 8601 string, required)
+        :param end_time: End time for the calendar range (ISO 8601 string, required)
+        :param interval: Time interval for each slot ('day' or 'week', default: 'day')
+        :param site: List of sites to include
+        :param host: List of hosts to include
+        :param exclude_site: List of sites to exclude
+        :param exclude_host: List of hosts to exclude
+        :return: Calendar response dict with 'data', 'interval', 'query_start', 'query_end', 'total'
+        """
+        url = f"{self.base_url}/calendar"
+
+        params = {
+            "start_time": start_time,
+            "end_time": end_time,
+            "interval": interval,
+            "site": site,
+            "host": host,
+            "exclude_site": exclude_site,
+            "exclude_host": exclude_host,
+        }
+        filtered_params = {k: v for k, v in params.items() if v is not None}
+
+        response = requests.get(url, headers=self.headers, params=filtered_params)
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise Exception(f"Failed to fetch calendar: {response.status_code} - {response.text}")
+
+    def post_host_capacity(self, host_name: str, capacity_payload: dict) -> dict:
+        """
+        Create or update host capacity data.
+
+        :param host_name: Name of the host
+        :param capacity_payload: Dictionary containing capacity data
+        :return: Server response as a dictionary
+
+        Example capacity_payload:
+        {
+            "site": "RENC",
+            "cores_capacity": 128,
+            "ram_capacity": 512,
+            "disk_capacity": 10000,
+            "components": {"GPU-A100": 4, "SmartNIC-ConnectX-6": 2}
+        }
+        """
+        url = f"{self.base_url}/hosts/{host_name}/capacity"
+
+        headers = self.headers.copy()
+        headers["Content-Type"] = "application/json"
+
+        response = requests.post(url, headers=headers, json=capacity_payload)
+
+        if response.status_code in (200, 201):
+            return response.json()
+        else:
+            raise Exception(f"Failed to post host capacity: {response.status_code} - {response.text}")
+
     def query_project_memberships(self,
                                   start_time: str = None,
                                   end_time: str = None,

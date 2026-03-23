@@ -118,3 +118,17 @@ ALTER TABLE users ADD COLUMN bastion_login VARCHAR;
 -- Add closed_at column to slivers table
 ALTER TABLE slivers ADD COLUMN closed_at TIMESTAMP WITH TIME ZONE;
 CREATE INDEX IF NOT EXISTS idx_slivers_closed_at ON slivers (closed_at);
+
+-- Add host_capacities table for resource availability calendar
+CREATE TABLE IF NOT EXISTS host_capacities (
+    id SERIAL PRIMARY KEY,
+    host_id INTEGER NOT NULL REFERENCES hosts(id),
+    site_id INTEGER NOT NULL REFERENCES sites(id),
+    cores_capacity INTEGER DEFAULT 0,
+    ram_capacity INTEGER DEFAULT 0,
+    disk_capacity INTEGER DEFAULT 0,
+    components JSON,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ix_host_capacities_host_id ON host_capacities(host_id);
+CREATE INDEX IF NOT EXISTS ix_host_capacities_site_id ON host_capacities(site_id);

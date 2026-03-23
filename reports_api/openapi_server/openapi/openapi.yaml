@@ -2498,6 +2498,187 @@ paths:
       tags:
       - users
       x-openapi-router-controller: reports_api.openapi_server.controllers.users_controller
+  /calendar:
+    get:
+      description: Retrieve resource availability calendar showing capacity and allocation over time slots.
+      operationId: calendar_get
+      parameters:
+      - description: Start time for the calendar range (required)
+        explode: true
+        in: query
+        name: start_time
+        required: true
+        schema:
+          format: date-time
+          type: string
+        style: form
+      - description: End time for the calendar range (required)
+        explode: true
+        in: query
+        name: end_time
+        required: true
+        schema:
+          format: date-time
+          type: string
+        style: form
+      - description: "Time interval for each slot (default: day)"
+        in: query
+        name: interval
+        required: false
+        schema:
+          default: day
+          enum:
+          - day
+          - week
+          type: string
+      - description: Filter by site
+        explode: true
+        in: query
+        name: site
+        required: false
+        schema:
+          items:
+            type: string
+          type: array
+        style: form
+      - description: Filter by host
+        explode: true
+        in: query
+        name: host
+        required: false
+        schema:
+          items:
+            type: string
+          type: array
+        style: form
+      - description: Exclude sites
+        explode: true
+        in: query
+        name: exclude_site
+        required: false
+        schema:
+          items:
+            type: string
+          type: array
+        style: form
+      - description: Exclude hosts
+        explode: true
+        in: query
+        name: exclude_host
+        required: false
+        schema:
+          items:
+            type: string
+          type: array
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_400_bad_request"
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_401_unauthorized"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_403_forbidden"
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_500_internal_server_error"
+          description: Internal Server Error
+      security:
+      - bearerAuth: []
+      summary: Get resource availability calendar
+      tags:
+      - calendar
+      x-openapi-router-controller: reports_api.openapi_server.controllers.calendar_controller
+  /hosts/{host_name}/capacity:
+    post:
+      description: Create or update host capacity data.
+      operationId: hosts_host_name_capacity_post
+      parameters:
+      - explode: false
+        in: path
+        name: host_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                site:
+                  type: string
+                cores_capacity:
+                  default: 0
+                  type: integer
+                ram_capacity:
+                  default: 0
+                  type: integer
+                disk_capacity:
+                  default: 0
+                  type: integer
+                components:
+                  type: object
+              required:
+              - site
+              type: object
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_200_ok_no_content"
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_400_bad_request"
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_401_unauthorized"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_403_forbidden"
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_500_internal_server_error"
+          description: Internal Server Error
+      security:
+      - bearerAuth: []
+      summary: Create/Update host capacity
+      tags:
+      - hosts
+      x-openapi-router-controller: reports_api.openapi_server.controllers.calendar_controller
   /version:
     get:
       description: Version

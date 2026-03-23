@@ -36,7 +36,7 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from datetime import datetime, timedelta
 
 from reports_api.database import Slices, Slivers, Hosts, Sites, Users, Projects, Components, Interfaces, Base, \
-    Membership
+    Membership, HostCapacities
 from reports_api.response_code.slice_sliver_states import SliceState, SliverStates
 
 
@@ -546,6 +546,205 @@ class DatabaseManager:
 
             session.commit()
             return site.id
+        finally:
+            session.rollback()
+
+    # -------------------- ADD OR UPDATE HOST CAPACITY --------------------
+    def add_or_update_host_capacity(self, host_name: str, site_name: str,
+                                     cores: int = 0, ram: int = 0, disk: int = 0,
+                                     components: Optional[dict] = None) -> int:
+        session = self.get_session()
+        try:
+            site_id = self.add_or_update_site(site_name)
+            host_id = self.add_or_update_host(host_name, site_id)
+
+            capacity = session.query(HostCapacities).filter(HostCapacities.host_id == host_id).first()
+            if capacity:
+                capacity.site_id = site_id
+                capacity.cores_capacity = cores
+                capacity.ram_capacity = ram
+                capacity.disk_capacity = disk
+                capacity.components = components
+            else:
+                capacity = HostCapacities(
+                    host_id=host_id,
+                    site_id=site_id,
+                    cores_capacity=cores,
+                    ram_capacity=ram,
+                    disk_capacity=disk,
+                    components=components
+                )
+                session.add(capacity)
+
+            session.commit()
+            return capacity.id
+        finally:
+            session.rollback()
+
+    # -------------------- CALENDAR QUERY --------------------
+    def get_calendar(self, start_time: datetime, end_time: datetime,
+                     interval: str = "day",
+                     site: Optional[List[str]] = None, host: Optional[List[str]] = None,
+                     exclude_site: Optional[List[str]] = None,
+                     exclude_host: Optional[List[str]] = None) -> dict:
+        session = self.get_session()
+        try:
+            # Build capacity query with optional site/host filters
+            cap_query = session.query(
+                HostCapacities, Hosts.name.label("host_name"), Sites.name.label("site_name")
+            ).join(Hosts, HostCapacities.host_id == Hosts.id
+            ).join(Sites, HostCapacities.site_id == Sites.id)
+
+            if site:
+                cap_query = cap_query.filter(Sites.name.in_(site))
+            if host:
+                cap_query = cap_query.filter(Hosts.name.in_(host))
+            if exclude_site:
+                cap_query = cap_query.filter(not_(Sites.name.in_(exclude_site)))
+            if exclude_host:
+                cap_query = cap_query.filter(not_(Hosts.name.in_(exclude_host)))
+
+            capacities = cap_query.all()
+            if not capacities:
+                return {"data": [], "interval": interval,
+                        "query_start": start_time.isoformat(), "query_end": end_time.isoformat(), "total": 0}
+
+            # Build host capacity map
+            host_cap_map = {}
+            for cap, h_name, s_name in capacities:
+                host_cap_map[cap.host_id] = {
+                    "name": h_name, "site": s_name,
+                    "cores_capacity": cap.cores_capacity or 0,
+                    "ram_capacity": cap.ram_capacity or 0,
+                    "disk_capacity": cap.disk_capacity or 0,
+                    "components": cap.components or {}
+                }
+
+            host_ids = list(host_cap_map.keys())
+
+            # Active sliver states: Nascent(1), Ticketed(2), Active(4), ActiveTicketed(5)
+            active_states = [1, 2, 4, 5]
+
+            # Generate time slots
+            if interval == "week":
+                delta = timedelta(weeks=1)
+            else:
+                delta = timedelta(days=1)
+
+            slots = []
+            slot_start = start_time
+            while slot_start < end_time:
+                slot_end = min(slot_start + delta, end_time)
+                slots.append((slot_start, slot_end))
+                slot_start = slot_end
+
+            # Single query: fetch all active slivers overlapping the entire range
+            # This avoids N queries per slot (was 2*N before: slivers + components)
+            slivers_in_range = session.query(
+                Slivers.id, Slivers.host_id, Slivers.core, Slivers.ram, Slivers.disk,
+                Slivers.lease_start, Slivers.lease_end
+            ).filter(
+                Slivers.host_id.in_(host_ids),
+                Slivers.state.in_(active_states),
+                # Overlaps with [start_time, end_time]
+                Slivers.lease_start < end_time,
+                Slivers.lease_end > start_time
+            ).all()
+
+            # Fetch components for these slivers in one query
+            sliver_ids = [s.id for s in slivers_in_range]
+            comp_rows = []
+            if sliver_ids:
+                comp_rows = session.query(
+                    Components.sliver_id, Components.type, Components.model, Components.component_guid
+                ).filter(Components.sliver_id.in_(sliver_ids)).all()
+
+            # Index components by sliver_id
+            comp_by_sliver = defaultdict(list)
+            for cr in comp_rows:
+                key = f"{cr.type}-{cr.model}" if cr.model else cr.type
+                comp_by_sliver[cr.sliver_id].append((key, cr.component_guid))
+
+            # Build per-slot results by bucketing slivers in Python
+            result_data = []
+            for slot_start, slot_end in slots:
+                # Aggregate allocated resources per host for this slot
+                alloc_map = defaultdict(lambda: {"cores": 0, "ram": 0, "disk": 0})
+                comp_alloc_map = defaultdict(lambda: defaultdict(int))
+
+                for sliver in slivers_in_range:
+                    # Check overlap with this specific slot
+                    if sliver.lease_start < slot_end and sliver.lease_end > slot_start:
+                        h = sliver.host_id
+                        alloc_map[h]["cores"] += sliver.core or 0
+                        alloc_map[h]["ram"] += sliver.ram or 0
+                        alloc_map[h]["disk"] += sliver.disk or 0
+                        for comp_key, _ in comp_by_sliver.get(sliver.id, []):
+                            comp_alloc_map[h][comp_key] += 1
+
+                # Build per-host results
+                hosts_result = []
+                site_agg = {}
+                for host_id, cap in host_cap_map.items():
+                    alloc = alloc_map.get(host_id, {"cores": 0, "ram": 0, "disk": 0})
+                    comp_alloc = comp_alloc_map.get(host_id, {})
+
+                    comp_result = {}
+                    for comp_key, comp_cap in cap["components"].items():
+                        comp_allocated = comp_alloc.get(comp_key, 0)
+                        comp_result[comp_key] = {
+                            "capacity": comp_cap,
+                            "allocated": comp_allocated,
+                            "available": comp_cap - comp_allocated
+                        }
+
+                    host_entry = {
+                        "name": cap["name"], "site": cap["site"],
+                        "cores_capacity": cap["cores_capacity"],
+                        "cores_allocated": alloc["cores"],
+                        "cores_available": cap["cores_capacity"] - alloc["cores"],
+                        "ram_capacity": cap["ram_capacity"],
+                        "ram_allocated": alloc["ram"],
+                        "ram_available": cap["ram_capacity"] - alloc["ram"],
+                        "disk_capacity": cap["disk_capacity"],
+                        "disk_allocated": alloc["disk"],
+                        "disk_available": cap["disk_capacity"] - alloc["disk"],
+                        "components": comp_result
+                    }
+                    hosts_result.append(host_entry)
+
+                    # Aggregate to site level
+                    s = cap["site"]
+                    if s not in site_agg:
+                        site_agg[s] = {"name": s,
+                                       "cores_capacity": 0, "cores_allocated": 0, "cores_available": 0,
+                                       "ram_capacity": 0, "ram_allocated": 0, "ram_available": 0,
+                                       "disk_capacity": 0, "disk_allocated": 0, "disk_available": 0,
+                                       "components": {}}
+                    for field in ["cores", "ram", "disk"]:
+                        site_agg[s][f"{field}_capacity"] += host_entry[f"{field}_capacity"]
+                        site_agg[s][f"{field}_allocated"] += host_entry[f"{field}_allocated"]
+                        site_agg[s][f"{field}_available"] += host_entry[f"{field}_available"]
+                    for comp_key, comp_data in comp_result.items():
+                        if comp_key not in site_agg[s]["components"]:
+                            site_agg[s]["components"][comp_key] = {"capacity": 0, "allocated": 0, "available": 0}
+                        for k in ["capacity", "allocated", "available"]:
+                            site_agg[s]["components"][comp_key][k] += comp_data[k]
+
+                result_data.append({
+                    "start": slot_start.isoformat(),
+                    "end": slot_end.isoformat(),
+                    "hosts": hosts_result,
+                    "sites": list(site_agg.values())
+                })
+
+            return {
+                "data": result_data,
+                "interval": interval,
+                "query_start": start_time.isoformat(),
+                "query_end": end_time.isoformat(),
+                "total": len(result_data)
+            }
         finally:
             session.rollback()
 
