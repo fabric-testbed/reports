@@ -54,6 +54,38 @@ def session_scope(psql_db_engine):
         session.close()
 
 
+def _parse_vlan_range(range_str: str) -> set:
+    """Parse '100-200,300-350' → {100, 101, ..., 200, 300, ..., 350}"""
+    vlans = set()
+    if not range_str:
+        return vlans
+    for part in range_str.split(','):
+        part = part.strip()
+        if '-' in part:
+            start, end = part.split('-', 1)
+            vlans.update(range(int(start), int(end) + 1))
+        elif part.isdigit():
+            vlans.add(int(part))
+    return vlans
+
+
+def _format_vlan_set_as_range(vlan_set: set) -> str:
+    """Format {100,101,102,105,110} → '100-102,105,110'"""
+    if not vlan_set:
+        return ""
+    sorted_vlans = sorted(vlan_set)
+    ranges = []
+    start = prev = sorted_vlans[0]
+    for v in sorted_vlans[1:]:
+        if v == prev + 1:
+            prev = v
+        else:
+            ranges.append(f"{start}-{prev}" if start != prev else str(start))
+            start = prev = v
+    ranges.append(f"{start}-{prev}" if start != prev else str(start))
+    return ",".join(ranges)
+
+
 class DatabaseManager:
     DEFAULT_TIME_WINDOW_DAYS = 30
 
@@ -762,6 +794,8 @@ class DatabaseManager:
             # Generate time slots
             if interval == "week":
                 delta = timedelta(weeks=1)
+            elif interval == "hour":
+                delta = timedelta(hours=1)
             else:
                 delta = timedelta(days=1)
 
@@ -948,7 +982,9 @@ class DatabaseManager:
 
                     for (fp_name, s_name, dev_name, loc_name), cap in fp_cap_map.items():
                         # Allocations are tracked per (name, site) — shared across ports
-                        allocated = len(fp_vlan_alloc.get((fp_name, s_name), set()))
+                        allocated_vlans = {int(v) for v in fp_vlan_alloc.get((fp_name, s_name), set()) if v}
+                        capacity_set = _parse_vlan_range(cap["vlan_range"])
+                        available_set = capacity_set - allocated_vlans
                         fp_result.append({
                             "name": cap["name"],
                             "site": cap["site"],
@@ -956,8 +992,8 @@ class DatabaseManager:
                             "local_name": cap["local_name"],
                             "vlan_range": cap["vlan_range"],
                             "total_vlans": cap["total_vlans"],
-                            "vlans_allocated": allocated,
-                            "vlans_available": cap["total_vlans"] - allocated
+                            "vlans_allocated": sorted([str(v) for v in allocated_vlans]),
+                            "vlans_available": _format_vlan_set_as_range(available_set)
                         })
 
                 slot_entry = {

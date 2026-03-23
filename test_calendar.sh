@@ -156,6 +156,12 @@ for slot in slots:
             if key not in fp:
                 errors.append(f'Facility port missing key: {key}')
                 break
+        if not isinstance(fp.get('vlans_allocated'), list):
+            errors.append(f'vlans_allocated should be a list, got {type(fp.get(\"vlans_allocated\")).__name__}')
+            break
+        if not isinstance(fp.get('vlans_available'), str):
+            errors.append(f'vlans_available should be a string, got {type(fp.get(\"vlans_available\")).__name__}')
+            break
 if errors:
     print('VALIDATION ERRORS: ' + '; '.join(errors))
     sys.exit(1)
@@ -180,6 +186,39 @@ check_status "GET /calendar (weekly, June)" "$STATUS" "$BODY"
 
 SLOT_COUNT=$(echo "$BODY" | python3 -c "import sys,json; print(json.load(sys.stdin).get('total',0))" 2>/dev/null)
 log_info "Got $SLOT_COUNT weekly slots"
+echo ""
+
+# ─────────────────────────────────────────────────────────
+echo "--- Step 3b: Query calendar - hourly interval (single day) ---"
+echo ""
+
+HOUR_START="2025-06-01T00:00:00+00:00"
+HOUR_END="2025-06-02T00:00:00+00:00"
+
+RESP=$(curl -sk -w "\n%{http_code}" \
+    "$REPORTS_URL/calendar?start_time=$HOUR_START&end_time=$HOUR_END&interval=hour" \
+    -H "Authorization: Bearer $TOKEN")
+STATUS=$(echo "$RESP" | tail -1)
+BODY=$(echo "$RESP" | sed '$d')
+
+check_status "GET /calendar (hourly, 1 day)" "$STATUS" "$BODY"
+
+echo "$BODY" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+total = data.get('total', 0)
+interval = data.get('interval', '')
+errors = []
+if total != 24:
+    errors.append(f'Expected 24 hourly slots, got {total}')
+if interval != 'hour':
+    errors.append(f'Expected interval=hour, got {interval}')
+if errors:
+    print('VALIDATION ERRORS: ' + '; '.join(errors))
+    sys.exit(1)
+else:
+    print(f'OK: {total} hourly slots')
+" 2>/dev/null && log_pass "Hourly interval validation (24 slots)" || log_fail "Hourly interval validation"
 echo ""
 
 # ─────────────────────────────────────────────────────────
@@ -538,29 +577,25 @@ for slot in slots:
         all_fps[key] = fp
 if all_fps:
     print('┌──────────────────────────────────────────────────────────────────────────────────────────────────┐')
-    print('│              Facility Port VLANs Available / Total  (per Port, per Day)                          │')
+    print('│              Facility Port VLANs  (per Port, per Day)                                            │')
     print('├──────────────────────────────────────────────────────────────────────────────────────────────────┤')
-    hdr = f'  {\"Facility (Site)\":<28} {\"Port\":<22}' + ''.join(f' {d:>{W}}' for d in date_hdrs)
-    print(hdr)
-    print('  ' + '─' * (28 + 22 + len(dates) * (W+1)))
     for (fp_name, fp_site, fp_dev, fp_port) in sorted(all_fps.keys()):
         label = f'{fp_name} ({fp_site})'
-        if len(label) > 27:
-            label = label[:25] + '..'
         port_label = fp_port if len(fp_port) <= 21 else fp_port[:19] + '..'
-        row = f'  {label:<28} {port_label:<22}'
-        for slot in slots:
+        print(f'  {label}  port={port_label}  range={all_fps[(fp_name, fp_site, fp_dev, fp_port)].get(\"vlan_range\", \"\")}')
+        for i, slot in enumerate(slots):
             fp_data = next((f for f in slot.get('facility_ports', [])
                            if f['name'] == fp_name and f.get('site', '') == fp_site
                            and f.get('device_name', '') == fp_dev and f.get('local_name', '') == fp_port), None)
             if fp_data:
-                avail = fp_data.get('vlans_available', 0)
+                alloc_list = fp_data.get('vlans_allocated', [])
+                avail_range = fp_data.get('vlans_available', '')
+                alloc_count = len(alloc_list)
                 total = fp_data.get('total_vlans', 0)
-                cell = f'{avail}/{total}'
-                row += f' {cell:>{W}}'
+                avail_display = avail_range if len(avail_range) <= 60 else avail_range[:57] + '...'
+                print(f'    {date_hdrs[i]}  allocated={alloc_count}/{total}  available={avail_display}')
             else:
-                row += f' {\"─\":>{W}}'
-        print(row)
+                print(f'    {date_hdrs[i]}  ─')
     print()
 
 print('└─────────────────────────────────────────────────────────────────────────────────────┘')

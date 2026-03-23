@@ -73,8 +73,8 @@ def calendar_get(start_time=None, end_time=None, interval=None, site=None, host=
         if start >= end:
             return cors_400(details="start_time must be before end_time")
 
-        if interval and interval not in ("day", "week"):
-            return cors_400(details="interval must be 'day' or 'week'")
+        if interval and interval not in ("hour", "day", "week"):
+            return cors_400(details="interval must be 'hour', 'day', or 'week'")
 
         db_mgr = _get_db_manager()
         result = db_mgr.get_calendar(start_time=start, end_time=end,
