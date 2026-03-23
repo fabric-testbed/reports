@@ -63,6 +63,10 @@ def calendar_get(start_time=None, end_time=None, interval=None, site=None, host=
         if not start_time or not end_time:
             return cors_400(details="start_time and end_time are required")
 
+        # URL decoding turns '+' into ' ' in timezone offsets like +00:00
+        start_time = start_time.replace(' ', '+')
+        end_time = end_time.replace(' ', '+')
+
         start = datetime.fromisoformat(start_time)
         end = datetime.fromisoformat(end_time)
 
