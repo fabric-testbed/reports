@@ -43,6 +43,11 @@ if [[ -z "$REPORTS_URL" || -z "$ORCH_URL" || -z "$TOKEN" ]]; then
     usage
 fi
 
+# Default fabric-token to token if not provided separately
+if [[ -z "$FABRIC_TOKEN" ]]; then
+    FABRIC_TOKEN="$TOKEN"
+fi
+
 REPORTS_URL="${REPORTS_URL%/}"
 ORCH_URL="${ORCH_URL%/}"
 PASS=0
@@ -140,11 +145,24 @@ for slot in slots:
             if key not in h:
                 errors.append(f'Host missing key: {key}')
                 break
+for slot in slots:
+    for lk in slot.get('links', []):
+        for key in ['bandwidth_capacity', 'bandwidth_allocated', 'bandwidth_available']:
+            if key not in lk:
+                errors.append(f'Link missing key: {key}')
+                break
+    for fp in slot.get('facility_ports', []):
+        for key in ['total_vlans', 'vlans_allocated', 'vlans_available']:
+            if key not in fp:
+                errors.append(f'Facility port missing key: {key}')
+                break
 if errors:
     print('VALIDATION ERRORS: ' + '; '.join(errors))
     sys.exit(1)
 else:
-    print(f'OK: {total} slots, {len(slots[0][\"hosts\"])} hosts, {len(slots[0][\"sites\"])} sites per slot')
+    links_count = len(slots[0].get('links', []))
+    fps_count = len(slots[0].get('facility_ports', []))
+    print(f'OK: {total} slots, {len(slots[0][\"hosts\"])} hosts, {len(slots[0][\"sites\"])} sites, {links_count} links, {fps_count} facility ports per slot')
 " 2>/dev/null && log_pass "Response structure validation" || log_fail "Response structure validation"
 echo ""
 
@@ -295,7 +313,259 @@ else:
 echo ""
 
 # ─────────────────────────────────────────────────────────
-echo "--- Step 8: Validation - bad requests ---"
+echo "--- Step 8: Display resource availability calendar ---"
+echo ""
+
+CAL_START=$(date -u +%Y-%m-%dT00:00:00%z)
+CAL_END=$(python3 -c "from datetime import datetime,timedelta,timezone; print((datetime.now(timezone.utc)+timedelta(days=14)).strftime('%Y-%m-%dT00:00:00+00:00'))")
+
+RESP=$(curl -sk -w "\n%{http_code}" \
+    "$REPORTS_URL/calendar?start_time=$CAL_START&end_time=$CAL_END&interval=day" \
+    -H "Authorization: Bearer $TOKEN")
+STATUS=$(echo "$RESP" | tail -1)
+BODY=$(echo "$RESP" | sed '$d')
+
+check_status "GET /calendar (next 14 days)" "$STATUS" "$BODY"
+
+echo "$BODY" | python3 -c "
+import sys, json
+from collections import defaultdict
+
+data = json.load(sys.stdin)
+slots = data.get('data', [])
+if not slots:
+    print('  No calendar data available')
+    sys.exit(0)
+
+dates = [slot['start'][:10] for slot in slots]
+date_hdrs = [d[5:] for d in dates]  # MM-DD
+
+# Collect all sites and component types
+all_sites = set()
+all_comp_types = set()
+for slot in slots:
+    for s in slot.get('sites', []):
+        all_sites.add(s['name'])
+    for h in slot.get('hosts', []):
+        for comp_name, comp_data in h.get('components', {}).items():
+            if isinstance(comp_data, dict) and comp_data.get('capacity', 0) > 0:
+                all_comp_types.add(comp_name)
+
+W = 9  # column width
+
+# ── CORES: Site-level availability ──
+print()
+print('┌─────────────────────────────────────────────────────────────────────────────────────┐')
+print('│                     Cores Available / Capacity  (by Site, per Day)                  │')
+print('├─────────────────────────────────────────────────────────────────────────────────────┤')
+hdr = f'  {\"Site\":<12}' + ''.join(f' {d:>{W}}' for d in date_hdrs)
+print(hdr)
+print('  ' + '─' * (12 + len(dates) * (W+1)))
+
+for site_name in sorted(all_sites):
+    row = f'  {site_name:<12}'
+    for slot in slots:
+        site_data = next((s for s in slot.get('sites', []) if s['name'] == site_name), None)
+        if site_data:
+            avail = site_data.get('cores_available', 0)
+            cap = site_data.get('cores_capacity', 0)
+            cell = f'{avail}/{cap}'
+            row += f' {cell:>{W}}'
+        else:
+            row += f' {\"─\":>{W}}'
+    print(row)
+print()
+
+# ── RAM: Site-level availability ──
+print('┌─────────────────────────────────────────────────────────────────────────────────────┐')
+print('│                    RAM Available / Capacity GB  (by Site, per Day)                  │')
+print('├─────────────────────────────────────────────────────────────────────────────────────┤')
+hdr = f'  {\"Site\":<12}' + ''.join(f' {d:>{W}}' for d in date_hdrs)
+print(hdr)
+print('  ' + '─' * (12 + len(dates) * (W+1)))
+
+for site_name in sorted(all_sites):
+    row = f'  {site_name:<12}'
+    for slot in slots:
+        site_data = next((s for s in slot.get('sites', []) if s['name'] == site_name), None)
+        if site_data:
+            avail = site_data.get('ram_available', 0)
+            cap = site_data.get('ram_capacity', 0)
+            cell = f'{avail}/{cap}'
+            row += f' {cell:>{W}}'
+        else:
+            row += f' {\"─\":>{W}}'
+    print(row)
+print()
+
+# ── COMPONENTS: Per component type, per site, per day ──
+# Group component types (e.g. all GPUs together, all SmartNICs together)
+gpu_types = sorted(t for t in all_comp_types if 'GPU' in t.upper())
+nic_types = sorted(t for t in all_comp_types if 'NIC' in t.upper() or 'ConnectX' in t)
+fpga_types = sorted(t for t in all_comp_types if 'FPGA' in t.upper())
+nvme_types = sorted(t for t in all_comp_types if 'NVME' in t.upper() or 'NVMe' in t)
+other_types = sorted(t for t in all_comp_types if t not in gpu_types + nic_types + fpga_types + nvme_types)
+
+def print_component_table(comp_types, title):
+    if not comp_types:
+        return
+    print(f'┌─────────────────────────────────────────────────────────────────────────────────────┐')
+    print(f'│  {title:<83}│')
+    print(f'├─────────────────────────────────────────────────────────────────────────────────────┤')
+
+    for comp_type in comp_types:
+        # Aggregate by site: for each site+slot, sum available/capacity across hosts
+        site_comp = {}  # site -> list of (avail, cap) per slot
+        for site_name in sorted(all_sites):
+            site_comp[site_name] = []
+            for slot in slots:
+                total_avail = 0
+                total_cap = 0
+                for h in slot.get('hosts', []):
+                    if h.get('site') != site_name:
+                        continue
+                    cd = h.get('components', {}).get(comp_type)
+                    if isinstance(cd, dict):
+                        total_cap += cd.get('capacity', 0)
+                        total_avail += cd.get('available', 0)
+                site_comp[site_name].append((total_avail, total_cap))
+
+        # Only show sites that have this component
+        sites_with_comp = [s for s in sorted(all_sites) if any(c[1] > 0 for c in site_comp[s])]
+        if not sites_with_comp:
+            continue
+
+        short_name = comp_type
+        if len(short_name) > 30:
+            short_name = short_name[:28] + '..'
+        print(f'  {short_name}')
+
+        hdr = f'    {\"Site\":<10}' + ''.join(f' {d:>{W}}' for d in date_hdrs)
+        print(hdr)
+        print('    ' + '─' * (10 + len(dates) * (W+1)))
+
+        for site_name in sites_with_comp:
+            row = f'    {site_name:<10}'
+            for avail, cap in site_comp[site_name]:
+                if cap > 0:
+                    cell = f'{avail}/{cap}'
+                    row += f' {cell:>{W}}'
+                else:
+                    row += f' {\"─\":>{W}}'
+            print(row)
+        print()
+
+print_component_table(gpu_types, 'GPU Available / Capacity  (by Site, per Day)')
+print_component_table(nic_types, 'SmartNIC Available / Capacity  (by Site, per Day)')
+print_component_table(fpga_types, 'FPGA Available / Capacity  (by Site, per Day)')
+print_component_table(nvme_types, 'NVMe Available / Capacity  (by Site, per Day)')
+print_component_table(other_types, 'Other Components Available / Capacity  (by Site, per Day)')
+
+# ── Per-host GPU detail ──
+if gpu_types:
+    print('┌─────────────────────────────────────────────────────────────────────────────────────┐')
+    print('│                    GPU Detail by Host  (available / capacity)                       │')
+    print('├─────────────────────────────────────────────────────────────────────────────────────┤')
+
+    for comp_type in gpu_types:
+        short_name = comp_type if len(comp_type) <= 30 else comp_type[:28] + '..'
+        print(f'  {short_name}')
+        hdr = f'    {\"Host\":<35} {\"Site\":<6}' + ''.join(f' {d:>{W}}' for d in date_hdrs)
+        print(hdr)
+        print('    ' + '─' * (35 + 6 + len(dates) * (W+1)))
+
+        # Find hosts that have this GPU
+        hosts_with_gpu = set()
+        for slot in slots:
+            for h in slot.get('hosts', []):
+                cd = h.get('components', {}).get(comp_type)
+                if isinstance(cd, dict) and cd.get('capacity', 0) > 0:
+                    hosts_with_gpu.add((h['name'], h.get('site', '')))
+
+        for host_name, site_name in sorted(hosts_with_gpu, key=lambda x: (x[1], x[0])):
+            row = f'    {host_name:<35} {site_name:<6}'
+            for slot in slots:
+                host_data = next((h for h in slot.get('hosts', []) if h['name'] == host_name), None)
+                if host_data:
+                    cd = host_data.get('components', {}).get(comp_type, {})
+                    if isinstance(cd, dict) and cd.get('capacity', 0) > 0:
+                        avail = cd.get('available', 0)
+                        cap = cd.get('capacity', 0)
+                        cell = f'{avail}/{cap}'
+                        # highlight fully available
+                        row += f' {cell:>{W}}'
+                    else:
+                        row += f' {\"─\":>{W}}'
+                else:
+                    row += f' {\"─\":>{W}}'
+            print(row)
+        print()
+
+print('└─────────────────────────────────────────────────────────────────────────────────────┘')
+
+# ── LINKS: Bandwidth availability ──
+all_links = {}
+for slot in slots:
+    for lk in slot.get('links', []):
+        all_links[lk['name']] = lk
+if all_links:
+    print()
+    print('┌─────────────────────────────────────────────────────────────────────────────────────┐')
+    print('│               Link Bandwidth Available / Capacity Gbps  (per Day)                   │')
+    print('├─────────────────────────────────────────────────────────────────────────────────────┤')
+    hdr = f'  {\"Link\":<20}' + ''.join(f' {d:>{W}}' for d in date_hdrs)
+    print(hdr)
+    print('  ' + '─' * (20 + len(dates) * (W+1)))
+    for link_name in sorted(all_links.keys()):
+        row = f'  {link_name:<20}'
+        for slot in slots:
+            lk_data = next((l for l in slot.get('links', []) if l['name'] == link_name), None)
+            if lk_data:
+                avail = lk_data.get('bandwidth_available', 0)
+                cap = lk_data.get('bandwidth_capacity', 0)
+                cell = f'{avail}/{cap}'
+                row += f' {cell:>{W}}'
+            else:
+                row += f' {\"─\":>{W}}'
+        print(row)
+    print()
+
+# ── FACILITY PORTS: VLAN availability ──
+all_fps = {}
+for slot in slots:
+    for fp in slot.get('facility_ports', []):
+        all_fps[(fp['name'], fp.get('site', ''))] = fp
+if all_fps:
+    print('┌─────────────────────────────────────────────────────────────────────────────────────┐')
+    print('│              Facility Port VLANs Available / Total  (per Day)                        │')
+    print('├─────────────────────────────────────────────────────────────────────────────────────┤')
+    hdr = f'  {\"Port (Site)\":<25}' + ''.join(f' {d:>{W}}' for d in date_hdrs)
+    print(hdr)
+    print('  ' + '─' * (25 + len(dates) * (W+1)))
+    for (fp_name, fp_site) in sorted(all_fps.keys()):
+        label = f'{fp_name} ({fp_site})'
+        if len(label) > 24:
+            label = label[:22] + '..'
+        row = f'  {label:<25}'
+        for slot in slots:
+            fp_data = next((f for f in slot.get('facility_ports', []) if f['name'] == fp_name and f.get('site', '') == fp_site), None)
+            if fp_data:
+                avail = fp_data.get('vlans_available', 0)
+                total = fp_data.get('total_vlans', 0)
+                cell = f'{avail}/{total}'
+                row += f' {cell:>{W}}'
+            else:
+                row += f' {\"─\":>{W}}'
+        print(row)
+    print()
+
+print('└─────────────────────────────────────────────────────────────────────────────────────┘')
+" 2>/dev/null
+echo ""
+
+# ─────────────────────────────────────────────────────────
+echo "--- Step 9: Validation - bad requests ---"
+
 echo ""
 
 # Missing end_time
@@ -327,7 +597,7 @@ check_status "GET /calendar no auth -> 401" "$STATUS" "" "401"
 echo ""
 
 # ─────────────────────────────────────────────────────────
-echo "--- Step 9: Orchestrator proxy ---"
+echo "--- Step 10: Orchestrator proxy ---"
 echo ""
 
 if [[ -n "$FABRIC_TOKEN" ]]; then

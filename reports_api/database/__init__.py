@@ -168,6 +168,38 @@ class HostCapacities(Base):
     )
 
 
+class LinkCapacities(Base):
+    __tablename__ = 'link_capacities'
+    id = Column(Integer, Sequence('link_capacities.id', start=1, increment=1), autoincrement=True, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    site_a_id = Column(Integer, ForeignKey('sites.id'), nullable=False)
+    site_b_id = Column(Integer, ForeignKey('sites.id'), nullable=False)
+    layer = Column(String, nullable=False)
+    bandwidth_capacity = Column(Integer, default=0)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        Index('ix_link_capacities_name', 'name', unique=True),
+        Index('ix_link_capacities_sites', 'site_a_id', 'site_b_id'),
+    )
+
+
+class FacilityPortCapacities(Base):
+    __tablename__ = 'facility_port_capacities'
+    id = Column(Integer, Sequence('facility_port_capacities.id', start=1, increment=1), autoincrement=True, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    site_id = Column(Integer, ForeignKey('sites.id'), nullable=False)
+    device_name = Column(String, nullable=True)
+    local_name = Column(String, nullable=True)
+    vlan_range = Column(String, nullable=True)
+    total_vlans = Column(Integer, default=0)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        Index('ix_facility_port_capacities_name_site', 'name', 'site_id', unique=True),
+    )
+
+
 class Interfaces(Base):
     __tablename__ = 'interfaces'
     sliver_id = Column(Integer, ForeignKey('slivers.id'), primary_key=True, index=True)

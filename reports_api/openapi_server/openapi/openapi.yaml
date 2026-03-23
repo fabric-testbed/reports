@@ -2679,6 +2679,144 @@ paths:
       tags:
       - hosts
       x-openapi-router-controller: reports_api.openapi_server.controllers.calendar_controller
+  /links/{link_name}/capacity:
+    post:
+      description: Create or update link capacity data.
+      operationId: links_link_name_capacity_post
+      parameters:
+      - explode: false
+        in: path
+        name: link_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                site_a:
+                  type: string
+                site_b:
+                  type: string
+                layer:
+                  type: string
+                bandwidth_capacity:
+                  default: 0
+                  type: integer
+              required:
+              - site_a
+              - site_b
+              - layer
+              type: object
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_200_ok_no_content"
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_400_bad_request"
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_401_unauthorized"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_403_forbidden"
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_500_internal_server_error"
+          description: Internal Server Error
+      security:
+      - bearerAuth: []
+      summary: Create/Update link capacity
+      tags:
+      - links
+      x-openapi-router-controller: reports_api.openapi_server.controllers.calendar_controller
+  /facility_ports/{port_name}/capacity:
+    post:
+      description: Create or update facility port capacity data.
+      operationId: facility_ports_port_name_capacity_post
+      parameters:
+      - explode: false
+        in: path
+        name: port_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                site:
+                  type: string
+                device_name:
+                  type: string
+                local_name:
+                  type: string
+                vlan_range:
+                  type: string
+                total_vlans:
+                  default: 0
+                  type: integer
+              required:
+              - site
+              type: object
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_200_ok_no_content"
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_400_bad_request"
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_401_unauthorized"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_403_forbidden"
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_500_internal_server_error"
+          description: Internal Server Error
+      security:
+      - bearerAuth: []
+      summary: Create/Update facility port capacity
+      tags:
+      - facility_ports
+      x-openapi-router-controller: reports_api.openapi_server.controllers.calendar_controller
   /version:
     get:
       description: Version

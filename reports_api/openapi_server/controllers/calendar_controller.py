@@ -48,3 +48,41 @@ def hosts_host_name_capacity_post(host_name, body):  # noqa: E501
     if not body or not body.get("site"):
         return cors_400(details="'site' is required in the request body")
     return rc.hosts_host_name_capacity_post(host_name=host_name, body=body)
+
+
+def links_link_name_capacity_post(link_name, body):  # noqa: E501
+    """Create/Update link capacity
+
+    Create or update link capacity data. # noqa: E501
+
+    :param link_name: Link name
+    :type link_name: str
+    :param body: Capacity payload
+    :type body: dict
+
+    :rtype: Status200OkNoContent
+    """
+    if connexion.request.is_json:
+        body = connexion.request.get_json()
+    if not body or not body.get("site_a") or not body.get("site_b") or not body.get("layer"):
+        return cors_400(details="'site_a', 'site_b', and 'layer' are required in the request body")
+    return rc.links_link_name_capacity_post(link_name=link_name, body=body)
+
+
+def facility_ports_port_name_capacity_post(port_name, body):  # noqa: E501
+    """Create/Update facility port capacity
+
+    Create or update facility port capacity data. # noqa: E501
+
+    :param port_name: Facility port name
+    :type port_name: str
+    :param body: Capacity payload
+    :type body: dict
+
+    :rtype: Status200OkNoContent
+    """
+    if connexion.request.is_json:
+        body = connexion.request.get_json()
+    if not body or not body.get("site"):
+        return cors_400(details="'site' is required in the request body")
+    return rc.facility_ports_port_name_capacity_post(port_name=port_name, body=body)

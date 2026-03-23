@@ -132,3 +132,29 @@ CREATE TABLE IF NOT EXISTS host_capacities (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS ix_host_capacities_host_id ON host_capacities(host_id);
 CREATE INDEX IF NOT EXISTS ix_host_capacities_site_id ON host_capacities(site_id);
+
+-- Add link_capacities table for network link availability calendar
+CREATE TABLE IF NOT EXISTS link_capacities (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR NOT NULL,
+    site_a_id INTEGER NOT NULL REFERENCES sites(id),
+    site_b_id INTEGER NOT NULL REFERENCES sites(id),
+    layer VARCHAR NOT NULL,
+    bandwidth_capacity INTEGER DEFAULT 0,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ix_link_capacities_name ON link_capacities(name);
+CREATE INDEX IF NOT EXISTS ix_link_capacities_sites ON link_capacities(site_a_id, site_b_id);
+
+-- Add facility_port_capacities table for facility port availability calendar
+CREATE TABLE IF NOT EXISTS facility_port_capacities (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR NOT NULL,
+    site_id INTEGER NOT NULL REFERENCES sites(id),
+    device_name VARCHAR,
+    local_name VARCHAR,
+    vlan_range VARCHAR,
+    total_vlans INTEGER DEFAULT 0,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ix_facility_port_capacities_name_site ON facility_port_capacities(name, site_id);

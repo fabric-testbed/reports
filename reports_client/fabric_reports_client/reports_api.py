@@ -883,6 +883,63 @@ class ReportsApi:
         else:
             raise Exception(f"Failed to post host capacity: {response.status_code} - {response.text}")
 
+    def post_link_capacity(self, link_name: str, capacity_payload: dict) -> dict:
+        """
+        Create or update link capacity data.
+
+        :param link_name: Name of the link
+        :param capacity_payload: Dictionary containing capacity data
+        :return: Server response as a dictionary
+
+        Example capacity_payload:
+        {
+            "site_a": "RENC",
+            "site_b": "UKY",
+            "layer": "L2",
+            "bandwidth_capacity": 100
+        }
+        """
+        url = f"{self.base_url}/links/{link_name}/capacity"
+
+        headers = self.headers.copy()
+        headers["Content-Type"] = "application/json"
+
+        response = requests.post(url, headers=headers, json=capacity_payload)
+
+        if response.status_code in (200, 201):
+            return response.json()
+        else:
+            raise Exception(f"Failed to post link capacity: {response.status_code} - {response.text}")
+
+    def post_facility_port_capacity(self, port_name: str, capacity_payload: dict) -> dict:
+        """
+        Create or update facility port capacity data.
+
+        :param port_name: Name of the facility port
+        :param capacity_payload: Dictionary containing capacity data
+        :return: Server response as a dictionary
+
+        Example capacity_payload:
+        {
+            "site": "RENC",
+            "device_name": "renc-data-sw",
+            "local_name": "HundredGigE0/0/0/25/1",
+            "vlan_range": "100-200,300-350",
+            "total_vlans": 152
+        }
+        """
+        url = f"{self.base_url}/facility_ports/{port_name}/capacity"
+
+        headers = self.headers.copy()
+        headers["Content-Type"] = "application/json"
+
+        response = requests.post(url, headers=headers, json=capacity_payload)
+
+        if response.status_code in (200, 201):
+            return response.json()
+        else:
+            raise Exception(f"Failed to post facility port capacity: {response.status_code} - {response.text}")
+
     def query_project_memberships(self,
                                   start_time: str = None,
                                   end_time: str = None,

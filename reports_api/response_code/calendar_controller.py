@@ -127,3 +127,74 @@ def hosts_host_name_capacity_post(host_name=None, body=None):
         logger.error(details)
         logger.error(traceback.format_exc())
         return cors_500(details=details)
+
+
+def links_link_name_capacity_post(link_name=None, body=None):
+    logger = GlobalsSingleton.get().log
+    try:
+        logger.debug("Processing - links_link_name_capacity_post")
+        ret_val = authorize()
+
+        if isinstance(ret_val, Response):
+            return ret_val
+        elif isinstance(ret_val, dict):
+            logger.debug("Authorized via bearer token")
+        elif isinstance(ret_val, FabricToken):
+            return cors_401(details=f"{ret_val.uuid}/{ret_val.email} is not authorized!")
+
+        db_mgr = _get_db_manager()
+        db_mgr.add_or_update_link_capacity(
+            link_name=link_name,
+            site_a_name=body.get("site_a"),
+            site_b_name=body.get("site_b"),
+            layer=body.get("layer"),
+            bandwidth=body.get("bandwidth_capacity", 0)
+        )
+
+        response = Status200OkNoContent()
+        response.data = [Status200OkNoContentData()]
+        response.data[0].message = "Link capacity updated successfully"
+        response.type = "no_content"
+        response.size = 1
+        return cors_success_response(response_body=response)
+    except Exception as exc:
+        details = 'Oops! something went wrong with links_link_name_capacity_post(): {0}'.format(exc)
+        logger.error(details)
+        logger.error(traceback.format_exc())
+        return cors_500(details=details)
+
+
+def facility_ports_port_name_capacity_post(port_name=None, body=None):
+    logger = GlobalsSingleton.get().log
+    try:
+        logger.debug("Processing - facility_ports_port_name_capacity_post")
+        ret_val = authorize()
+
+        if isinstance(ret_val, Response):
+            return ret_val
+        elif isinstance(ret_val, dict):
+            logger.debug("Authorized via bearer token")
+        elif isinstance(ret_val, FabricToken):
+            return cors_401(details=f"{ret_val.uuid}/{ret_val.email} is not authorized!")
+
+        db_mgr = _get_db_manager()
+        db_mgr.add_or_update_facility_port_capacity(
+            port_name=port_name,
+            site_name=body.get("site"),
+            device_name=body.get("device_name"),
+            local_name=body.get("local_name"),
+            vlan_range=body.get("vlan_range"),
+            total_vlans=body.get("total_vlans", 0)
+        )
+
+        response = Status200OkNoContent()
+        response.data = [Status200OkNoContentData()]
+        response.data[0].message = "Facility port capacity updated successfully"
+        response.type = "no_content"
+        response.size = 1
+        return cors_success_response(response_body=response)
+    except Exception as exc:
+        details = 'Oops! something went wrong with facility_ports_port_name_capacity_post(): {0}'.format(exc)
+        logger.error(details)
+        logger.error(traceback.format_exc())
+        return cors_500(details=details)
