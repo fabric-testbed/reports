@@ -114,3 +114,7 @@ CREATE INDEX idx_membership_user_id ON membership (user_id);
 CREATE INDEX idx_membership_project_id ON membership (project_id);
 
 ALTER TABLE users ADD COLUMN bastion_login VARCHAR;
+
+-- Add closed_at column to slivers table
+ALTER TABLE slivers ADD COLUMN closed_at TIMESTAMP WITH TIME ZONE;
+CREATE INDEX IF NOT EXISTS idx_slivers_closed_at ON slivers (closed_at);

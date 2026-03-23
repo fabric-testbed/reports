@@ -121,6 +121,7 @@ class Slivers(Base):
     error = Column(String, nullable=True)
     lease_start = Column(TIMESTAMP(timezone=True), nullable=True, index=True)
     lease_end = Column(TIMESTAMP(timezone=True), nullable=True, index=True)
+    closed_at = Column(TIMESTAMP(timezone=True), nullable=True, index=True)
 
     __table_args__ = (
         Index('idx_sliver_lease_range', 'lease_start', 'lease_end'),

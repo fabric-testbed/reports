@@ -16,7 +16,7 @@ class Sliver(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, project_id=None, project_name=None, slice_id=None, slice_name=None, user_id=None, user_email=None, host=None, site=None, sliver_id=None, node_id=None, state=None, sliver_type=None, ip_subnet=None, ip_v4=None, ip_v6=None, error=None, image=None, core=None, ram=None, disk=None, bandwidth=None, lease_start=None, lease_end=None, components=None, interfaces=None):  # noqa: E501
+    def __init__(self, project_id=None, project_name=None, slice_id=None, slice_name=None, user_id=None, user_email=None, host=None, site=None, sliver_id=None, node_id=None, state=None, sliver_type=None, ip_subnet=None, ip_v4=None, ip_v6=None, error=None, image=None, core=None, ram=None, disk=None, bandwidth=None, lease_start=None, lease_end=None, closed_at=None, components=None, interfaces=None):  # noqa: E501
         """Sliver - a model defined in OpenAPI
 
         :param project_id: The project_id of this Sliver.  # noqa: E501
@@ -65,6 +65,8 @@ class Sliver(Model):
         :type lease_start: datetime
         :param lease_end: The lease_end of this Sliver.  # noqa: E501
         :type lease_end: datetime
+        :param closed_at: The closed_at of this Sliver.  # noqa: E501
+        :type closed_at: datetime
         :param components: The components of this Sliver.  # noqa: E501
         :type components: SliverComponents
         :param interfaces: The interfaces of this Sliver.  # noqa: E501
@@ -94,6 +96,7 @@ class Sliver(Model):
             'bandwidth': int,
             'lease_start': datetime,
             'lease_end': datetime,
+            'closed_at': datetime,
             'components': SliverComponents,
             'interfaces': SliverInterfaces
         }
@@ -122,6 +125,7 @@ class Sliver(Model):
             'bandwidth': 'bandwidth',
             'lease_start': 'lease_start',
             'lease_end': 'lease_end',
+            'closed_at': 'closed_at',
             'components': 'components',
             'interfaces': 'interfaces'
         }
@@ -149,6 +153,7 @@ class Sliver(Model):
         self._bandwidth = bandwidth
         self._lease_start = lease_start
         self._lease_end = lease_end
+        self._closed_at = closed_at
         self._components = components
         self._interfaces = interfaces
 
@@ -645,6 +650,27 @@ class Sliver(Model):
         """
 
         self._lease_end = lease_end
+
+    @property
+    def closed_at(self) -> datetime:
+        """Gets the closed_at of this Sliver.
+
+
+        :return: The closed_at of this Sliver.
+        :rtype: datetime
+        """
+        return self._closed_at
+
+    @closed_at.setter
+    def closed_at(self, closed_at: datetime):
+        """Sets the closed_at of this Sliver.
+
+
+        :param closed_at: The closed_at of this Sliver.
+        :type closed_at: datetime
+        """
+
+        self._closed_at = closed_at
 
     @property
     def components(self) -> SliverComponents:

@@ -665,6 +665,7 @@ class ReportsApi:
                 "bandwidth": 10000,
                 "lease_start": "2025-05-01T12:00:00Z",
                 "lease_end": "2025-05-03T12:00:00Z",
+                "closed_at": "2025-05-02T08:30:00Z",
                 "components": [
                     {
                         "component_id": "comp-01",
