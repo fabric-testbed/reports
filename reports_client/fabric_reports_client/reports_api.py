@@ -1,6 +1,7 @@
 import requests
 import json
 import os
+from urllib.parse import quote
 
 
 class ReportsApi:
@@ -871,7 +872,7 @@ class ReportsApi:
             "components": {"GPU-A100": 4, "SmartNIC-ConnectX-6": 2}
         }
         """
-        url = f"{self.base_url}/hosts/{host_name}/capacity"
+        url = f"{self.base_url}/hosts/{quote(host_name, safe='')}/capacity"
 
         headers = self.headers.copy()
         headers["Content-Type"] = "application/json"
@@ -899,7 +900,7 @@ class ReportsApi:
             "bandwidth_capacity": 100
         }
         """
-        url = f"{self.base_url}/links/{link_name}/capacity"
+        url = f"{self.base_url}/links/{quote(link_name, safe='')}/capacity"
 
         headers = self.headers.copy()
         headers["Content-Type"] = "application/json"
@@ -928,7 +929,7 @@ class ReportsApi:
             "total_vlans": 152
         }
         """
-        url = f"{self.base_url}/facility_ports/{port_name}/capacity"
+        url = f"{self.base_url}/facility_ports/{quote(port_name, safe='')}/capacity"
 
         headers = self.headers.copy()
         headers["Content-Type"] = "application/json"
