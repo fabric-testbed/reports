@@ -1,7 +1,6 @@
 import requests
 import json
 import os
-from urllib.parse import quote
 
 
 class ReportsApi:
@@ -889,7 +888,7 @@ class ReportsApi:
         Create or update link capacity data.
 
         :param link_name: Name of the link
-        :param capacity_payload: Dictionary containing capacity data
+        :param capacity_payload: Dictionary containing capacity data (must include site_a, site_b, layer)
         :return: Server response as a dictionary
 
         Example capacity_payload:
@@ -900,12 +899,13 @@ class ReportsApi:
             "bandwidth_capacity": 100
         }
         """
-        url = f"{self.base_url}/links/{quote(link_name, safe='')}/capacity"
+        url = f"{self.base_url}/links/capacity"
 
         headers = self.headers.copy()
         headers["Content-Type"] = "application/json"
 
-        response = requests.post(url, headers=headers, json=capacity_payload)
+        payload = {"name": link_name, **capacity_payload}
+        response = requests.post(url, headers=headers, json=payload)
 
         if response.status_code in (200, 201):
             return response.json()
@@ -917,7 +917,7 @@ class ReportsApi:
         Create or update facility port capacity data.
 
         :param port_name: Name of the facility port
-        :param capacity_payload: Dictionary containing capacity data
+        :param capacity_payload: Dictionary containing capacity data (must include site)
         :return: Server response as a dictionary
 
         Example capacity_payload:
@@ -929,12 +929,13 @@ class ReportsApi:
             "total_vlans": 152
         }
         """
-        url = f"{self.base_url}/facility_ports/{quote(port_name, safe='')}/capacity"
+        url = f"{self.base_url}/facility_ports/capacity"
 
         headers = self.headers.copy()
         headers["Content-Type"] = "application/json"
 
-        response = requests.post(url, headers=headers, json=capacity_payload)
+        payload = {"name": port_name, **capacity_payload}
+        response = requests.post(url, headers=headers, json=payload)
 
         if response.status_code in (200, 201):
             return response.json()

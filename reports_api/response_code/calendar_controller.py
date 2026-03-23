@@ -129,10 +129,10 @@ def hosts_host_name_capacity_post(host_name=None, body=None):
         return cors_500(details=details)
 
 
-def links_link_name_capacity_post(link_name=None, body=None):
+def links_capacity_post(body=None):
     logger = GlobalsSingleton.get().log
     try:
-        logger.debug("Processing - links_link_name_capacity_post")
+        logger.debug("Processing - links_capacity_post")
         ret_val = authorize()
 
         if isinstance(ret_val, Response):
@@ -144,7 +144,7 @@ def links_link_name_capacity_post(link_name=None, body=None):
 
         db_mgr = _get_db_manager()
         db_mgr.add_or_update_link_capacity(
-            link_name=link_name,
+            link_name=body.get("name"),
             site_a_name=body.get("site_a"),
             site_b_name=body.get("site_b"),
             layer=body.get("layer"),
@@ -158,16 +158,16 @@ def links_link_name_capacity_post(link_name=None, body=None):
         response.size = 1
         return cors_success_response(response_body=response)
     except Exception as exc:
-        details = 'Oops! something went wrong with links_link_name_capacity_post(): {0}'.format(exc)
+        details = 'Oops! something went wrong with links_capacity_post(): {0}'.format(exc)
         logger.error(details)
         logger.error(traceback.format_exc())
         return cors_500(details=details)
 
 
-def facility_ports_port_name_capacity_post(port_name=None, body=None):
+def facility_ports_capacity_post(body=None):
     logger = GlobalsSingleton.get().log
     try:
-        logger.debug("Processing - facility_ports_port_name_capacity_post")
+        logger.debug("Processing - facility_ports_capacity_post")
         ret_val = authorize()
 
         if isinstance(ret_val, Response):
@@ -179,7 +179,7 @@ def facility_ports_port_name_capacity_post(port_name=None, body=None):
 
         db_mgr = _get_db_manager()
         db_mgr.add_or_update_facility_port_capacity(
-            port_name=port_name,
+            port_name=body.get("name"),
             site_name=body.get("site"),
             device_name=body.get("device_name"),
             local_name=body.get("local_name"),
@@ -194,7 +194,7 @@ def facility_ports_port_name_capacity_post(port_name=None, body=None):
         response.size = 1
         return cors_success_response(response_body=response)
     except Exception as exc:
-        details = 'Oops! something went wrong with facility_ports_port_name_capacity_post(): {0}'.format(exc)
+        details = 'Oops! something went wrong with facility_ports_capacity_post(): {0}'.format(exc)
         logger.error(details)
         logger.error(traceback.format_exc())
         return cors_500(details=details)
