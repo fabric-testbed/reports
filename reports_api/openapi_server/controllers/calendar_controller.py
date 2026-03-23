@@ -79,6 +79,6 @@ def facility_ports_capacity_post(body):  # noqa: E501
     """
     if connexion.request.is_json:
         body = connexion.request.get_json()
-    if not body or not body.get("name") or not body.get("site"):
-        return cors_400(details="'name' and 'site' are required in the request body")
+    if not body or not body.get("name") or not body.get("site") or not body.get("device_name") or not body.get("local_name"):
+        return cors_400(details="'name', 'site', 'device_name', and 'local_name' are required in the request body")
     return rc.facility_ports_capacity_post(body=body)

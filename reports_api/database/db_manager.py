@@ -616,8 +616,8 @@ class DatabaseManager:
 
     # -------------------- ADD OR UPDATE FACILITY PORT CAPACITY --------------------
     def add_or_update_facility_port_capacity(self, port_name: str, site_name: str,
-                                              device_name: Optional[str] = None,
-                                              local_name: Optional[str] = None,
+                                              device_name: str = "",
+                                              local_name: str = "",
                                               vlan_range: Optional[str] = None,
                                               total_vlans: int = 0) -> int:
         session = self.get_session()
@@ -626,7 +626,9 @@ class DatabaseManager:
 
             capacity = session.query(FacilityPortCapacities).filter(
                 FacilityPortCapacities.name == port_name,
-                FacilityPortCapacities.site_id == site_id
+                FacilityPortCapacities.site_id == site_id,
+                FacilityPortCapacities.device_name == device_name,
+                FacilityPortCapacities.local_name == local_name
             ).first()
             if capacity:
                 capacity.device_name = device_name
@@ -735,12 +737,16 @@ class DatabaseManager:
 
             fp_capacities = fp_query.all()
 
-            # Build facility port capacity map: keyed by (name, site_name)
+            # Build facility port capacity map: keyed by (name, site, device_name, local_name)
+            # Each physical port is a separate entry
             fp_cap_map = {}
             for fp, s_name in fp_capacities:
-                fp_cap_map[(fp.name, s_name)] = {
+                key = (fp.name, s_name, fp.device_name, fp.local_name)
+                fp_cap_map[key] = {
                     "name": fp.name,
                     "site": s_name,
+                    "device_name": fp.device_name,
+                    "local_name": fp.local_name,
                     "vlan_range": fp.vlan_range or "",
                     "total_vlans": fp.total_vlans or 0
                 }
@@ -822,7 +828,7 @@ class DatabaseManager:
             # ── Facility port slivers: fetch interfaces that match facility port names ──
             fp_iface_slivers = []
             if fp_cap_map:
-                fp_names = [k[0] for k in fp_cap_map.keys()]
+                fp_names = list(set(k[0] for k in fp_cap_map.keys()))
                 fp_iface_slivers = session.query(
                     Interfaces.name.label("fp_name"),
                     Sites.name.label("site_name"),
@@ -940,11 +946,14 @@ class DatabaseManager:
                             if fp_iface.vlan:
                                 fp_vlan_alloc[key].add(fp_iface.vlan)
 
-                    for (fp_name, s_name), cap in fp_cap_map.items():
+                    for (fp_name, s_name, dev_name, loc_name), cap in fp_cap_map.items():
+                        # Allocations are tracked per (name, site) — shared across ports
                         allocated = len(fp_vlan_alloc.get((fp_name, s_name), set()))
                         fp_result.append({
                             "name": cap["name"],
                             "site": cap["site"],
+                            "device_name": cap["device_name"],
+                            "local_name": cap["local_name"],
                             "vlan_range": cap["vlan_range"],
                             "total_vlans": cap["total_vlans"],
                             "vlans_allocated": allocated,

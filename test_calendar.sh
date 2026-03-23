@@ -530,25 +530,29 @@ if all_links:
         print(row)
     print()
 
-# ── FACILITY PORTS: VLAN availability ──
+# ── FACILITY PORTS: VLAN availability (per port) ──
 all_fps = {}
 for slot in slots:
     for fp in slot.get('facility_ports', []):
-        all_fps[(fp['name'], fp.get('site', ''))] = fp
+        key = (fp['name'], fp.get('site', ''), fp.get('device_name', ''), fp.get('local_name', ''))
+        all_fps[key] = fp
 if all_fps:
-    print('┌─────────────────────────────────────────────────────────────────────────────────────┐')
-    print('│              Facility Port VLANs Available / Total  (per Day)                        │')
-    print('├─────────────────────────────────────────────────────────────────────────────────────┤')
-    hdr = f'  {\"Port (Site)\":<25}' + ''.join(f' {d:>{W}}' for d in date_hdrs)
+    print('┌──────────────────────────────────────────────────────────────────────────────────────────────────┐')
+    print('│              Facility Port VLANs Available / Total  (per Port, per Day)                          │')
+    print('├──────────────────────────────────────────────────────────────────────────────────────────────────┤')
+    hdr = f'  {\"Facility (Site)\":<28} {\"Port\":<22}' + ''.join(f' {d:>{W}}' for d in date_hdrs)
     print(hdr)
-    print('  ' + '─' * (25 + len(dates) * (W+1)))
-    for (fp_name, fp_site) in sorted(all_fps.keys()):
+    print('  ' + '─' * (28 + 22 + len(dates) * (W+1)))
+    for (fp_name, fp_site, fp_dev, fp_port) in sorted(all_fps.keys()):
         label = f'{fp_name} ({fp_site})'
-        if len(label) > 24:
-            label = label[:22] + '..'
-        row = f'  {label:<25}'
+        if len(label) > 27:
+            label = label[:25] + '..'
+        port_label = fp_port if len(fp_port) <= 21 else fp_port[:19] + '..'
+        row = f'  {label:<28} {port_label:<22}'
         for slot in slots:
-            fp_data = next((f for f in slot.get('facility_ports', []) if f['name'] == fp_name and f.get('site', '') == fp_site), None)
+            fp_data = next((f for f in slot.get('facility_ports', [])
+                           if f['name'] == fp_name and f.get('site', '') == fp_site
+                           and f.get('device_name', '') == fp_dev and f.get('local_name', '') == fp_port), None)
             if fp_data:
                 avail = fp_data.get('vlans_available', 0)
                 total = fp_data.get('total_vlans', 0)

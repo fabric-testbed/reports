@@ -2768,6 +2768,8 @@ paths:
               required:
               - name
               - site
+              - device_name
+              - local_name
               type: object
         required: true
       responses:

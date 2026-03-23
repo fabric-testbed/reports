@@ -147,14 +147,16 @@ CREATE UNIQUE INDEX IF NOT EXISTS ix_link_capacities_name ON link_capacities(nam
 CREATE INDEX IF NOT EXISTS ix_link_capacities_sites ON link_capacities(site_a_id, site_b_id);
 
 -- Add facility_port_capacities table for facility port availability calendar
+-- Each row is one physical port: same facility name can have many ports at the same site
 CREATE TABLE IF NOT EXISTS facility_port_capacities (
     id SERIAL PRIMARY KEY,
     name VARCHAR NOT NULL,
     site_id INTEGER NOT NULL REFERENCES sites(id),
-    device_name VARCHAR,
-    local_name VARCHAR,
+    device_name VARCHAR NOT NULL,
+    local_name VARCHAR NOT NULL,
     vlan_range VARCHAR,
     total_vlans INTEGER DEFAULT 0,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
-CREATE UNIQUE INDEX IF NOT EXISTS ix_facility_port_capacities_name_site ON facility_port_capacities(name, site_id);
+CREATE UNIQUE INDEX IF NOT EXISTS ix_facility_port_capacities_name_site_device_port ON facility_port_capacities(name, site_id, device_name, local_name);
+CREATE INDEX IF NOT EXISTS ix_facility_port_capacities_name_site ON facility_port_capacities(name, site_id);

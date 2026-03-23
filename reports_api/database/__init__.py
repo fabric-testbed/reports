@@ -189,14 +189,15 @@ class FacilityPortCapacities(Base):
     id = Column(Integer, Sequence('facility_port_capacities.id', start=1, increment=1), autoincrement=True, primary_key=True, index=True)
     name = Column(String, nullable=False)
     site_id = Column(Integer, ForeignKey('sites.id'), nullable=False)
-    device_name = Column(String, nullable=True)
-    local_name = Column(String, nullable=True)
+    device_name = Column(String, nullable=False)
+    local_name = Column(String, nullable=False)
     vlan_range = Column(String, nullable=True)
     total_vlans = Column(Integer, default=0)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
 
     __table_args__ = (
-        Index('ix_facility_port_capacities_name_site', 'name', 'site_id', unique=True),
+        Index('ix_facility_port_capacities_name_site_device_port', 'name', 'site_id', 'device_name', 'local_name', unique=True),
+        Index('ix_facility_port_capacities_name_site', 'name', 'site_id'),
     )
 
 
