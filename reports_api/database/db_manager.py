@@ -863,8 +863,10 @@ class DatabaseManager:
                     comp_alloc = comp_alloc_map.get(host_id, {})
 
                     comp_result = {}
+                    # Build lowercase-keyed alloc map for case-insensitive matching
+                    comp_alloc_lower = {k.lower(): v for k, v in comp_alloc.items()}
                     for comp_key, comp_cap in cap["components"].items():
-                        comp_allocated = comp_alloc.get(comp_key, 0)
+                        comp_allocated = comp_alloc_lower.get(comp_key.lower(), 0)
                         comp_result[comp_key] = {
                             "capacity": comp_cap,
                             "allocated": comp_allocated,
