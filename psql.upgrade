@@ -158,5 +158,9 @@ CREATE TABLE IF NOT EXISTS facility_port_capacities (
     total_vlans INTEGER DEFAULT 0,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+-- Migration: drop old unique constraint on (name, site_id) if it exists, replace with 4-column unique
+DROP INDEX IF EXISTS ix_facility_port_capacities_name_site;
+ALTER TABLE facility_port_capacities ALTER COLUMN device_name SET NOT NULL;
+ALTER TABLE facility_port_capacities ALTER COLUMN local_name SET NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS ix_facility_port_capacities_name_site_device_port ON facility_port_capacities(name, site_id, device_name, local_name);
 CREATE INDEX IF NOT EXISTS ix_facility_port_capacities_name_site ON facility_port_capacities(name, site_id);

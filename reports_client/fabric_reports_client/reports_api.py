@@ -871,7 +871,7 @@ class ReportsApi:
             "components": {"GPU-A100": 4, "SmartNIC-ConnectX-6": 2}
         }
         """
-        url = f"{self.base_url}/hosts/{quote(host_name, safe='')}/capacity"
+        url = f"{self.base_url}/hosts/{host_name}/capacity"
 
         headers = self.headers.copy()
         headers["Content-Type"] = "application/json"
