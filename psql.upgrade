@@ -118,3 +118,49 @@ ALTER TABLE users ADD COLUMN bastion_login VARCHAR;
 -- Add closed_at column to slivers table
 ALTER TABLE slivers ADD COLUMN closed_at TIMESTAMP WITH TIME ZONE;
 CREATE INDEX IF NOT EXISTS idx_slivers_closed_at ON slivers (closed_at);
+
+-- Add host_capacities table for resource availability calendar
+CREATE TABLE IF NOT EXISTS host_capacities (
+    id SERIAL PRIMARY KEY,
+    host_id INTEGER NOT NULL REFERENCES hosts(id),
+    site_id INTEGER NOT NULL REFERENCES sites(id),
+    cores_capacity INTEGER DEFAULT 0,
+    ram_capacity INTEGER DEFAULT 0,
+    disk_capacity INTEGER DEFAULT 0,
+    components JSON,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ix_host_capacities_host_id ON host_capacities(host_id);
+CREATE INDEX IF NOT EXISTS ix_host_capacities_site_id ON host_capacities(site_id);
+
+-- Add link_capacities table for network link availability calendar
+CREATE TABLE IF NOT EXISTS link_capacities (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR NOT NULL,
+    site_a_id INTEGER NOT NULL REFERENCES sites(id),
+    site_b_id INTEGER NOT NULL REFERENCES sites(id),
+    layer VARCHAR NOT NULL,
+    bandwidth_capacity INTEGER DEFAULT 0,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ix_link_capacities_name ON link_capacities(name);
+CREATE INDEX IF NOT EXISTS ix_link_capacities_sites ON link_capacities(site_a_id, site_b_id);
+
+-- Add facility_port_capacities table for facility port availability calendar
+-- Each row is one physical port: same facility name can have many ports at the same site
+CREATE TABLE IF NOT EXISTS facility_port_capacities (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR NOT NULL,
+    site_id INTEGER NOT NULL REFERENCES sites(id),
+    device_name VARCHAR NOT NULL,
+    local_name VARCHAR NOT NULL,
+    vlan_range VARCHAR,
+    total_vlans INTEGER DEFAULT 0,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+-- Migration: drop old unique constraint on (name, site_id) if it exists, replace with 4-column unique
+DROP INDEX IF EXISTS ix_facility_port_capacities_name_site;
+ALTER TABLE facility_port_capacities ALTER COLUMN device_name SET NOT NULL;
+ALTER TABLE facility_port_capacities ALTER COLUMN local_name SET NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS ix_facility_port_capacities_name_site_device_port ON facility_port_capacities(name, site_id, device_name, local_name);
+CREATE INDEX IF NOT EXISTS ix_facility_port_capacities_name_site ON facility_port_capacities(name, site_id);

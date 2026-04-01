@@ -819,6 +819,161 @@ class ReportsApi:
             "data": all_memberships
         }
 
+    def query_calendar(self, start_time: str, end_time: str, interval: str = "day",
+                       site: list[str] = None, host: list[str] = None,
+                       exclude_site: list[str] = None, exclude_host: list[str] = None) -> dict:
+        """
+        Query the resource availability calendar.
+
+        :param start_time: Start time for the calendar range (ISO 8601 string, required)
+        :param end_time: End time for the calendar range (ISO 8601 string, required)
+        :param interval: Time interval for each slot ('day' or 'week', default: 'day')
+        :param site: List of sites to include
+        :param host: List of hosts to include
+        :param exclude_site: List of sites to exclude
+        :param exclude_host: List of hosts to exclude
+        :return: Calendar response dict with 'data', 'interval', 'query_start', 'query_end', 'total'
+        """
+        url = f"{self.base_url}/calendar"
+
+        params = {
+            "start_time": start_time,
+            "end_time": end_time,
+            "interval": interval,
+            "site": site,
+            "host": host,
+            "exclude_site": exclude_site,
+            "exclude_host": exclude_host,
+        }
+        filtered_params = {k: v for k, v in params.items() if v is not None}
+
+        response = requests.get(url, headers=self.headers, params=filtered_params)
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise Exception(f"Failed to fetch calendar: {response.status_code} - {response.text}")
+
+    def find_slot(self, start_time: str, end_time: str, duration: int,
+                  resources: list, max_results: int = 1) -> dict:
+        """
+        Find available time slots where all requested resources are simultaneously available.
+
+        :param start_time: Start of search range (ISO 8601 string)
+        :param end_time: End of search range (ISO 8601 string)
+        :param duration: Consecutive hours needed
+        :param resources: List of resource request dicts
+        :param max_results: Maximum number of windows to return (1-50, default 1)
+        :return: Dict with 'windows', 'total', 'search_start', 'search_end', 'duration_hours'
+        """
+        url = f"{self.base_url}/calendar/find-slot"
+
+        headers = self.headers.copy()
+        headers["Content-Type"] = "application/json"
+
+        payload = {
+            "start": start_time,
+            "end": end_time,
+            "duration": duration,
+            "resources": resources,
+            "max_results": max_results
+        }
+
+        response = requests.post(url, headers=headers, json=payload)
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise Exception(f"Failed to find slot: {response.status_code} - {response.text}")
+
+    def post_host_capacity(self, host_name: str, capacity_payload: dict) -> dict:
+        """
+        Create or update host capacity data.
+
+        :param host_name: Name of the host
+        :param capacity_payload: Dictionary containing capacity data
+        :return: Server response as a dictionary
+
+        Example capacity_payload:
+        {
+            "site": "RENC",
+            "cores_capacity": 128,
+            "ram_capacity": 512,
+            "disk_capacity": 10000,
+            "components": {"GPU-A100": 4, "SmartNIC-ConnectX-6": 2}
+        }
+        """
+        url = f"{self.base_url}/hosts/{host_name}/capacity"
+
+        headers = self.headers.copy()
+        headers["Content-Type"] = "application/json"
+
+        response = requests.post(url, headers=headers, json=capacity_payload)
+
+        if response.status_code in (200, 201):
+            return response.json()
+        else:
+            raise Exception(f"Failed to post host capacity: {response.status_code} - {response.text}")
+
+    def post_link_capacity(self, link_name: str, capacity_payload: dict) -> dict:
+        """
+        Create or update link capacity data.
+
+        :param link_name: Name of the link
+        :param capacity_payload: Dictionary containing capacity data (must include site_a, site_b, layer)
+        :return: Server response as a dictionary
+
+        Example capacity_payload:
+        {
+            "site_a": "RENC",
+            "site_b": "UKY",
+            "layer": "L2",
+            "bandwidth_capacity": 100
+        }
+        """
+        url = f"{self.base_url}/links/capacity"
+
+        headers = self.headers.copy()
+        headers["Content-Type"] = "application/json"
+
+        payload = {"name": link_name, **capacity_payload}
+        response = requests.post(url, headers=headers, json=payload)
+
+        if response.status_code in (200, 201):
+            return response.json()
+        else:
+            raise Exception(f"Failed to post link capacity: {response.status_code} - {response.text}")
+
+    def post_facility_port_capacity(self, port_name: str, capacity_payload: dict) -> dict:
+        """
+        Create or update facility port capacity data.
+
+        :param port_name: Name of the facility port
+        :param capacity_payload: Dictionary containing capacity data (must include site)
+        :return: Server response as a dictionary
+
+        Example capacity_payload:
+        {
+            "site": "RENC",
+            "device_name": "renc-data-sw",
+            "local_name": "HundredGigE0/0/0/25/1",
+            "vlan_range": "100-200,300-350",
+            "total_vlans": 152
+        }
+        """
+        url = f"{self.base_url}/facility_ports/capacity"
+
+        headers = self.headers.copy()
+        headers["Content-Type"] = "application/json"
+
+        payload = {"name": port_name, **capacity_payload}
+        response = requests.post(url, headers=headers, json=payload)
+
+        if response.status_code in (200, 201):
+            return response.json()
+        else:
+            raise Exception(f"Failed to post facility port capacity: {response.status_code} - {response.text}")
+
     def query_project_memberships(self,
                                   start_time: str = None,
                                   end_time: str = None,

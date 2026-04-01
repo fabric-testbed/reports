@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, TIMESTAMP, Index, JSON, Boolean, UniqueConstraint
+from sqlalchemy import ForeignKey, TIMESTAMP, Index, JSON, Boolean, UniqueConstraint, func
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy import Column, String, Integer, Sequence
 
@@ -148,6 +148,56 @@ class Components(Base):
     __table_args__ = (
         Index('idx_components_type_model', 'type', 'model'),
         Index('idx_components_sliver', 'sliver_id'),
+    )
+
+
+class HostCapacities(Base):
+    __tablename__ = 'host_capacities'
+    id = Column(Integer, Sequence('host_capacities.id', start=1, increment=1), autoincrement=True, primary_key=True, index=True)
+    host_id = Column(Integer, ForeignKey('hosts.id'), nullable=False)
+    site_id = Column(Integer, ForeignKey('sites.id'), nullable=False)
+    cores_capacity = Column(Integer, default=0)
+    ram_capacity = Column(Integer, default=0)
+    disk_capacity = Column(Integer, default=0)
+    components = Column(JSON, nullable=True)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        Index('ix_host_capacities_host_id', 'host_id', unique=True),
+        Index('ix_host_capacities_site_id', 'site_id'),
+    )
+
+
+class LinkCapacities(Base):
+    __tablename__ = 'link_capacities'
+    id = Column(Integer, Sequence('link_capacities.id', start=1, increment=1), autoincrement=True, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    site_a_id = Column(Integer, ForeignKey('sites.id'), nullable=False)
+    site_b_id = Column(Integer, ForeignKey('sites.id'), nullable=False)
+    layer = Column(String, nullable=False)
+    bandwidth_capacity = Column(Integer, default=0)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        Index('ix_link_capacities_name', 'name', unique=True),
+        Index('ix_link_capacities_sites', 'site_a_id', 'site_b_id'),
+    )
+
+
+class FacilityPortCapacities(Base):
+    __tablename__ = 'facility_port_capacities'
+    id = Column(Integer, Sequence('facility_port_capacities.id', start=1, increment=1), autoincrement=True, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    site_id = Column(Integer, ForeignKey('sites.id'), nullable=False)
+    device_name = Column(String, nullable=False)
+    local_name = Column(String, nullable=False)
+    vlan_range = Column(String, nullable=True)
+    total_vlans = Column(Integer, default=0)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        Index('ix_facility_port_capacities_name_site_device_port', 'name', 'site_id', 'device_name', 'local_name', unique=True),
+        Index('ix_facility_port_capacities_name_site', 'name', 'site_id'),
     )
 
 
