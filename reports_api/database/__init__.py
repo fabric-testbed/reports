@@ -153,7 +153,7 @@ class Components(Base):
 
 class HostCapacities(Base):
     __tablename__ = 'host_capacities'
-    id = Column(Integer, Sequence('host_capacities.id', start=1, increment=1), autoincrement=True, primary_key=True, index=True)
+    id = Column(Integer, Sequence('host_capacities_id_seq', start=1, increment=1), autoincrement=True, primary_key=True, index=True)
     host_id = Column(Integer, ForeignKey('hosts.id'), nullable=False)
     site_id = Column(Integer, ForeignKey('sites.id'), nullable=False)
     cores_capacity = Column(Integer, default=0)
@@ -170,7 +170,7 @@ class HostCapacities(Base):
 
 class LinkCapacities(Base):
     __tablename__ = 'link_capacities'
-    id = Column(Integer, Sequence('link_capacities.id', start=1, increment=1), autoincrement=True, primary_key=True, index=True)
+    id = Column(Integer, Sequence('link_capacities_id_seq', start=1, increment=1), autoincrement=True, primary_key=True, index=True)
     name = Column(String, nullable=False)
     site_a_id = Column(Integer, ForeignKey('sites.id'), nullable=False)
     site_b_id = Column(Integer, ForeignKey('sites.id'), nullable=False)
@@ -186,7 +186,7 @@ class LinkCapacities(Base):
 
 class FacilityPortCapacities(Base):
     __tablename__ = 'facility_port_capacities'
-    id = Column(Integer, Sequence('facility_port_capacities.id', start=1, increment=1), autoincrement=True, primary_key=True, index=True)
+    id = Column(Integer, Sequence('facility_port_capacities_id_seq', start=1, increment=1), autoincrement=True, primary_key=True, index=True)
     name = Column(String, nullable=False)
     site_id = Column(Integer, ForeignKey('sites.id'), nullable=False)
     device_name = Column(String, nullable=False)
