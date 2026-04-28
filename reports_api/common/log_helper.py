@@ -71,19 +71,20 @@ class LogHelper:
         file_handler.setFormatter(logging.Formatter(default_log_format))
         log.addHandler(file_handler)
 
-        console_log = logging.getLogger()
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.CRITICAL)
-        console_log.addHandler(console_handler)
-
-        #logging.basicConfig(handlers=[file_handler], format=log_format, force=True)
-        #file_handler.addFilter(LogHelper.thread_id_filter)
+        # Route uvicorn logs to the same file
+        for uvicorn_logger_name in ("uvicorn", "uvicorn.access", "uvicorn.error"):
+            uv_log = logging.getLogger(uvicorn_logger_name)
+            uv_log.handlers.clear()
+            uv_log.addHandler(file_handler)
+            uv_log.setLevel(log_level)
 
         # Disable console logging to prevent /var partition from filling up with container logs
-        console_log = logging.getLogger()
+        root_log = logging.getLogger()
+        root_log.handlers.clear()
         console_handler = logging.StreamHandler()
         console_handler.setLevel(logging.CRITICAL)
-        console_log.addHandler(console_handler)
+        root_log.addHandler(console_handler)
+
         return log
 
     @staticmethod
