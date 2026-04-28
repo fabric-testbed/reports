@@ -43,8 +43,6 @@ def _ensure_datetime(value) -> Optional[datetime]:
     """Convert ISO format strings to datetime objects if needed."""
     if value is None:
         return None
-    if isinstance(value, datetime):
-        return value
     if isinstance(value, str):
         return datetime.fromisoformat(value)
     return value

@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, Any
 
-from sqlalchemy import ForeignKey, Index, JSON, UniqueConstraint, func, String, Integer
+from sqlalchemy import DateTime, ForeignKey, Index, JSON, UniqueConstraint, func, String, Integer
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -32,10 +32,10 @@ class Projects(Base):
     project_name: Mapped[Optional[str]] = mapped_column(String, index=True)
     project_type: Mapped[Optional[str]] = mapped_column(String, index=True)
     active: Mapped[Optional[bool]] = mapped_column()
-    created_date: Mapped[Optional[datetime]] = mapped_column(index=True)
-    expires_on: Mapped[Optional[datetime]] = mapped_column(index=True)
-    retired_date: Mapped[Optional[datetime]] = mapped_column(index=True)
-    last_updated: Mapped[Optional[datetime]] = mapped_column(index=True)
+    created_date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), index=True)
+    expires_on: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), index=True)
+    retired_date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), index=True)
+    last_updated: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), index=True)
 
     __table_args__ = (
         Index('idx_projects_uuid_name', 'project_uuid', 'project_name'),
@@ -50,8 +50,8 @@ class Users(Base):
     active: Mapped[Optional[bool]] = mapped_column()
     name: Mapped[Optional[str]] = mapped_column(String, index=True)
     affiliation: Mapped[Optional[str]] = mapped_column(String, index=True)
-    registered_on: Mapped[Optional[datetime]] = mapped_column(index=True)
-    last_updated: Mapped[Optional[datetime]] = mapped_column(index=True)
+    registered_on: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), index=True)
+    last_updated: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), index=True)
     google_scholar: Mapped[Optional[str]] = mapped_column(String)
     scopus: Mapped[Optional[str]] = mapped_column(String)
     bastion_login: Mapped[Optional[str]] = mapped_column(String)
@@ -66,8 +66,8 @@ class Membership(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     project_id: Mapped[int] = mapped_column(Integer, ForeignKey('projects.id', ondelete='CASCADE'), nullable=False, index=True)
-    start_time: Mapped[Optional[datetime]] = mapped_column(nullable=True)
-    end_time: Mapped[Optional[datetime]] = mapped_column(nullable=True)
+    start_time: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    end_time: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     membership_type: Mapped[Optional[str]] = mapped_column(String)
     active: Mapped[bool] = mapped_column(default=True, nullable=False)
 
@@ -84,8 +84,8 @@ class Slices(Base):
     slice_guid: Mapped[str] = mapped_column(String, nullable=False, index=True)
     slice_name: Mapped[Optional[str]] = mapped_column(String, nullable=True, index=True)
     state: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
-    lease_start: Mapped[Optional[datetime]] = mapped_column(nullable=True, index=True)
-    lease_end: Mapped[Optional[datetime]] = mapped_column(nullable=True, index=True)
+    lease_start: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    lease_end: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
 
     __table_args__ = (
         Index('idx_slice_lease_range', 'lease_start', 'lease_end'),
@@ -115,9 +115,9 @@ class Slivers(Base):
     disk: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     bandwidth: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     error: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    lease_start: Mapped[Optional[datetime]] = mapped_column(nullable=True, index=True)
-    lease_end: Mapped[Optional[datetime]] = mapped_column(nullable=True, index=True)
-    closed_at: Mapped[Optional[datetime]] = mapped_column(nullable=True, index=True)
+    lease_start: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    lease_end: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    closed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
 
     __table_args__ = (
         Index('idx_sliver_lease_range', 'lease_start', 'lease_end'),
@@ -156,7 +156,7 @@ class HostCapacities(Base):
     ram_capacity: Mapped[Optional[int]] = mapped_column(Integer, default=0)
     disk_capacity: Mapped[Optional[int]] = mapped_column(Integer, default=0)
     components: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
-    updated_at: Mapped[Optional[datetime]] = mapped_column(server_default=func.now(), onupdate=func.now())
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     __table_args__ = (
         Index('ix_host_capacities_host_id', 'host_id', unique=True),
@@ -172,7 +172,7 @@ class LinkCapacities(Base):
     site_b_id: Mapped[int] = mapped_column(Integer, ForeignKey('sites.id'), nullable=False)
     layer: Mapped[str] = mapped_column(String, nullable=False)
     bandwidth_capacity: Mapped[Optional[int]] = mapped_column(Integer, default=0)
-    updated_at: Mapped[Optional[datetime]] = mapped_column(server_default=func.now(), onupdate=func.now())
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     __table_args__ = (
         Index('ix_link_capacities_name', 'name', unique=True),
@@ -189,7 +189,7 @@ class FacilityPortCapacities(Base):
     local_name: Mapped[str] = mapped_column(String, nullable=False)
     vlan_range: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     total_vlans: Mapped[Optional[int]] = mapped_column(Integer, default=0)
-    updated_at: Mapped[Optional[datetime]] = mapped_column(server_default=func.now(), onupdate=func.now())
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     __table_args__ = (
         Index('ix_facility_port_capacities_name_site_device_port', 'name', 'site_id', 'device_name', 'local_name', unique=True),

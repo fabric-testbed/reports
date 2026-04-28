@@ -164,3 +164,12 @@ ALTER TABLE facility_port_capacities ALTER COLUMN device_name SET NOT NULL;
 ALTER TABLE facility_port_capacities ALTER COLUMN local_name SET NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS ix_facility_port_capacities_name_site_device_port ON facility_port_capacities(name, site_id, device_name, local_name);
 CREATE INDEX IF NOT EXISTS ix_facility_port_capacities_name_site ON facility_port_capacities(name, site_id);
+
+-- Migrate all datetime columns from TIMESTAMP to TIMESTAMPTZ
+ALTER TABLE slices
+    ALTER COLUMN lease_start TYPE TIMESTAMPTZ,
+    ALTER COLUMN lease_end TYPE TIMESTAMPTZ;
+
+ALTER TABLE slivers
+    ALTER COLUMN lease_start TYPE TIMESTAMPTZ,
+    ALTER COLUMN lease_end TYPE TIMESTAMPTZ;
