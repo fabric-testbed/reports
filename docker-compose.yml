@@ -35,25 +35,22 @@ services:
 
   mcp-server:
     build:
-      # Set the build context to the subdirectory containing the Dockerfile and code
       context: mcp_server/
       dockerfile: Dockerfile
     container_name: reports-mcp-server
-    image: reports-mcp-server:latest
+    image: fabric-reports-mcp:latest
     restart: always
-    # The MCP server uses port 5000 internally (as defined in mcp_reports_server.py)
     networks:
       - backend
-    # NOTE: We don't need 'ports:' here unless you want to access it directly from the host.
-    # We rely on 'nginx' to route traffic to it.
     environment:
       MCP_TRANSPORT: "http"
-      # If your client requires this for its base URL, define it here.
-      # The MCP server uses this for the /capabilities response details.
-      #REPORTS_API_BASE_URL: "https://reports.fabric-testbed.net/reports"
-      REPORTS_API_BASE_URL: http://reports-api:8080/reports
+      REPORTS_API_BASE_URL: "http://reports-api:8080/reports"
+      MCP_LOGGING__LEVEL: "INFO"
+      MCP_LOGGING__FORMAT: "json"
+      MCP_LOGGING__DESTINATION: "both"
+      MCP_LOGGING__FILE_PATH: "/var/log/mcp/server.log"
     volumes:
-      - ./mcp-logs:/var/log/mcp # Optional: for application logs
+      - ./mcp-logs:/var/log/mcp
 
   nginx:
     image: library/nginx:1

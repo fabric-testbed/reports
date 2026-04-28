@@ -1,0 +1,25 @@
+# Local docker-compose — stdio mode for Claude Desktop, VS Code, etc.
+#
+# Usage:
+#   docker compose -f docker-compose.local.yml up -d
+
+services:
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    container_name: fabric-reports-local
+    image: fabric-reports-mcp-local:latest
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      MCP_TRANSPORT: "stdio"
+      REPORTS_API_BASE_URL: "https://reports.fabric-testbed.net/reports"
+      # FABRIC_RC should point to the directory containing fabric_rc
+      FABRIC_RC: "/fabric_config"
+    volumes:
+      # Mount your FABRIC config directory (read-only)
+      - /Users/kthare10/work/fabric_config_mcp:/fabric_config:ro
+      # Optional: for application logs
+      - ./mcp-logs:/var/log/mcp

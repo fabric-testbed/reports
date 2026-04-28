@@ -1,43 +1,93 @@
-# Smaller base image; feel free to keep full if you need build tooling
+# Production Multi-Stage Dockerfile for FABRIC Reports MCP Server
+#
+# Features:
+# - Multi-stage build for smaller image size
+# - Non-root user for security
+# - Optimized layer caching
+# - Health check
+# - Production-ready configuration
+#
+# For local/stdio development, see Dockerfile.local
+
+# ============================================================================
+# Stage 1: Builder
+# ============================================================================
+FROM python:3.11-slim AS builder
+
+LABEL maintainer="Komal Thareja <komal.thareja@gmail.com>"
+LABEL stage="builder"
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create virtual environment
+RUN python -m venv /opt/venv
+
+# Activate virtual environment
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy requirements and install dependencies
+WORKDIR /build
+COPY requirements.txt .
+
+# Upgrade pip and install dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# ============================================================================
+# Stage 2: Runtime
+# ============================================================================
 FROM python:3.11-slim
 
 LABEL maintainer="Komal Thareja <komal.thareja@gmail.com>"
+LABEL description="FABRIC Reports MCP Server - Production Build"
+LABEL version="1.4.0"
 
-# System deps (keep minimal)
+# Install runtime dependencies only
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    vim-tiny cron iputils-ping ca-certificates curl \
- && rm -rf /var/lib/apt/lists/*
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
-# Python stdout/stderr unbuffered
-ENV PYTHONUNBUFFERED=1
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
 
-# App config (override at runtime)
-ENV REPORTS_API_BASE_URL="https://reports.fabric-testbed.net/reports" \
-    PORT=5000 \
-    MCP_TRANSPORT="http"
+# Create non-root user
+RUN useradd -m -u 10001 -s /bin/bash appuser && \
+    mkdir -p /var/log/mcp && \
+    chown -R appuser:appuser /var/log/mcp
 
-# Create app user (non-root)
-RUN useradd -m -u 10001 appuser
-
+# Set working directory
 WORKDIR /app
 
-# Leverage layer caching
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PATH="/opt/venv/bin:$PATH" \
+    MCP_ENV=prod \
+    REPORTS_API_BASE_URL="http://reports-api:8080/reports" \
+    PORT=5000 \
+    MCP_TRANSPORT__MODE="http" \
+    MCP_LOGGING__LEVEL="INFO" \
+    MCP_LOGGING__FORMAT="json" \
+    MCP_LOGGING__DESTINATION="both" \
+    MCP_LOGGING__FILE_PATH="/var/log/mcp/server.log"
 
-# App code
-COPY mcp_reports_server.py /app/
-COPY system.md /app/
-COPY config/ /app/config/
+# Copy application code
+COPY --chown=appuser:appuser . /app/
 
-# Use an unprivileged user
+# Switch to non-root user
 USER appuser
 
-# Expose the configurable port
-EXPOSE ${PORT}
+# Expose ports
+EXPOSE 5000
 
-# Healthcheck uses a simple TCP probe so we don't depend on a specific HTTP route
-HEALTHCHECK --interval=30s --timeout=3s --retries=5 CMD bash -c "exec 3<>/dev/tcp/127.0.0.1/${PORT} && exit 0 || exit 1"
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:5000/health || exit 1
 
-# Start the FastMCP HTTP server (the script reads PORT and MCP_TRANSPORT env)
+# Run application
 CMD ["python", "/app/mcp_reports_server.py"]
