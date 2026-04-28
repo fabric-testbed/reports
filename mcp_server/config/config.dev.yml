@@ -1,0 +1,21 @@
+# Development Configuration
+# Use this for local development with stdio mode
+
+transport:
+  mode: stdio  # Local mode for development
+  http_host: 0.0.0.0
+  http_port: 5000
+
+api:
+  base_url: http://localhost:8080/reports  # Local Reports API
+  timeout: 30
+  max_retries: 3
+  pool_size: 10
+
+logging:
+  level: DEBUG  # Verbose logging for development
+  format: text  # Human-readable format
+  destination: stdout  # Console only
+  file_path: null
+  rotation_size: 100MB
+  retention_days: 7

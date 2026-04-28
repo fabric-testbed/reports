@@ -28,6 +28,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # App code
 COPY mcp_reports_server.py /app/
 COPY system.md /app/
+COPY config/ /app/config/
 
 # Use an unprivileged user
 USER appuser
