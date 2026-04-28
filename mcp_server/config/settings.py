@@ -252,18 +252,28 @@ def _map_legacy_env() -> None:
 
     Only sets the new variable if it is not already defined,
     so explicit new-style vars always win.
+
+    Legacy keys that collide with pydantic-settings' nested-delimiter
+    parsing (e.g. MCP_TRANSPORT clashes with MCP_TRANSPORT__MODE) are
+    removed from the environment after mapping to prevent
+    pydantic-settings from trying to JSON-parse them as complex objects.
     """
-    mapping = {
-        # legacy var -> new-style var
-        "REPORTS_API_BASE_URL": "MCP_API__BASE_URL",
-        "MCP_TRANSPORT": "MCP_TRANSPORT__MODE",
-        "PORT": "MCP_TRANSPORT__HTTP_PORT",
-        "HOST": "MCP_TRANSPORT__HTTP_HOST",
-    }
-    for old_key, new_key in mapping.items():
+    # (legacy var, new-style var, remove legacy after mapping?)
+    # Remove legacy keys that share the MCP_ prefix and would collide
+    # with the nested delimiter ("__") interpretation.  Keys like PORT
+    # and HOST don't start with MCP_ so they won't collide.
+    mapping = [
+        ("MCP_TRANSPORT", "MCP_TRANSPORT__MODE", True),
+        ("REPORTS_API_BASE_URL", "MCP_API__BASE_URL", False),
+        ("PORT", "MCP_TRANSPORT__HTTP_PORT", False),
+        ("HOST", "MCP_TRANSPORT__HTTP_HOST", False),
+    ]
+    for old_key, new_key, remove in mapping:
         val = os.environ.get(old_key)
         if val is not None and new_key not in os.environ:
             os.environ[new_key] = val
+        if remove and old_key in os.environ:
+            del os.environ[old_key]
 
 
 def get_settings() -> Settings:
