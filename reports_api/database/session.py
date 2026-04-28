@@ -26,10 +26,9 @@ def init_db(config: Configuration) -> None:
         url,
         pool_size=20,
         max_overflow=10,
-        expire_on_commit=False,
         echo=False,
     )
-    _session_factory = async_sessionmaker(bind=_engine, class_=AsyncSession)
+    _session_factory = async_sessionmaker(bind=_engine, class_=AsyncSession, expire_on_commit=False)
     logger.info(f"Async database engine initialized: {host}/{database}")
 
 
