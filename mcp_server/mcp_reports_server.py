@@ -1,197 +1,378 @@
+"""
+FABRIC Reports MCP Server — single entry point.
+
+Merges v1 explicit tool signatures with v2 structured config/logging.
+Supports both stdio (local) and HTTP (server) transport modes.
+
+Usage:
+    # stdio mode (local, reads FABRIC_RC / FABRIC_TOKEN):
+    python mcp_reports_server.py
+
+    # HTTP mode (Bearer-auth per request):
+    MCP_TRANSPORT=http python mcp_reports_server.py
+
+    # With new-style env vars:
+    MCP_TRANSPORT__MODE=http MCP_LOGGING__LEVEL=DEBUG python mcp_reports_server.py
+"""
+
 from __future__ import annotations
 
-import os
 import json
+import os
 import asyncio
+import threading
+import time
 from pathlib import Path
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, List, Optional
+
+from pydantic import BeforeValidator
+from typing_extensions import Annotated
 
 from fastmcp import FastMCP
 from fabric_reports_client.reports_api import ReportsApi
 
-# ---------------------------------------
-# Config
-# ---------------------------------------
-# Transport mode: "stdio" (local) or "http" (server)
-MCP_TRANSPORT = os.environ.get("MCP_TRANSPORT", "stdio").lower()
+# ---- Config / logging (from config/) ------------------------------------
+from config.settings import get_settings
+from config.logging_config import setup_logging, get_logger
 
-REPORTS_API_BASE_URL = os.environ.get(
-    "REPORTS_API_BASE_URL",
-    "https://reports.fabric-testbed.net/reports",
-)
-
-# For local/stdio mode, get token from FABRIC_RC or FABRIC_TOKEN
-def _load_fabric_config() -> None:
-    """
-    Load FABRIC configuration from fabric_rc file if FABRIC_RC is set.
-
-    This makes all FABRIC environment variables available, including:
-    - FABRIC_TOKEN_LOCATION: Path to token JSON file
-    - FABRIC_ORCHESTRATOR_HOST: Orchestrator API endpoint
-    - FABRIC_CREDMGR_HOST: Credential manager endpoint
-    - FABRIC_CORE_API_HOST: Core API endpoint
-    - FABRIC_PROJECT_ID: Default project ID
-    - FABRIC_BASTION_HOST: Bastion host for SSH access
-    - FABRIC_BASTION_USERNAME: Bastion username
-    - And other FABRIC-specific configuration
-
-    These variables are available for current and future MCP server features.
-    """
-    fabric_rc_dir = os.environ.get("FABRIC_RC")
-    if not fabric_rc_dir:
-        return
-
-    fabric_rc_file = Path(fabric_rc_dir) / 'fabric_rc'
-    if not fabric_rc_file.exists():
-        print(f"INFO: FABRIC_RC set to {fabric_rc_dir} but fabric_rc file not found")
-        return
-
-    try:
-        # Read the fabric_rc file and parse environment variables
-        with open(fabric_rc_file, 'r') as f:
-            for line in f:
-                line = line.strip()
-                # Skip comments and empty lines
-                if not line or line.startswith('#'):
-                    continue
-                # Parse export statements
-                if line.startswith('export '):
-                    line = line[7:]  # Remove 'export '
-                    if '=' in line:
-                        key, value = line.split('=', 1)
-                        # Remove quotes if present
-                        value = value.strip().strip('"').strip("'")
-                        # Only set if not already in environment
-                        if key not in os.environ:
-                            os.environ[key] = value
-        print(f"Loaded FABRIC configuration from: {fabric_rc_file}")
-    except Exception as e:
-        print(f"WARNING: Failed to load fabric_rc from {fabric_rc_file}: {e}")
-
-
-def _load_fabric_token() -> Optional[str]:
-    """Load FABRIC token from FABRIC_RC directory or FABRIC_TOKEN env var."""
-    # First, try to load fabric_rc configuration
-    _load_fabric_config()
-
-    # Check if FABRIC_TOKEN_LOCATION is set (from fabric_rc)
-    token_location = os.environ.get("FABRIC_TOKEN_LOCATION")
-    if token_location:
-        token_file = Path(token_location)
-        if token_file.exists():
-            try:
-                with open(token_file, 'r') as f:
-                    token_data = json.load(f)
-                    # Token file typically has structure: {"id_token": "...", "refresh_token": "..."}
-                    token = token_data.get("id_token") or token_data.get("token")
-                    if token:
-                        print(f"Loaded token from FABRIC_TOKEN_LOCATION: {token_location}")
-                        return token
-                    else:
-                        print(f"WARNING: Token file found at {token_file} but no 'id_token' or 'token' field")
-            except Exception as e:
-                print(f"WARNING: Failed to read token from {token_file}: {e}")
-        else:
-            print(f"WARNING: FABRIC_TOKEN_LOCATION set to {token_location} but file not found")
-
-    # Fall back to FABRIC_TOKEN environment variable
-    token = os.environ.get("FABRIC_TOKEN")
-    if token:
-        print("Using FABRIC_TOKEN from environment")
-    return token
-
-FABRIC_TOKEN = _load_fabric_token() if MCP_TRANSPORT == "stdio" else None
-
-# For HTTP mode
-HTTP_PORT = int(os.getenv("PORT", "5000"))
-HTTP_HOST = os.getenv("HOST", "0.0.0.0")
-
-print(f"MCP Transport Mode: {MCP_TRANSPORT}")
-print(f"Reports API Base URL: {REPORTS_API_BASE_URL}")
-
-if MCP_TRANSPORT == "stdio":
-    if not FABRIC_TOKEN:
-        print("WARNING: Neither FABRIC_RC nor FABRIC_TOKEN environment variable set. Authentication will fail.")
-        print("  Set FABRIC_RC to point to your fabric config file (e.g., /Users/username/fabric_config/fabric_rc)")
-        print("  Or set FABRIC_TOKEN directly with your token string")
-    else:
-        print("FABRIC token loaded successfully")
-elif MCP_TRANSPORT == "http":
-    print(f"HTTP Server will run on {HTTP_HOST}:{HTTP_PORT}")
+# Initialize settings & logging at import time so every module sees them.
+settings = get_settings()
+setup_logging(settings.logging)
+logger = get_logger(__name__)
 
 # Conditionally import HTTP-specific dependencies
-if MCP_TRANSPORT == "http":
+if settings.transport.mode == "http":
     from fastmcp.server.context import Context
     from fastmcp.server.dependencies import get_http_headers
 
-# Meta fields various bridges may attach to tool calls
-EXTRA_META_ARGS = [
-    "toolCallId",  # camelCase
-    "tool_call_id",  # snake_case
-    "id",  # "call_tool" envelope
-    "type",  # "call_tool" envelope
-    "name",  # envelope alt for tool name
-    "tool",  # if a wrapper redundantly includes it
-]
+
+# =========================================================================
+# _parse_listish / JsonListStr  (from v1, verbatim)
+# =========================================================================
+
+def _parse_listish(v: Any) -> Any:
+    """
+    Accept list[str] OR a string that encodes a JSON list.
+    Also accepts comma-separated strings.
+    """
+    if v is None:
+        return None
+    if isinstance(v, list):
+        return v
+    if isinstance(v, str):
+        s = v.strip()
+        if not s:
+            return []
+        if s.startswith("[") and s.endswith("]"):
+            try:
+                parsed = json.loads(s)
+                if isinstance(parsed, list):
+                    return parsed
+            except Exception:
+                pass
+        if "," in s:
+            return [p.strip() for p in s.split(",") if p.strip()]
+        return [s]
+    return v
+
+
+JsonListStr = Annotated[Optional[List[str]], BeforeValidator(_parse_listish)]
+
+
+# =========================================================================
+# TokenProvider — thread-safe, TTL-cached for stdio mode
+# =========================================================================
+
+class TokenProvider:
+    """
+    Provides FABRIC auth tokens.
+
+    - **stdio mode**: reads from FABRIC_RC / FABRIC_TOKEN env and caches
+      with a configurable TTL (default 1800 s = 30 min).
+    - **HTTP mode**: extracts Bearer token from request headers (no cache).
+    """
+
+    def __init__(self, transport_mode: str, ttl: int = 1800):
+        self._transport_mode = transport_mode
+        self._ttl = ttl
+        self._lock = threading.Lock()
+        self._cached_token: Optional[str] = None
+        self._cached_at: float = 0.0
+
+        # Eagerly load config on startup for stdio so we fail fast
+        if self._transport_mode == "stdio":
+            self._load_fabric_config()
+            tok = self._read_token()
+            if tok:
+                self._cached_token = tok
+                self._cached_at = time.monotonic()
+                logger.info("FABRIC token loaded successfully")
+            else:
+                logger.warning(
+                    "Neither FABRIC_RC nor FABRIC_TOKEN set — "
+                    "authentication will fail in stdio mode"
+                )
+
+    # -- public API --------------------------------------------------------
+
+    def get_token(self, headers: Optional[Dict[str, str]] = None) -> str:
+        """Return a valid token or raise."""
+        if self._transport_mode == "http":
+            return self._token_from_headers(headers or {})
+        return self._get_stdio_token()
+
+    # -- internals ---------------------------------------------------------
+
+    def _get_stdio_token(self) -> str:
+        with self._lock:
+            now = time.monotonic()
+            if self._cached_token and (now - self._cached_at) < self._ttl:
+                return self._cached_token
+            tok = self._read_token()
+            if not tok:
+                raise ValueError(
+                    "FABRIC_TOKEN environment variable must be set "
+                    "(or set FABRIC_RC to the config directory)"
+                )
+            self._cached_token = tok
+            self._cached_at = now
+            return tok
+
+    @staticmethod
+    def _token_from_headers(headers: Dict[str, str]) -> str:
+        low = {k.lower(): v for k, v in headers.items()}
+        auth = low.get("authorization", "").strip()
+        if auth.lower().startswith("bearer "):
+            return auth.split(" ", 1)[1].strip()
+        raise ValueError(
+            "Authentication Required: Missing or invalid Authorization Bearer token."
+        )
+
+    @staticmethod
+    def _load_fabric_config() -> None:
+        """Parse FABRIC_RC/fabric_rc and inject env vars."""
+        fabric_rc_dir = os.environ.get("FABRIC_RC")
+        if not fabric_rc_dir:
+            return
+        fabric_rc_file = Path(fabric_rc_dir) / "fabric_rc"
+        if not fabric_rc_file.exists():
+            logger.info("FABRIC_RC set to %s but fabric_rc file not found", fabric_rc_dir)
+            return
+        try:
+            with open(fabric_rc_file, "r") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    if line.startswith("export "):
+                        line = line[7:]
+                    if "=" in line:
+                        key, value = line.split("=", 1)
+                        value = value.strip().strip('"').strip("'")
+                        if key not in os.environ:
+                            os.environ[key] = value
+            logger.info("Loaded FABRIC configuration from: %s", fabric_rc_file)
+        except Exception as e:
+            logger.warning("Failed to load fabric_rc from %s: %s", fabric_rc_file, e)
+
+    @staticmethod
+    def _read_token() -> Optional[str]:
+        """Read token from FABRIC_TOKEN_LOCATION or FABRIC_TOKEN env."""
+        token_location = os.environ.get("FABRIC_TOKEN_LOCATION")
+        if token_location:
+            token_file = Path(token_location)
+            if token_file.exists():
+                try:
+                    with open(token_file, "r") as f:
+                        data = json.load(f)
+                    tok = data.get("id_token") or data.get("token")
+                    if tok:
+                        return tok
+                except Exception as e:
+                    logger.warning("Failed to read token from %s: %s", token_file, e)
+        return os.environ.get("FABRIC_TOKEN")
+
+
+# =========================================================================
+# _CircuitBreaker — wraps actual API calls (not client creation)
+# =========================================================================
+
+class _CircuitBreaker:
+    """
+    Simple circuit breaker for the Reports API backend.
+
+    States:
+        closed   — requests flow normally
+        open     — all requests are rejected immediately
+        half-open — one probe request is allowed through
+    """
+
+    def __init__(self, failure_threshold: int = 5, recovery_timeout: float = 60.0):
+        self._threshold = failure_threshold
+        self._recovery_timeout = recovery_timeout
+        self._lock = threading.Lock()
+        self._failures = 0
+        self._opened_at: float = 0.0
+        self._state: str = "closed"  # closed | open | half-open
+
+    def check(self) -> None:
+        """Raise if circuit is open (and not yet eligible for half-open)."""
+        with self._lock:
+            if self._state == "closed":
+                return
+            elapsed = time.monotonic() - self._opened_at
+            if elapsed >= self._recovery_timeout:
+                self._state = "half-open"
+                logger.info("Circuit breaker entering half-open state")
+                return
+            raise RuntimeError(
+                "Reports API circuit breaker is open — too many consecutive failures. "
+                f"Will retry in {self._recovery_timeout - elapsed:.0f}s."
+            )
+
+    def record_success(self) -> None:
+        with self._lock:
+            self._failures = 0
+            if self._state != "closed":
+                logger.info("Circuit breaker closed (backend recovered)")
+            self._state = "closed"
+
+    def record_failure(self) -> None:
+        with self._lock:
+            self._failures += 1
+            if self._failures >= self._threshold and self._state == "closed":
+                self._state = "open"
+                self._opened_at = time.monotonic()
+                logger.error(
+                    "Circuit breaker opened after %d consecutive failures",
+                    self._failures,
+                )
+
+
+_breaker = _CircuitBreaker()
+
+
+# =========================================================================
+# Helpers
+# =========================================================================
+
+# Meta fields various bridges may attach to tool calls — filter from kwargs
+_EXTRA_META_ARGS = frozenset({
+    "toolCallId", "tool_call_id", "id", "type", "name", "tool",
+})
+
+# Only coerce these keys to lists
+_LIST_KEYS = frozenset({
+    "user_id", "user_email", "project_id", "slice_id", "slice_state",
+    "sliver_id", "sliver_type", "sliver_state",
+    "component_type", "component_model", "bdf", "vlan",
+    "ip_subnet", "ip_v4", "ip_v6",
+    "site", "host", "facility",
+    "exclude_user_id", "exclude_user_email", "exclude_project_id",
+    "exclude_site", "exclude_host", "exclude_slice_state", "exclude_sliver_state",
+    "project_type", "exclude_project_type",
+})
+
+token_provider = TokenProvider(transport_mode=settings.transport.mode)
+
+
+def _get_headers() -> Optional[Dict[str, str]]:
+    """Return HTTP headers if in HTTP mode, else None."""
+    if settings.transport.mode == "http":
+        hdrs = get_http_headers(include_all=True) or {}
+        logger.debug(
+            "HTTP headers received",
+            extra={"header_keys": list(hdrs.keys()),
+                   "has_authorization": "authorization" in hdrs},
+        )
+        return hdrs
+    return None
+
+
+def _get_client(headers: Optional[Dict[str, str]] = None) -> ReportsApi:
+    """Create a ReportsApi client with the right token."""
+    tok = token_provider.get_token(headers=headers)
+    return ReportsApi(base_url=settings.api.base_url, token=tok)
+
+
+def _coerce_to_list(v: Any) -> Any:
+    """Coerce string-ish values to list[str]."""
+    if v is None:
+        return None
+    if isinstance(v, list):
+        return [str(x) for x in v]
+    if not isinstance(v, str):
+        return v
+    s = v.strip()
+    if not s:
+        return []
+    if s.startswith("[") and s.endswith("]"):
+        try:
+            parsed = json.loads(s)
+            if isinstance(parsed, list):
+                return [str(x) for x in parsed]
+        except Exception:
+            pass
+    if "," in s:
+        return [p.strip() for p in s.split(",") if p.strip()]
+    return [s]
+
+
+async def _call(client: ReportsApi, method: str, **kwargs: Any) -> Dict[str, Any]:
+    """
+    Call a ReportsApi method in a thread, with circuit-breaker protection.
+
+    - Filters out None values and meta args (toolCallId, etc.)
+    - Coerces list-typed keys from strings if needed
+    - Wraps execution with circuit breaker check/record
+    """
+    fn = getattr(client, method)
+
+    final_args: Dict[str, Any] = {}
+    for k, v in kwargs.items():
+        if v is None or k in _EXTRA_META_ARGS:
+            continue
+        if k in _LIST_KEYS:
+            final_args[k] = _coerce_to_list(v)
+        else:
+            final_args[k] = v
+
+    _breaker.check()
+    try:
+        result = await asyncio.to_thread(fn, **final_args)
+        _breaker.record_success()
+        return result
+    except Exception:
+        _breaker.record_failure()
+        raise
+
+
+# =========================================================================
+# FastMCP app + system prompt
+# =========================================================================
 
 mcp = FastMCP(
-    name=f"fabric-reports-mcp-{MCP_TRANSPORT}",
+    name=f"fabric-reports-mcp-{settings.transport.mode}",
     instructions="Proxy for accessing FABRIC Reports API data via LLM tool calls.",
-    version="1.3.0",
+    version="1.4.0",
 )
 
-# Load system prompt
 SYSTEM_TEXT_PATH = Path(__file__).parent / "system.md"
 if SYSTEM_TEXT_PATH.exists():
     SYSTEM_TEXT = SYSTEM_TEXT_PATH.read_text(encoding="utf-8").strip()
 else:
     SYSTEM_TEXT = "System rules for querying FABRIC Reports via MCP"
 
+
 @mcp.prompt(name="fabric-reports-system")
 def fabric_reports_system_prompt():
     """System rules for querying FABRIC Reports via MCP"""
     return SYSTEM_TEXT
 
-# ---------------------------------------
-# Helpers
-# ---------------------------------------
-def _bearer_from_headers(headers: Dict[str, str]) -> Optional[str]:
-    """Extract bearer token from HTTP headers (HTTP mode only)"""
-    low = {k.lower(): v for k, v in headers.items()}
-    auth = low.get("authorization", "").strip()
-    if auth.lower().startswith("bearer "):
-        return auth.split(" ", 1)[1].strip()
-    return None
 
-
-def _get_client() -> ReportsApi:
-    """Get Reports API client based on transport mode"""
-    if MCP_TRANSPORT == "http":
-        # HTTP mode: extract token from headers
-        headers = get_http_headers() or {}
-        token = _bearer_from_headers(headers)
-        if not token:
-            raise ValueError("Authentication Required: Missing or invalid Authorization Bearer token.")
-        return ReportsApi(base_url=REPORTS_API_BASE_URL, token=token)
-    else:
-        # stdio mode: use environment variable
-        if not FABRIC_TOKEN:
-            raise ValueError("FABRIC_TOKEN environment variable must be set")
-        return ReportsApi(base_url=REPORTS_API_BASE_URL, token=FABRIC_TOKEN)
-
-
-async def _call(client: ReportsApi, method: str, **kwargs) -> Dict[str, Any]:
-    """
-    Call a ReportsApi method in a thread, filtering out None args.
-    """
-    fn = getattr(client, method)
-    final_args = {k: v for k, v in kwargs.items() if v is not None}
-    return await asyncio.to_thread(fn, **final_args)
-
-# ---------------------------------------
-# Tool definitions
-# Note: ctx parameter is optional and only used in HTTP mode
-# ---------------------------------------
+# =========================================================================
+# Tool definitions — explicit parameter signatures (from v1)
+# =========================================================================
 
 @mcp.tool(name="query-version", title="Query Version")
 async def query_version(
@@ -208,8 +389,11 @@ async def query_version(
         Dict containing version details including version number, git commit,
         and service metadata.
     """
-    client = _get_client()
-    return await _call(client, "query_version")
+    logger.info("Executing query-version")
+    client = _get_client(_get_headers())
+    result = await _call(client, "query_version")
+    logger.info("query-version completed")
+    return result
 
 
 @mcp.tool(name="query-sites", title="Query Sites")
@@ -229,43 +413,44 @@ async def query_sites(
         Dict containing list of sites with details including site name, ID,
         location, and resource capacities.
     """
-    client = _get_client()
-    return await _call(client, "query_sites")
+    logger.info("Executing query-sites")
+    client = _get_client(_get_headers())
+    result = await _call(client, "query_sites")
+    logger.info("query-sites completed")
+    return result
 
 
-@mcp.tool(
-    name="query-slices",
-    title="Query Slices")
+@mcp.tool(name="query-slices", title="Query Slices")
 async def query_slices(
         toolCallId: Optional[str] = None,
         tool_call_id: Optional[str] = None,
         start_time: Optional[str] = None,
         end_time: Optional[str] = None,
-        user_id: Optional[List[str]] = None,
-        user_email: Optional[List[str]] = None,
-        project_id: Optional[List[str]] = None,
-        slice_id: Optional[List[str]] = None,
-        slice_state: Optional[List[str]] = None,
-        sliver_id: Optional[List[str]] = None,
-        sliver_type: Optional[List[str]] = None,
-        sliver_state: Optional[List[str]] = None,
-        component_type: Optional[List[str]] = None,
-        component_model: Optional[List[str]] = None,
-        bdf: Optional[List[str]] = None,
-        vlan: Optional[List[str]] = None,
-        ip_subnet: Optional[List[str]] = None,
-        ip_v4: Optional[List[str]] = None,
-        ip_v6: Optional[List[str]] = None,
-        site: Optional[List[str]] = None,
-        host: Optional[List[str]] = None,
-        facility: Optional[List[str]] = None,
-        exclude_user_id: Optional[List[str]] = None,
-        exclude_user_email: Optional[List[str]] = None,
-        exclude_project_id: Optional[List[str]] = None,
-        exclude_site: Optional[List[str]] = None,
-        exclude_host: Optional[List[str]] = None,
-        exclude_slice_state: Optional[List[str]] = None,
-        exclude_sliver_state: Optional[List[str]] = None,
+        user_id: JsonListStr = None,
+        user_email: JsonListStr = None,
+        project_id: JsonListStr = None,
+        slice_id: JsonListStr = None,
+        slice_state: JsonListStr = None,
+        sliver_id: JsonListStr = None,
+        sliver_type: JsonListStr = None,
+        sliver_state: JsonListStr = None,
+        component_type: JsonListStr = None,
+        component_model: JsonListStr = None,
+        bdf: JsonListStr = None,
+        vlan: JsonListStr = None,
+        ip_subnet: JsonListStr = None,
+        ip_v4: JsonListStr = None,
+        ip_v6: JsonListStr = None,
+        site: JsonListStr = None,
+        host: JsonListStr = None,
+        facility: JsonListStr = None,
+        exclude_user_id: JsonListStr = None,
+        exclude_user_email: JsonListStr = None,
+        exclude_project_id: JsonListStr = None,
+        exclude_site: JsonListStr = None,
+        exclude_host: JsonListStr = None,
+        exclude_slice_state: JsonListStr = None,
+        exclude_sliver_state: JsonListStr = None,
         page: int = 0,
         per_page: int = 1000,
         fetch_all: bool = True,
@@ -324,8 +509,9 @@ async def query_slices(
         - User's slices: user_email=["user@example.com"]
         - Slices with GPUs: component_type=["GPU"]
     """
-    client = _get_client()
-    return await _call(
+    logger.info("Executing query-slices")
+    client = _get_client(_get_headers())
+    result = await _call(
         client, "query_slices",
         start_time=start_time, end_time=end_time,
         user_id=user_id, user_email=user_email, project_id=project_id,
@@ -340,41 +526,41 @@ async def query_slices(
         exclude_sliver_state=exclude_sliver_state,
         page=page, per_page=per_page, fetch_all=fetch_all,
     )
+    logger.info("query-slices completed")
+    return result
 
 
-@mcp.tool(
-    name="query-slivers",
-    title="Query Slivers")
+@mcp.tool(name="query-slivers", title="Query Slivers")
 async def query_slivers(
         toolCallId: Optional[str] = None,
         tool_call_id: Optional[str] = None,
         start_time: Optional[str] = None,
         end_time: Optional[str] = None,
-        user_id: Optional[List[str]] = None,
-        user_email: Optional[List[str]] = None,
-        project_id: Optional[List[str]] = None,
-        slice_id: Optional[List[str]] = None,
-        slice_state: Optional[List[str]] = None,
-        sliver_id: Optional[List[str]] = None,
-        sliver_type: Optional[List[str]] = None,
-        sliver_state: Optional[List[str]] = None,
-        component_type: Optional[List[str]] = None,
-        component_model: Optional[List[str]] = None,
-        bdf: Optional[List[str]] = None,
-        vlan: Optional[List[str]] = None,
-        ip_subnet: Optional[List[str]] = None,
-        ip_v4: Optional[List[str]] = None,
-        ip_v6: Optional[List[str]] = None,
-        site: Optional[List[str]] = None,
-        host: Optional[List[str]] = None,
-        facility: Optional[List[str]] = None,
-        exclude_user_id: Optional[List[str]] = None,
-        exclude_user_email: Optional[List[str]] = None,
-        exclude_project_id: Optional[List[str]] = None,
-        exclude_site: Optional[List[str]] = None,
-        exclude_host: Optional[List[str]] = None,
-        exclude_slice_state: Optional[List[str]] = None,
-        exclude_sliver_state: Optional[List[str]] = None,
+        user_id: JsonListStr = None,
+        user_email: JsonListStr = None,
+        project_id: JsonListStr = None,
+        slice_id: JsonListStr = None,
+        slice_state: JsonListStr = None,
+        sliver_id: JsonListStr = None,
+        sliver_type: JsonListStr = None,
+        sliver_state: JsonListStr = None,
+        component_type: JsonListStr = None,
+        component_model: JsonListStr = None,
+        bdf: JsonListStr = None,
+        vlan: JsonListStr = None,
+        ip_subnet: JsonListStr = None,
+        ip_v4: JsonListStr = None,
+        ip_v6: JsonListStr = None,
+        site: JsonListStr = None,
+        host: JsonListStr = None,
+        facility: JsonListStr = None,
+        exclude_user_id: JsonListStr = None,
+        exclude_user_email: JsonListStr = None,
+        exclude_project_id: JsonListStr = None,
+        exclude_site: JsonListStr = None,
+        exclude_host: JsonListStr = None,
+        exclude_slice_state: JsonListStr = None,
+        exclude_sliver_state: JsonListStr = None,
         page: int = 0,
         per_page: int = 1000,
         fetch_all: bool = True,
@@ -432,8 +618,9 @@ async def query_slivers(
         - SmartNIC allocations at RENC: component_type=["SmartNIC"], site=["RENC"]
         - Failed slivers in last 24h: sliver_state=["Failed"], start_time="2025-01-09T00:00:00Z"
     """
-    client = _get_client()
-    return await _call(
+    logger.info("Executing query-slivers")
+    client = _get_client(_get_headers())
+    result = await _call(
         client, "query_slivers",
         start_time=start_time, end_time=end_time,
         user_id=user_id, user_email=user_email, project_id=project_id,
@@ -448,44 +635,44 @@ async def query_slivers(
         exclude_sliver_state=exclude_sliver_state,
         page=page, per_page=per_page, fetch_all=fetch_all,
     )
+    logger.info("query-slivers completed")
+    return result
 
 
-@mcp.tool(
-    name="query-users",
-    title="Query Users")
+@mcp.tool(name="query-users", title="Query Users")
 async def query_users(
         toolCallId: Optional[str] = None,
         tool_call_id: Optional[str] = None,
         start_time: Optional[str] = None,
         end_time: Optional[str] = None,
-        user_id: Optional[List[str]] = None,
-        user_email: Optional[List[str]] = None,
-        project_id: Optional[List[str]] = None,
-        slice_id: Optional[List[str]] = None,
-        slice_state: Optional[List[str]] = None,
-        sliver_id: Optional[List[str]] = None,
-        sliver_type: Optional[List[str]] = None,
-        sliver_state: Optional[List[str]] = None,
-        component_type: Optional[List[str]] = None,
-        component_model: Optional[List[str]] = None,
-        bdf: Optional[List[str]] = None,
-        vlan: Optional[List[str]] = None,
-        ip_subnet: Optional[List[str]] = None,
-        ip_v4: Optional[List[str]] = None,
-        ip_v6: Optional[List[str]] = None,
-        site: Optional[List[str]] = None,
-        host: Optional[List[str]] = None,
-        facility: Optional[List[str]] = None,
-        project_type: Optional[List[str]] = None,
+        user_id: JsonListStr = None,
+        user_email: JsonListStr = None,
+        project_id: JsonListStr = None,
+        slice_id: JsonListStr = None,
+        slice_state: JsonListStr = None,
+        sliver_id: JsonListStr = None,
+        sliver_type: JsonListStr = None,
+        sliver_state: JsonListStr = None,
+        component_type: JsonListStr = None,
+        component_model: JsonListStr = None,
+        bdf: JsonListStr = None,
+        vlan: JsonListStr = None,
+        ip_subnet: JsonListStr = None,
+        ip_v4: JsonListStr = None,
+        ip_v6: JsonListStr = None,
+        site: JsonListStr = None,
+        host: JsonListStr = None,
+        facility: JsonListStr = None,
+        project_type: JsonListStr = None,
         user_active: Optional[bool] = True,
-        exclude_user_id: Optional[List[str]] = None,
-        exclude_user_email: Optional[List[str]] = None,
-        exclude_project_id: Optional[List[str]] = None,
-        exclude_site: Optional[List[str]] = None,
-        exclude_host: Optional[List[str]] = None,
-        exclude_slice_state: Optional[List[str]] = None,
-        exclude_sliver_state: Optional[List[str]] = None,
-        exclude_project_type: Optional[List[str]] = None,
+        exclude_user_id: JsonListStr = None,
+        exclude_user_email: JsonListStr = None,
+        exclude_project_id: JsonListStr = None,
+        exclude_site: JsonListStr = None,
+        exclude_host: JsonListStr = None,
+        exclude_slice_state: JsonListStr = None,
+        exclude_sliver_state: JsonListStr = None,
+        exclude_project_type: JsonListStr = None,
         page: int = 0,
         per_page: int = 1000,
         fetch_all: bool = True,
@@ -543,8 +730,9 @@ async def query_users(
         - Users in research projects: project_type=["research"]
         - Users with failed slices: slice_state=["Dead", "StableError"]
     """
-    client = _get_client()
-    return await _call(
+    logger.info("Executing query-users")
+    client = _get_client(_get_headers())
+    result = await _call(
         client, "query_users",
         start_time=start_time, end_time=end_time,
         user_id=user_id, user_email=user_email, project_id=project_id,
@@ -561,44 +749,44 @@ async def query_users(
         exclude_project_type=exclude_project_type,
         page=page, per_page=per_page, fetch_all=fetch_all,
     )
+    logger.info("query-users completed")
+    return result
 
 
-@mcp.tool(
-    name="query-projects",
-    title="Query Projects")
+@mcp.tool(name="query-projects", title="Query Projects")
 async def query_projects(
         toolCallId: Optional[str] = None,
         tool_call_id: Optional[str] = None,
         start_time: Optional[str] = None,
         end_time: Optional[str] = None,
-        user_id: Optional[List[str]] = None,
-        user_email: Optional[List[str]] = None,
-        project_id: Optional[List[str]] = None,
-        slice_id: Optional[List[str]] = None,
-        slice_state: Optional[List[str]] = None,
-        sliver_id: Optional[List[str]] = None,
-        sliver_type: Optional[List[str]] = None,
-        sliver_state: Optional[List[str]] = None,
-        component_type: Optional[List[str]] = None,
-        component_model: Optional[List[str]] = None,
-        bdf: Optional[List[str]] = None,
-        vlan: Optional[List[str]] = None,
-        ip_subnet: Optional[List[str]] = None,
-        ip_v4: Optional[List[str]] = None,
-        ip_v6: Optional[List[str]] = None,
-        site: Optional[List[str]] = None,
-        host: Optional[List[str]] = None,
-        facility: Optional[List[str]] = None,
-        project_type: Optional[List[str]] = None,
+        user_id: JsonListStr = None,
+        user_email: JsonListStr = None,
+        project_id: JsonListStr = None,
+        slice_id: JsonListStr = None,
+        slice_state: JsonListStr = None,
+        sliver_id: JsonListStr = None,
+        sliver_type: JsonListStr = None,
+        sliver_state: JsonListStr = None,
+        component_type: JsonListStr = None,
+        component_model: JsonListStr = None,
+        bdf: JsonListStr = None,
+        vlan: JsonListStr = None,
+        ip_subnet: JsonListStr = None,
+        ip_v4: JsonListStr = None,
+        ip_v6: JsonListStr = None,
+        site: JsonListStr = None,
+        host: JsonListStr = None,
+        facility: JsonListStr = None,
+        project_type: JsonListStr = None,
         project_active: Optional[bool] = True,
-        exclude_user_id: Optional[List[str]] = None,
-        exclude_user_email: Optional[List[str]] = None,
-        exclude_project_id: Optional[List[str]] = None,
-        exclude_site: Optional[List[str]] = None,
-        exclude_host: Optional[List[str]] = None,
-        exclude_slice_state: Optional[List[str]] = None,
-        exclude_sliver_state: Optional[List[str]] = None,
-        exclude_project_type: Optional[List[str]] = None,
+        exclude_user_id: JsonListStr = None,
+        exclude_user_email: JsonListStr = None,
+        exclude_project_id: JsonListStr = None,
+        exclude_site: JsonListStr = None,
+        exclude_host: JsonListStr = None,
+        exclude_slice_state: JsonListStr = None,
+        exclude_sliver_state: JsonListStr = None,
+        exclude_project_type: JsonListStr = None,
         page: int = 0,
         per_page: int = 1000,
         fetch_all: bool = True,
@@ -657,8 +845,9 @@ async def query_projects(
         - Projects using GPUs at RENC: component_type=["GPU"], site=["RENC"]
         - Exclude FABRIC personnel: exclude_project_id=[list of FABRIC project UUIDs]
     """
-    client = _get_client()
-    return await _call(
+    logger.info("Executing query-projects")
+    client = _get_client(_get_headers())
+    result = await _call(
         client, "query_projects",
         start_time=start_time, end_time=end_time,
         user_id=user_id, user_email=user_email,
@@ -675,22 +864,22 @@ async def query_projects(
         exclude_project_type=exclude_project_type,
         page=page, per_page=per_page, fetch_all=fetch_all,
     )
+    logger.info("query-projects completed")
+    return result
 
 
-@mcp.tool(
-    name="query-user-memberships",
-    title="Query User Memberships")
+@mcp.tool(name="query-user-memberships", title="Query User Memberships")
 async def query_user_memberships(
         toolCallId: Optional[str] = None,
         tool_call_id: Optional[str] = None,
         start_time: Optional[str] = None,
         end_time: Optional[str] = None,
-        user_id: Optional[List[str]] = None,
-        user_email: Optional[List[str]] = None,
-        exclude_user_id: Optional[List[str]] = None,
-        exclude_user_email: Optional[List[str]] = None,
-        project_type: Optional[List[str]] = ["research", "education"],
-        exclude_project_type: Optional[List[str]] = None,
+        user_id: JsonListStr = None,
+        user_email: JsonListStr = None,
+        exclude_user_id: JsonListStr = None,
+        exclude_user_email: JsonListStr = None,
+        project_type: JsonListStr = ["research", "education"],
+        exclude_project_type: JsonListStr = None,
         project_active: Optional[bool] = True,
         project_expired: Optional[bool] = None,
         project_retired: Optional[bool] = None,
@@ -734,8 +923,9 @@ async def query_user_memberships(
         - Research project memberships: project_type=["research"]
         - Active users in non-test projects: user_active=True, exclude_project_type=["test"]
     """
-    client = _get_client()
-    return await _call(
+    logger.info("Executing query-user-memberships")
+    client = _get_client(_get_headers())
+    result = await _call(
         client, "query_user_memberships",
         start_time=start_time, end_time=end_time,
         user_id=user_id, user_email=user_email,
@@ -745,20 +935,20 @@ async def query_user_memberships(
         project_retired=project_retired, user_active=user_active,
         page=page, per_page=per_page, fetch_all=fetch_all,
     )
+    logger.info("query-user-memberships completed")
+    return result
 
 
-@mcp.tool(
-    name="query-project-memberships",
-    title="Query Project Memberships")
+@mcp.tool(name="query-project-memberships", title="Query Project Memberships")
 async def query_project_memberships(
         toolCallId: Optional[str] = None,
         tool_call_id: Optional[str] = None,
         start_time: Optional[str] = None,
         end_time: Optional[str] = None,
-        project_id: Optional[List[str]] = None,
-        exclude_project_id: Optional[List[str]] = None,
-        project_type: Optional[List[str]] = ["research", "education"],
-        exclude_project_type: Optional[List[str]] = None,
+        project_id: JsonListStr = None,
+        exclude_project_id: JsonListStr = None,
+        project_type: JsonListStr = ["research", "education"],
+        exclude_project_type: JsonListStr = None,
         project_active: Optional[bool] = True,
         project_expired: Optional[bool] = None,
         project_retired: Optional[bool] = None,
@@ -801,8 +991,9 @@ async def query_project_memberships(
         - Research project teams: project_type=["research"], project_active=True
         - Active members only: user_active=True
     """
-    client = _get_client()
-    return await _call(
+    logger.info("Executing query-project-memberships")
+    client = _get_client(_get_headers())
+    result = await _call(
         client, "query_project_memberships",
         start_time=start_time, end_time=end_time,
         project_id=project_id, exclude_project_id=exclude_project_id,
@@ -811,84 +1002,37 @@ async def query_project_memberships(
         project_retired=project_retired, user_active=user_active,
         page=page, per_page=per_page, fetch_all=fetch_all,
     )
+    logger.info("query-project-memberships completed")
+    return result
 
 
-@mcp.tool(
-    name="post-slice",
-    title="Post Slice")
-async def post_slice(
-        slice_id: str,
-        slice_payload: Dict[str, Any],
-) -> Dict[str, Any]:
-    """
-    Create or update a slice in the Reports database.
+# =========================================================================
+# Entry point
+# =========================================================================
 
-    This endpoint allows programmatic creation or updating of slice records.
-    Typically used for data import/sync operations rather than regular queries.
-    Requires appropriate authentication and permissions.
-
-    Args:
-        slice_id: The unique UUID of the slice to create or update
-        slice_payload: Dict containing slice data including state, name,
-                       project_id, user_id, created_time, and other slice attributes
-
-    Returns:
-        Dict with operation status and created/updated slice information.
-
-    Note:
-        This is an administrative endpoint primarily used for data synchronization
-        from other FABRIC systems into the Reports database.
-    """
-    client = _get_client()
-    return await _call(client, "post_slice", slice_id=slice_id, slice_payload=slice_payload)
-
-
-@mcp.tool(
-    name="post-sliver",
-    title="Post Sliver",
-    #description="Administrative endpoint to create or update sliver records in Reports database. Requires slice_id, sliver_id, and sliver_payload with state, type, site, host, components, interfaces. Use for data import/sync from orchestrator/controllers only, not regular queries."
-)
-async def post_sliver(
-        slice_id: str,
-        sliver_id: str,
-        sliver_payload: Dict[str, Any],
-) -> Dict[str, Any]:
-    """
-    Create or update a sliver within a slice in the Reports database.
-
-    This endpoint allows programmatic creation or updating of sliver records
-    (individual resource allocations). Typically used for data import/sync
-    operations rather than regular queries. Requires appropriate authentication
-    and permissions.
-
-    Args:
-        slice_id: The unique UUID of the parent slice
-        sliver_id: The unique UUID of the sliver to create or update
-        sliver_payload: Dict containing sliver data including state, type,
-                        site, host, components, interfaces, and other attributes
-
-    Returns:
-        Dict with operation status and created/updated sliver information.
-
-    Note:
-        This is an administrative endpoint primarily used for data synchronization
-        from other FABRIC systems (orchestrator, controllers) into the Reports
-        database.
-    """
-    client = _get_client()
-    return await _call(
-        client, "post_sliver",
-        slice_id=slice_id, sliver_id=sliver_id, sliver_payload=sliver_payload
+if __name__ == "__main__":
+    logger.info(
+        "Starting FABRIC Reports MCP Server",
+        extra={
+            "transport_mode": settings.transport.mode,
+            "api_base_url": settings.api.base_url,
+            "log_level": settings.logging.level,
+        },
     )
 
-
-# ---------------------------------------
-# Run
-# ---------------------------------------
-if __name__ == "__main__":
-    if MCP_TRANSPORT == "http":
-        print(f"Starting FABRIC Reports MCP (FastMCP) in HTTP mode on http://{HTTP_HOST}:{HTTP_PORT}")
-        mcp.run(transport="http", host=HTTP_HOST, port=HTTP_PORT)
+    if settings.transport.mode == "http":
+        logger.info(
+            "Starting HTTP server",
+            extra={
+                "host": settings.transport.http_host,
+                "port": settings.transport.http_port,
+            },
+        )
+        mcp.run(
+            transport="http",
+            host=settings.transport.http_host,
+            port=settings.transport.http_port,
+        )
     else:
-        print(f"Starting FABRIC Reports MCP (FastMCP) in stdio mode")
+        logger.info("Starting stdio mode")
         mcp.run(transport="stdio")

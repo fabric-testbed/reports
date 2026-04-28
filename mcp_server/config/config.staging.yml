@@ -1,0 +1,21 @@
+# Staging Configuration
+# Use this for staging/testing environment
+
+transport:
+  mode: http  # HTTP server mode
+  http_host: 0.0.0.0
+  http_port: 5000
+
+api:
+  base_url: http://reports-api:8080/reports  # Staging Reports API
+  timeout: 30
+  max_retries: 5
+  pool_size: 20
+
+logging:
+  level: INFO  # Standard logging
+  format: json  # Structured logging
+  destination: both  # Console and file
+  file_path: /var/log/mcp/server.log
+  rotation_size: 100MB
+  retention_days: 14
