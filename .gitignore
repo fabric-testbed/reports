@@ -68,3 +68,4 @@ target/
 reports_api/python-flask-server-generated/
 mcp-server/node_modules
 openapi_server_archive
+pg_data/
