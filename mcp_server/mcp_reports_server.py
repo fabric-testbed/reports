@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import ast
 import os
 import json
 import asyncio
@@ -194,9 +193,7 @@ async def _call(client: ReportsApi, method: str, **kwargs) -> Dict[str, Any]:
 # Note: ctx parameter is optional and only used in HTTP mode
 # ---------------------------------------
 
-@mcp.tool(name="query-version", title="Query Version",
-          #description="Get API version, build info, and service status. Use to verify API availability and compatibility."
-          )
+@mcp.tool(name="query-version", title="Query Version")
 async def query_version(
         toolCallId: Optional[str] = None,
         tool_call_id: Optional[str] = None,
@@ -215,9 +212,7 @@ async def query_version(
     return await _call(client, "query_version")
 
 
-@mcp.tool(name="query-sites", title="Query Sites",
-          #description="Get all FABRIC testbed sites with location, capacity, and available resources (GPUs, FPGAs, SmartNICs). No filters available - returns complete site list."
-          )
+@mcp.tool(name="query-sites", title="Query Sites")
 async def query_sites(
         toolCallId: Optional[str] = None,
         tool_call_id: Optional[str] = None,
@@ -240,9 +235,7 @@ async def query_sites(
 
 @mcp.tool(
     name="query-slices",
-    title="Query Slices",
-    #description="Query FABRIC experimental slices (user environments containing resources). Filter by state (StableOK, StableError, Dead, etc.), user, project, site, time range, or resource types (GPU, SmartNIC, etc.). Use exclude_slice_state to filter out terminated slices. Default excludes Dead and Closing states."
-)
+    title="Query Slices")
 async def query_slices(
         toolCallId: Optional[str] = None,
         tool_call_id: Optional[str] = None,
@@ -327,7 +320,7 @@ async def query_slices(
         state, project_id, user_id, site information, and associated resources.
 
     Examples:
-        - Active slices at EDC site: site=["EDC"], , exclude_slice_state=["Dead", "Closing"]
+        - Active slices at EDC site: site=["EDC"], exclude_slice_state=["Dead", "Closing"]
         - User's slices: user_email=["user@example.com"]
         - Slices with GPUs: component_type=["GPU"]
     """
@@ -351,9 +344,7 @@ async def query_slices(
 
 @mcp.tool(
     name="query-slivers",
-    title="Query Slivers",
-    #description="Query individual resource allocations (VMs, network connections, storage). Filter by sliver_type (VM, L2PTP, FABNetv4, etc.), sliver_state (Active, Failed, Closed, etc.), component_type (GPU, SmartNIC, FPGA, NVME, Storage), site, host, or time range. Use for detailed resource utilization tracking. Default excludes Closed slivers."
-)
+    title="Query Slivers")
 async def query_slivers(
         toolCallId: Optional[str] = None,
         tool_call_id: Optional[str] = None,
@@ -461,9 +452,7 @@ async def query_slivers(
 
 @mcp.tool(
     name="query-users",
-    title="Query Users",
-    #description="Query FABRIC users filtered by activity, project membership, resource usage, or experiments. Filter by user_active (default: true), project_type (research/education/test), component_type, site, or slice ownership. Use to identify active users, find users by experiments, or analyze user communities."
-)
+    title="Query Users")
 async def query_users(
         toolCallId: Optional[str] = None,
         tool_call_id: Optional[str] = None,
@@ -576,9 +565,7 @@ async def query_users(
 
 @mcp.tool(
     name="query-projects",
-    title="Query Projects",
-    #description="Query FABRIC projects (organizational units grouping users and resources). Filter by project_active (default: true), project_type (research/education/test), members, resource usage, or site. Use exclude_project_id to filter out FABRIC personnel projects. Useful for finding projects by activity, team composition, or resource patterns."
-)
+    title="Query Projects")
 async def query_projects(
         toolCallId: Optional[str] = None,
         tool_call_id: Optional[str] = None,
@@ -692,9 +679,7 @@ async def query_projects(
 
 @mcp.tool(
     name="query-user-memberships",
-    title="Query User Memberships",
-    #description="Get user-centric view of project memberships showing which projects each user belongs to with roles. Filter by user_active (default: true), project_type (default: research, education), project_active (default: true), or project status. Use to understand user participation across projects."
-)
+    title="Query User Memberships")
 async def query_user_memberships(
         toolCallId: Optional[str] = None,
         tool_call_id: Optional[str] = None,
@@ -764,9 +749,7 @@ async def query_user_memberships(
 
 @mcp.tool(
     name="query-project-memberships",
-    title="Query Project Memberships",
-    #description="Get project-centric view of memberships showing which users belong to each project with roles. Filter by project_type (default: research, education), project_active (default: true), user_active (default: true), or project status. Use to analyze team composition and identify project owners."
-)
+    title="Query Project Memberships")
 async def query_project_memberships(
         toolCallId: Optional[str] = None,
         tool_call_id: Optional[str] = None,
@@ -832,9 +815,7 @@ async def query_project_memberships(
 
 @mcp.tool(
     name="post-slice",
-    title="Post Slice",
-    #description="Administrative endpoint to create or update slice records in Reports database. Requires slice_id and slice_payload with state, name, project_id, user_id, timestamps. Use for data import/sync operations only, not regular queries."
-)
+    title="Post Slice")
 async def post_slice(
         slice_id: str,
         slice_payload: Dict[str, Any],
