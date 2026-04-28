@@ -45,7 +45,7 @@ services:
     environment:
       MCP_TRANSPORT: "http"
       REPORTS_API_BASE_URL: "http://reports-api:8080/reports"
-      MCP_LOGGING__LEVEL: "INFO"
+      MCP_LOGGING__LEVEL: "DEBUG"
       MCP_LOGGING__FORMAT: "json"
       MCP_LOGGING__DESTINATION: "both"
       MCP_LOGGING__FILE_PATH: "/var/log/mcp/server.log"

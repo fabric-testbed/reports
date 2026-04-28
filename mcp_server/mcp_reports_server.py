@@ -279,7 +279,13 @@ token_provider = TokenProvider(transport_mode=settings.transport.mode)
 def _get_headers() -> Optional[Dict[str, str]]:
     """Return HTTP headers if in HTTP mode, else None."""
     if settings.transport.mode == "http":
-        return get_http_headers() or {}
+        hdrs = get_http_headers(include_all=True) or {}
+        logger.debug(
+            "HTTP headers received",
+            extra={"header_keys": list(hdrs.keys()),
+                   "has_authorization": "authorization" in hdrs},
+        )
+        return hdrs
     return None
 
 
