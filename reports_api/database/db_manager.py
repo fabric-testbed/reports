@@ -39,6 +39,17 @@ from reports_api.database import (
 from reports_api.response_code.slice_sliver_states import SliceState, SliverStates
 
 
+def _ensure_datetime(value) -> Optional[datetime]:
+    """Convert ISO format strings to datetime objects if needed."""
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, str):
+        return datetime.fromisoformat(value)
+    return value
+
+
 def _parse_vlan_range(range_str: str) -> set:
     """Parse '100-200,300-350' -> {100, 101, ..., 200, 300, ..., 350}"""
     vlans = set()
@@ -246,6 +257,8 @@ class DatabaseManager:
             slice_name: str, state: int,
             lease_start: Optional[datetime], lease_end: Optional[datetime]
     ) -> int:
+        lease_start = _ensure_datetime(lease_start)
+        lease_end = _ensure_datetime(lease_end)
         result = await session.execute(select(Slices).where(Slices.slice_guid == slice_guid))
         slice_obj = result.scalars().first()
         if slice_obj:
@@ -301,6 +314,9 @@ class DatabaseManager:
         closed_at: Optional[datetime] = None,
         error: Optional[str] = None
     ) -> int:
+        lease_start = _ensure_datetime(lease_start)
+        lease_end = _ensure_datetime(lease_end)
+        closed_at = _ensure_datetime(closed_at)
         result = await session.execute(select(Slivers).where(Slivers.sliver_guid == sliver_guid))
         sliver = result.scalars().first()
 
