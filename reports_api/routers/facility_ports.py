@@ -9,7 +9,7 @@ from reports_api.security.dependencies import require_bearer_token_only
 router = APIRouter(prefix="/reports", tags=["facility_ports"])
 
 
-@router.post("/facility-ports/capacity", response_model=NoContentResponse, response_model_exclude_none=True)
+@router.post("/facility_ports/capacity", response_model=NoContentResponse, response_model_exclude_none=True)
 async def facility_ports_capacity_post(
     body: dict,
     session: AsyncSession = Depends(get_session),
