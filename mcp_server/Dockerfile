@@ -50,6 +50,7 @@ LABEL version="1.4.0"
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
+    gosu \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -79,8 +80,11 @@ ENV PYTHONUNBUFFERED=1 \
 # Copy application code
 COPY --chown=appuser:appuser . /app/
 
-# Switch to non-root user
-USER appuser
+# Entrypoint fixes log dir permissions when bind-mounted, then drops to appuser
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["entrypoint.sh"]
 
 # Expose ports
 EXPOSE 5000

@@ -1,6 +1,6 @@
 services:
   database:
-    image: fabrictestbed/postgres:12.3
+    image: fabrictestbed/postgres:17.7
     container_name: reports-db
     networks:
       - backend
